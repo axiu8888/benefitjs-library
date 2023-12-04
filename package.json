@@ -1,0 +1,19 @@
+{
+  "name": "benefitjs-library",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "pnpm run --filter * dev",
+    "dev:core": "pnpm run --filter @benefitjs/core dev",
+    "build:core": "pnpm run --filter @benefitjs/core build",
+    "dev:uni-plugins": "pnpm run --filter @benefitjs/uni-plugins dev",
+    "build:uni-plugins": "pnpm run --filter @benefitjs/uni-plugins build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+  }
+}

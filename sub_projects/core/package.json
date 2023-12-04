@@ -1,0 +1,33 @@
+{
+  "name": "@benefitjs/core",
+  "version": "0.1.0",
+  "description": "核心组件",
+  "main": "dist/core.umd.js",
+  "module": "dist/core.mjs",
+  "types": "types/index.d.ts",
+  "files": [
+    "dist",
+    "lib/**/*",
+    "types"
+  ],
+  "scripts": {
+    "dev": "vite --host",
+    "tsc": "tsc",
+    "build": "npm run tsc && vite build",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -p tsconfig.json"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/uuid": "~9.0.1",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "prettier": "^2.8.8",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^5.2.2",
+    "vite": "~4.3.9"
+  }
+}

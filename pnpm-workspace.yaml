@@ -1,0 +1,7 @@
+packages:
+  # 所有在 sub_projects、examples 子目录下的文件
+  - "sub_projects/**"
+  - "examples/**"
+
+  # 不包括在 test 文件夹下的 package
+  - "!**/test/**"

@@ -1,0 +1,115 @@
+{
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		// {
+		// 	"path": "pages/bt-devices/h1",
+		// 	"style": {
+		// 		"navigationBarTitleText": "H1"
+		// 	}
+		// },
+		{
+			"path": "pages/bt-devices/breathing_trainer",
+			"style": {
+				"navigationBarTitleText": "呼吸训练器"
+			}
+		},
+		// {
+		// 	"path": "pages/bt-devices/collector",
+		// 	"style": {
+		// 		"navigationBarTitleText": "采集器"
+		// 	}
+		// },
+		// {
+		// 	"path": "pages/bt-devices/lanbei",
+		// 	"style": {
+		// 		"navigationBarTitleText": "兰贝设备"
+		// 	}
+		// },
+		// {
+		// 	"path": "pages/bt-devices/v3_bp",
+		// 	"style": {
+		// 		"navigationBarTitleText": "V3星脉血压计"
+		// 	}
+		// },
+		// {
+		// 	"path": "pages/bt-devices/u9_bp",
+		// 	"style": {
+		// 		"navigationBarTitleText": "U9蓝牙血压计"
+		// 	}
+		// },
+		{
+			"path": "pages/plugins/mqtt",
+			"style": {
+				"navigationBarTitleText": "mqtt"
+			}
+		},
+		{
+			"path": "pages/plugins/plugins",
+			"style": {
+				"navigationBarTitleText": "插件"
+			}
+		}
+	],
+	"tabBar": {
+		"color": "#7A7E83",
+		"selectedColor": "#0000ff",
+		"borderStyle": "black",
+		"backgroundColor": "#ffffff",
+		"fontSize": "16px",
+		"list": [
+			// {
+			// 	"pagePath": "pages/bt-devices/h1",
+			// 	// "iconPath": "static/image/icon_component.png",
+			// 	// "selectedIconPath": "static/logo.png",
+			// 	"text": "H1"
+			// },
+			{
+				"pagePath": "pages/bt-devices/breathing_trainer",
+				// "iconPath": "static/image/icon_component.png",
+				// "selectedIconPath": "static/logo.png",
+				"text": "呼吸训练器"
+			},
+			// {
+			// 	"pagePath": "pages/bt-devices/collector",
+			// 	// "iconPath": "static/image/icon_component.png",
+			// 	// "selectedIconPath": "static/logo.png",
+			// 	"text": "采集器"
+			// },
+			// {
+			// 	"pagePath": "pages/bt-devices/lanbei",
+			// 	// "iconPath": "static/image/icon_component.png",
+			// 	// "selectedIconPath": "static/logo.png",
+			// 	"text": "兰贝设备"
+			// },
+			// {
+			// 	"pagePath": "pages/bt-devices/v3_bp",
+			// 	// "iconPath": "static/image/icon_component.png",
+			// 	// "selectedIconPath": "static/logo.png",
+			// 	"text": "V3星脉血压计"
+			// },
+			// {
+			// 	"pagePath": "pages/bt-devices/u9_bp",
+			// 	// "iconPath": "static/image/icon_component.png",
+			// 	// "selectedIconPath": "static/logo.png",
+			// 	"text": "U9蓝牙血压计"
+			// },
+			{
+				"pagePath": "pages/plugins/mqtt",
+				// "iconPath": "static/image/icon_API.png",
+				// "selectedIconPath": "static/logo.png",
+				"text": "mqtt"
+			},
+			{
+				"pagePath": "pages/plugins/plugins",
+				// "iconPath": "static/image/icon_API.png",
+				// "selectedIconPath": "static/logo.png",
+				"text": "插件"
+			}
+		]
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	}
+}
