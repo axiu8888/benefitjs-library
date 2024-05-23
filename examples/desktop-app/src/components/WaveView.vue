@@ -22,10 +22,7 @@
 <script lang="ts" setup>
 
 import { onMounted, ref } from 'vue'
-
-import {
-  mqtt,
-} from '@benefitjs/core'
+import {  mqtt } from '@benefitjs/core'
 import {
   createCanvasGridBG,
   createCanvasWaveView,
@@ -41,8 +38,8 @@ let wv2: WaveView
 
 const mqttClient = new mqtt.Client(<mqtt.MqttOptions>{
   autoReconnectInterval: 5000,
-  // host: '192.168.1.198',
-  host: 'pr.sensecho.com',
+  host: '192.168.1.198',
+  // host: 'pr.sensecho.com',
   // host: '127.0.0.1',
   port: 8883,
   path: '/',

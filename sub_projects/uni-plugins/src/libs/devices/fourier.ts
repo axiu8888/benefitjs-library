@@ -2,7 +2,7 @@
  * 傅里叶设备：智能电动训练车、上下肢主被动训练车
  */
 
-import { binary, utils } from "@benefitjs/core";
+import { binary, logger, utils } from '@benefitjs/core';
 import { uniapp } from '../uni/uniapp';
 import { bluetooth } from '../uni/bluetooth';
 
@@ -10,20 +10,22 @@ import { bluetooth } from '../uni/bluetooth';
  * H1设备
  */
 export namespace h1 {
+  /**
+   * 日志打印
+   */
+  export const log = logger.newProxy('h1', logger.Level.warn);
 
   /**
    * 傅里叶：H1设备
    */
   export class Client extends bluetooth.BluetoothClient<Client> {
-
     options?: Options;
 
     private readonly _handler = <uniapp.OnBleClientListener<Client>>{
       onConnected(client, deviceId) {
         client.buf.clear();
       },
-      onServiceDiscover(client, deviceId, services) {
-      },
+      onServiceDiscover(client, deviceId, services) {},
       onDisconnected(client, deviceId, auto) {
         client.buf.clear();
       },
@@ -54,11 +56,11 @@ export namespace h1 {
               case 0x14: // 读取工作参数 响应
                 let opts = client.resolveConf(data);
                 client.options = opts;
-                client.callListenersFn<Listener>(l => l.onOptions(client, deviceId, value, opts), 'onData');
+                client.callListenersFn<Listener>((l) => l.onOptions(client, deviceId, value, opts), 'onData');
                 break;
-              case 0x15: // 
+              case 0x15: //
                 let p = client.resolvePacket(data);
-                client.callListenersFn<Listener>(l => l.onData(client, deviceId, value, p), 'onData');
+                client.callListenersFn<Listener>((l) => l.onData(client, deviceId, value, p), 'onData');
                 break;
             }
           } else {
@@ -70,20 +72,24 @@ export namespace h1 {
 
     /**
      * A4客户端的构造函数
-     * 
+     *
      * @param autoConnect 是否自动连接
      * @param useNative 是否使用本地插件(如果支持)
      */
     constructor(autoConnect: boolean = false, useNative: boolean = true) {
-      super(<uniapp.GattUUID>{
-        service: '0000ffe1-0000-1000-8000-00805f9b34fb',
-        readCharacteristic: '0000ffe2-0000-1000-8000-00805f9b34fb',
-        writeCharacteristic: '0000ffe3-0000-1000-8000-00805f9b34fb',
-        notifyCharacteristic: '0000ffe2-0000-1000-8000-00805f9b34fb',
-        readDescriptor: '00002902-0000-1000-8000-00805f9b34fb',
-        notifyDescriptor: '00002902-0000-1000-8000-00805f9b34fb',
-        mtu: 512
-      }, autoConnect, useNative);
+      super(
+        <uniapp.GattUUID>{
+          service: '0000ffe1-0000-1000-8000-00805f9b34fb',
+          readCharacteristic: '0000ffe2-0000-1000-8000-00805f9b34fb',
+          writeCharacteristic: '0000ffe3-0000-1000-8000-00805f9b34fb',
+          notifyCharacteristic: '0000ffe2-0000-1000-8000-00805f9b34fb',
+          readDescriptor: '00002902-0000-1000-8000-00805f9b34fb',
+          notifyDescriptor: '00002902-0000-1000-8000-00805f9b34fb',
+          mtu: 512,
+        },
+        autoConnect,
+        useNative,
+      );
       super.addListener(this._handler);
     }
 
@@ -128,9 +134,9 @@ export namespace h1 {
 
     /**
      * 发送指令
-     * 
+     *
      * @param opts 参数
-     * @returns 返回结果 
+     * @returns 返回结果
      */
     sendConfCmd(opts: Options) {
       return this.sendConfCmd2(opts.mode, opts.turnOn, opts.direction, opts.duration, opts.speed, opts.spasmLevel, opts.resistance, opts.resistanceOn);
@@ -235,10 +241,9 @@ export namespace h1 {
    * H1设备监听
    */
   export interface Listener extends uniapp.OnBleClientListener<Client> {
-
     /**
      * 接收到数据
-     * 
+     *
      * @param client 客户端
      * @param deviceId 设备的MAC地址
      * @param value 数值
@@ -248,14 +253,13 @@ export namespace h1 {
 
     /**
      * 接收到数据
-     * 
+     *
      * @param client 客户端
      * @param deviceId 设备的MAC地址
      * @param value 数值
      * @param packet 数据包
      */
     onData(client: Client, deviceId: string, value: number[] | Array<number> | Uint8Array, packet: Packet): void;
-
   }
 
   /** 训练模式 */
@@ -290,7 +294,7 @@ export namespace h1 {
   export const checkSum = (data: number[]) => {
     let sum = 0x5a; // 固定值
     for (let i = 4; i < data.length - 1; i++) {
-      sum ^= (data[i] & 0xFF);
+      sum ^= data[i] & 0xff;
     }
     return sum & 0xff;
   };
@@ -325,12 +329,12 @@ export namespace h1 {
 
   /**
    * 模式名
-   * 
+   *
    * @param mode 模式类型
    * @returns 返回模式名
    */
   export function modeName(mode: number) {
-    let tm = h1_train_modes.find(m => m.type == mode);
+    let tm = h1_train_modes.find((m) => m.type == mode);
     return tm ? (tm.name.includes('智能') ? '主被动' : tm.name) : '';
   }
 
@@ -427,7 +431,6 @@ export namespace h1 {
     return (Math.floor(weight * (mileage / 1000.0) * 0.51) * 100) / 100.0;
   }
 
-
   /**
    * 解析读取的配置
    */
@@ -442,7 +445,7 @@ export namespace h1 {
       resistanceOn: data[12] & 0xff, // 智能阻力是否开启 关闭1 开启2
       resistance: data[13] & 0xff, // 设定阻力等级 1-12
     };
-  }
+  };
 
   /**
    * 5.	上报工作参数:开启实时参数上报时,下位机工作时每秒上报的内容
@@ -492,9 +495,9 @@ export namespace h1 {
     let start = 5;
     let fp = <Packet>{
       mode: mode, // 模式
-      modeAlias: mode.name.includes('智能') ? "主被动" : mode.name, // 模式
+      modeAlias: mode.name.includes('智能') ? '主被动' : mode.name, // 模式
       direction: data[2 + start], // 方向
-      directionAlias: ((data[2 + start] == 1) ? '正' : '反'),
+      directionAlias: data[2 + start] == 1 ? '正' : '反',
       countDownMinute: data[3 + start] & 0xff, // 倒计时：分钟
       countDownSecond: data[4 + start] & 0xff, // 倒计时：秒
       mileage: binary.bytesToNumber([data[5 + start], data[6 + start]], false, false), // 里程：1:10、3圈1米
@@ -523,15 +526,17 @@ export namespace h1 {
         break;
     }
     return fp;
-  }
+  };
 }
-
-
 
 /**
  * 上下肢主被动训练车
  */
 export namespace a4 {
+  /**
+   * 日志打印
+   */
+  export const log = logger.newProxy('a4', logger.Level.warn);
   /**
    * 客户端
    */
@@ -570,31 +575,35 @@ export namespace a4 {
           }
         }
       },
-    }
+    };
 
     /**
      * H1客户端的构造函数
-     * 
+     *
      * @param autoConnect 是否自动连接
      * @param useNative 是否使用本地插件(如果支持)
      */
     constructor(autoConnect: boolean = false, useNative = false) {
-      super(<uniapp.GattUUID>{
-        service: "0000a002-0000-1000-8000-00805f9b34fb",
-        readCharacteristic: "0000c305-0000-1000-8000-00805f9b34fb",
-        notifyCharacteristic: "0000c305-0000-1000-8000-00805f9b34fb",
-        writeCharacteristic: "0000c304-0000-1000-8000-00805f9b34fb",
-        readDescriptor: "00002902-0000-1000-8000-00805f9b34fb",
-        mtu: 512,
-      }, autoConnect, useNative);
+      super(
+        <uniapp.GattUUID>{
+          service: '0000a002-0000-1000-8000-00805f9b34fb',
+          readCharacteristic: '0000c305-0000-1000-8000-00805f9b34fb',
+          notifyCharacteristic: '0000c305-0000-1000-8000-00805f9b34fb',
+          writeCharacteristic: '0000c304-0000-1000-8000-00805f9b34fb',
+          readDescriptor: '00002902-0000-1000-8000-00805f9b34fb',
+          mtu: 512,
+        },
+        autoConnect,
+        useNative,
+      );
       super.addListener(this._handler);
     }
 
     /**
      * 发送状态
-     * 
+     *
      * @param state 状态：2-开始、3-暂停、4-停止
-     * @returns 
+     * @returns
      */
     send(state: number): Promise<uniapp.UniBtDeviceResponse> {
       let data = new Array(9);
@@ -605,50 +614,54 @@ export namespace a4 {
 
     /**
      * 解析
-     * 
+     *
      * @param deviceId 设备ID
      * @param value 数据
      */
     private resolve(deviceId: string, value: number[]) {
-      let payload: number[], packet: Packet | undefined = undefined;
+      let payload: number[],
+        packet: Packet | undefined = undefined;
       switch (value[5] & 0xff) {
         case 0x21:
           payload = getPayload(value);
           packet = <Packet>{
             packetType: PacketType.WORK_PARAM,
-            state: states.find(v => v.flag == (payload[0] & 0xff)),
-            type: types.find(v => v.flag == (payload[1] & 0xff)),
+            state: states.find((v) => v.flag == (payload[0] & 0xff)),
+            type: types.find((v) => v.flag == (payload[1] & 0xff)),
           };
           if (packet.state?.name != 'before' && packet.state?.name != 'finish') {
             // 未进入训练界面
-            utils.copyAttrs({
-              mode: modes.find(v => v.flag == (payload[2] & 0xff)),
-              duration: binary.bytesToNumber([payload[3], payload[4]]),
-              speed: payload[5] & 0xff,
-              direction: payload[6] == 1 ? '反' : '正',
-              resistance: payload[7] & 0xff,
-              spasms: (payload[8] & 0xff) > 0 ? payload[8] & 0xff : undefined,
-              zygomorphy: payload.length >= 10 ? payload[9] & 0xff : undefined,
-            }, packet);
-          };
-          break
+            utils.copyAttrs(
+              {
+                mode: modes.find((v) => v.flag == (payload[2] & 0xff)),
+                duration: binary.bytesToNumber([payload[3], payload[4]]),
+                speed: payload[5] & 0xff,
+                direction: payload[6] == 1 ? '反' : '正',
+                resistance: payload[7] & 0xff,
+                spasms: (payload[8] & 0xff) > 0 ? payload[8] & 0xff : undefined,
+                zygomorphy: payload.length >= 10 ? payload[9] & 0xff : undefined,
+              },
+              packet,
+            );
+          }
+          break;
         case 0x23:
           payload = getPayload(value);
           packet = <Packet>{
             packetType: PacketType.SETTINGS_PARAM,
-            state: states.find(v => v.flag == (payload[0] & 0xff)),
-            type: types.find(v => v.flag == (payload[1] & 0xff)),
+            state: states.find((v) => v.flag == (payload[0] & 0xff)),
+            type: types.find((v) => v.flag == (payload[1] & 0xff)),
             duration: binary.bytesToNumber([payload[2], payload[3]]),
             speed: payload[4] & 0xff,
             direction: payload[5] == 1 ? '反' : '正',
             resistance: payload[6] & 0xff,
           };
-          break
+          break;
         case 0x25:
           payload = getPayload(value);
           packet = <Packet>{
             packetType: PacketType.TRAIN_RESULT,
-            state: states.find(v => v.flag == (payload[0] & 0xff)),
+            state: states.find((v) => v.flag == (payload[0] & 0xff)),
             mileage: binary.bytesToNumber([payload[1], payload[2]], false) * 10,
             energy: binary.bytesToNumber([payload[3], payload[4]], false),
             muscleTone: binary.bytesToNumber([payload[5], payload[6]], false),
@@ -657,7 +670,7 @@ export namespace a4 {
             spasms: (payload[10] & 0xff) > 0 ? payload[10] & 0xff : undefined,
             zygomorphy: (payload[11] & 0xff) > 0 ? payload[11] & 0xff : undefined,
           };
-          break
+          break;
       }
       if (packet) {
         this.callListenersFn<Listener>((l) => l.onData(this, deviceId, value, packet as Packet), 'onData');
@@ -695,23 +708,23 @@ export namespace a4 {
     // 2100 类型，2字节，小端
     // 00000100000000000032 数据
     // 68 结束，固定值：0x68
-    data = binary.asNumberArray(data)
-    return data.slice(7, data.length - 8)
+    data = binary.asNumberArray(data);
+    return data.slice(7, data.length - 8);
   }
 
   const PASSWORD = binary.hexToBytes('666F7572696572'); // fourier
 
   /**
-  * 帧头标识（2字节)
-  * 数据长度（2 字节）
-  * 命令码（1 字节）
-  * 数据字节（n 字节）
-  * 结束，固定值：0x68（1 字节）
-  *
-  * @param type    类型
-  * @param payload 数据
-  * @return 返回是否发送
-  */
+   * 帧头标识（2字节)
+   * 数据长度（2 字节）
+   * 命令码（1 字节）
+   * 数据字节（n 字节）
+   * 结束，固定值：0x68（1 字节）
+   *
+   * @param type    类型
+   * @param payload 数据
+   * @return 返回是否发送
+   */
   function wrapCmd(type: number, payload: number[]) {
     // 数据大小, (包头 + 数据长度 + 包尾)
     let data = new Array(1 + 2 + 1 + 1 + 2 + payload.length + 1);
@@ -739,17 +752,17 @@ export namespace a4 {
     /**
      * 标志
      */
-    flag: number,
+    flag: number;
     /**
      * 名称
      */
-    name: string,
+    name: string;
   }
   export const modes = <TrainMode[]>[
-    { flag: 0x01, name: "智能被动" },
-    { flag: 0x02, name: "智能主动" },
-    { flag: 0x10, name: "被动" },
-    { flag: 0x20, name: "主动" },
+    { flag: 0x01, name: '智能被动' },
+    { flag: 0x02, name: '智能主动' },
+    { flag: 0x10, name: '被动' },
+    { flag: 0x20, name: '主动' },
   ];
 
   /**
@@ -759,11 +772,11 @@ export namespace a4 {
     /**
      * 标志
      */
-    flag: number,
+    flag: number;
     /**
      * 名称
      */
-    name: string
+    name: string;
   }
   // 类型
   export const types = <Type[]>[
@@ -780,15 +793,15 @@ export namespace a4 {
     /**
      * 类型
      */
-    flag: number,
+    flag: number;
     /**
      * 别名
      */
-    type: string,
+    type: string;
     /**
      * 名称
      */
-    name: string,
+    name: string;
   }
   // 类型
   export const states = <State[]>[
@@ -804,11 +817,11 @@ export namespace a4 {
    */
   export enum PacketType {
     /* 实时数据  */
-    WORK_PARAM = "实时数据",
+    WORK_PARAM = '实时数据',
     /* 设置参数 */
-    SETTINGS_PARAM = "设置参数",
+    SETTINGS_PARAM = '设置参数',
     /* 训练结果 */
-    TRAIN_RESULT = "训练结果",
+    TRAIN_RESULT = '训练结果',
   }
 
   /**
@@ -816,54 +829,54 @@ export namespace a4 {
    */
   export interface Packet {
     /** 数据包类型 */
-    packetType: PacketType,
+    packetType: PacketType;
 
     /** 设备状态：0-未进入训练界面，1-在训练界面准备开始，2-训练中，3-暂停训练，4-结束训练(报告界面) */
-    state: State,
+    state: State;
 
     /** 训练类型 （ 上肢垂直交叉0x00，上肢水平训练0x01，上肢垂直平行0x02，下肢0x10） */
-    type: Type,
+    type: Type;
 
     /** 训练模式（ 主被动训练下的被动 0x01，主被动训练下的主动 0x02，被动训练 0x10, 主动训练 0x20） */
-    mode: TrainMode,
+    mode: TrainMode;
 
     /** 当前的设置训练时间，时间单位：s */
-    duration: number,
+    duration: number;
 
     /** 当前的设置速度 转/分钟 */
-    speed: number,
+    speed: number;
 
     /** 当前的设置方向：0:正（-1:反） */
-    direction: string,
+    direction: string;
 
     /** 当前的设置阻力：级（不同等级对应不同阻力，但是阻力大小未确定） */
-    resistance: number,
+    resistance: number;
 
     /** SN */
-    sn: number,
+    sn: number;
 
     /** 设备名称 */
-    deviceName: string,
+    deviceName: string;
 
     /** 里程，单位：0.01km */
-    mileage: number,
+    mileage: number;
 
     /** 能量消耗，单位：J */
-    energy: number,
+    energy: number;
 
     /** 肌张力：单位：N */
-    muscleTone: number,
+    muscleTone: number;
 
     /** 肌张力最小：单位：N */
-    muscleToneMin: number,
+    muscleToneMin: number;
 
     /** 肌张力最大：单位：N */
-    muscleToneMax: number,
+    muscleToneMax: number;
 
     /** 痉挛次数,单位：次 */
-    spasms: number,
+    spasms: number;
 
     /** 实时对称性：单位%（注：1-99代表左边的力气占比） */
-    zygomorphy: number,
+    zygomorphy: number;
   }
 }

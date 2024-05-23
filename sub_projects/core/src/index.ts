@@ -2,9 +2,12 @@
  * @Description:
  * @Date: 2023-11-29
  */
-export * from './libs/core';
-export * from './libs/proxy';
-export * from './libs/binary-helper';
+export * from './libs/core'; // 基础工具: UUID、日期
+export * from './libs/proxy'; // 动态代理
+export * from './libs/binary-helper'; // 二进制工具
+export * from './libs/logger'; // 日志工具
+export * from './libs/http'; // HTTP 工具
+export * from './libs/process-env'; // 运行环境(NodeJS、Electron、Browser)
 
 // MQTT
 export * from './libs/mqtt/paho-mqtt';

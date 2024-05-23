@@ -1,4 +1,4 @@
-import { binary, utils } from "@benefitjs/core";
+import { binary, logger, utils } from '@benefitjs/core';
 import { bluetooth } from '../uni/bluetooth';
 import { uniapp } from '../uni/uniapp';
 
@@ -6,6 +6,11 @@ import { uniapp } from '../uni/uniapp';
  * U9 血压设备
  */
 export namespace u9 {
+  /**
+   * 日志打印
+   */
+  export const log = logger.newProxy('u9', logger.Level.warn);
+
   const device = <uniapp.BluetoothDevice>{
     deviceId: 'F1:F0:01:00:64:FC',
     name: 'Bluetooth BP',
@@ -91,24 +96,28 @@ export namespace u9 {
               break;
           }
         } catch (err) {
-          console.log(`处理血压数据时出现错误: ${deviceId}, value: ${binary.bytesToHex(value)}, ${err}`);
+          log.warn(`处理血压数据时出现错误: ${deviceId}, value: ${binary.bytesToHex(value)}, ${err}`);
         }
       },
     };
 
     /**
      * U9客户端的构造函数
-     * 
+     *
      * @param autoConnect 是否自动连接
      * @param useNative 是否使用本地插件(如果支持)
      */
     constructor(autoConnect: boolean = false, useNative = false) {
-      super(<uniapp.GattUUID>{
-        service: '0000fff0-0000-1000-8000-00805f9b34fb',
-        readCharacteristic: '0000fff1-0000-1000-8000-00805f9b34fb',
-        writeCharacteristic: '0000fff2-0000-1000-8000-00805f9b34fb',
-        notifyCharacteristic: '0000fff1-0000-1000-8000-00805f9b34fb',
-      }, autoConnect, useNative);
+      super(
+        <uniapp.GattUUID>{
+          service: '0000fff0-0000-1000-8000-00805f9b34fb',
+          readCharacteristic: '0000fff1-0000-1000-8000-00805f9b34fb',
+          writeCharacteristic: '0000fff2-0000-1000-8000-00805f9b34fb',
+          notifyCharacteristic: '0000fff1-0000-1000-8000-00805f9b34fb',
+        },
+        autoConnect,
+        useNative,
+      );
       this.addListener(this._handler);
     }
 
@@ -221,7 +230,7 @@ export namespace u9 {
    * 指令类型
    */
   export class CmdType {
-    constructor(public readonly type: number, public readonly name: string, public readonly description: string, public readonly parser?: Function) { }
+    constructor(public readonly type: number, public readonly name: string, public readonly description: string, public readonly parser?: Function) {}
   }
 
   export const CMD_TYPES = <Array<CmdType>>[
@@ -238,7 +247,7 @@ export namespace u9 {
    * 血压异常
    */
   export class BpError {
-    constructor(public readonly type: number, public readonly description: string) { }
+    constructor(public readonly type: number, public readonly description: string) {}
   }
 
   export const ERROR_TYPES = <Array<BpError>>[

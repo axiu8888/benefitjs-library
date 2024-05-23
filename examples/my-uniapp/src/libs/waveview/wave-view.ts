@@ -1,3 +1,5 @@
+import { log } from "../log";
+
 /**
  * 波形图绘制：心电/脉搏波/胸腹呼吸
  */
@@ -197,7 +199,7 @@ export class WaveView {
           try {
             m.clear(this.ctx);
           } catch (err) {
-            console.error(err);
+            log.error(err);
           }
         }
       }
@@ -687,7 +689,7 @@ export function createWaveView(c: HTMLCanvasElement): WaveView {
       // view.models.forEach(m => m.clear(ctx));
       // 打印参数
       // for (const model of view.models) {
-      //     console.log(JSON.stringify(model));
+      //     log.debug(JSON.stringify(model));
       // }
 
       // view.onDrawBackground = function (ctx: CanvasRenderingContext2D) {
@@ -700,7 +702,7 @@ export function createWaveView(c: HTMLCanvasElement): WaveView {
       //     ctx.moveTo(0, this.height() / 2);
       //     ctx.lineTo(this.width(), this.height() / 2);
       //     ctx.stroke();
-      //     console.log('绘制背景');
+      //     log.debug('绘制背景');
       // }
 
     }

@@ -1,4 +1,4 @@
-import { binary } from "@benefitjs/core";
+import { binary } from '@benefitjs/core';
 import { collector as c } from './collector';
 
 /**

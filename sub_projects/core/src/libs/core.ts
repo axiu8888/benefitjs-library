@@ -448,6 +448,40 @@ export namespace utils {
     );
 
   /**
+   * 模拟 setInterval
+   *
+   * @param handler 回调
+   * @param timeout 延迟执行时长
+   */
+  export const setInterval = (handler: Function, timeout: number = 0): { id: number } => {
+    const ref = <any>[];
+    ref[0] = () => {
+      let startAt = Date.now();
+      try {
+        handler();
+      } finally {
+        ref[1].id = setTimeout(ref[0], Math.min(timeout, Date.now() - startAt));
+      }
+    };
+    ref[1] = {};
+    ref[1].id = setTimeout(ref[0], timeout);
+    return ref[1];
+  };
+
+  /**
+   * 清理定时调度
+   *
+   * @param id 调度ID
+   */
+  export const clearInterval = (id: number | { id: number }) => {
+    if (typeof id == 'number') {
+      clearTimeout(id);
+    } else {
+      clearTimeout(id.id);
+    }
+  };
+
+  /**
    * 判断是否仅为ASCII码字符
    *
    * @param str 字符串
@@ -462,6 +496,40 @@ export namespace utils {
    * @returns 返回判断结果
    */
   export const isNumberOrLetter = (str: string) => /^[\d\w]+$/.test(str);
+
+  /**
+   * JSON格式化
+   *
+   * @param obj 对象
+   * @returns 返回JSON字符串
+   */
+  export const stringify = (obj: any) => {
+    if (typeof obj === 'object') {
+      let copy = <any>{};
+      let v;
+      for (const key in obj) {
+        v = obj[key];
+        if (v instanceof ArrayBuffer) {
+          copy[key] = ab2hex(v);
+        } else {
+          copy[key] = v;
+        }
+      }
+      return JSON.stringify(obj);
+    }
+    return JSON.stringify(obj);
+  };
+
+  /**
+   * ArrayBuffer 转换为16进制
+   *
+   * @param buffer ArrayBuffer
+   * @returns 返回16进制字符串
+   */
+  export const ab2hex = (buffer: ArrayBuffer) => {
+    let u8a = new Uint8Array(buffer);
+    return Array.prototype.map.call(u8a, (bit) => ('00' + bit.toString(16)).slice(-2)).join('');
+  };
 
   /**
    * 过滤
@@ -701,5 +769,6 @@ export namespace utils {
 
   // ========================================================
   export const rawUUID = (): string => uuidv4();
+  export const uuid = (): string => rawUUID().replaceAll('-', '');
   export const nextUUID = (): string => rawUUID().replace(new RegExp('-', 'gm'), '');
 }

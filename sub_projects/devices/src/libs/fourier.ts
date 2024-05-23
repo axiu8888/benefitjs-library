@@ -2,14 +2,13 @@
  * 傅里叶设备：智能电动训练车、上下肢主被动训练车
  */
 
-import { binary, utils, ByteBuf } from "@benefitjs/core";
+import { binary, utils, ByteBuf } from '@benefitjs/core';
 import { GattUUID, IDevice } from './bluetooth';
 
 /**
  * H1设备
  */
 export namespace h1 {
-
   /**
    * UUID
    */
@@ -20,16 +19,15 @@ export namespace h1 {
     notifyCharacteristic: '0000ffe2-0000-1000-8000-00805f9b34fb',
     readDescriptor: '00002902-0000-1000-8000-00805f9b34fb',
     notifyDescriptor: '00002902-0000-1000-8000-00805f9b34fb',
-    mtu: 512
+    mtu: 512,
   };
 
   export class Device implements IDevice {
-
     buf = new ByteBuf();
     uuid = uuid;
     options?: Options;
 
-    push(value?: number[] | undefined): number[] | undefined {
+    addBuf(value?: number[] | undefined): number[] | undefined {
       let buf = this.buf;
       if (value && value.length > 0) {
         buf.write(value);
@@ -67,14 +65,14 @@ export namespace h1 {
           let opts = this.resolveConf(data);
           this.options = opts;
           return;
-        case 0x15: // 
+        case 0x15: //
           return this.resolvePacket(data);
       }
     }
 
     /**
-   * 检查是否为响应头
-   */
+     * 检查是否为响应头
+     */
     isResponseHead(data: number[]): boolean {
       return binary.isEquals(RESPONSE_HEAD, 0, data, 0, RESPONSE_HEAD.length);
     }
@@ -154,9 +152,9 @@ export namespace h1 {
       let start = 5;
       let fp = <Packet>{
         mode: mode, // 模式
-        modeAlias: mode.name.includes('智能') ? "主被动" : mode.name, // 模式
+        modeAlias: mode.name.includes('智能') ? '主被动' : mode.name, // 模式
         direction: data[2 + start], // 方向
-        directionAlias: ((data[2 + start] == 1) ? '正' : '反'),
+        directionAlias: data[2 + start] == 1 ? '正' : '反',
         countDownMinute: data[3 + start] & 0xff, // 倒计时：分钟
         countDownSecond: data[4 + start] & 0xff, // 倒计时：秒
         mileage: binary.bytesToNumber([data[5 + start], data[6 + start]], false, false), // 里程：1:10、3圈1米
@@ -186,7 +184,6 @@ export namespace h1 {
       }
       return fp;
     }
-
   }
 
   /** 训练模式 */
@@ -199,12 +196,12 @@ export namespace h1 {
   export const train_mode_passive = <H1TrainMode>{
     type: 0x01,
     name: '被动',
-    alias: 'passive'
+    alias: 'passive',
   };
   export const train_mode_active = <H1TrainMode>{
     type: 0x02,
     name: '主动',
-    alias: 'active'
+    alias: 'active',
   };
   export const train_mode_intelligent_passive = <H1TrainMode>{
     type: 0x03,
@@ -219,12 +216,7 @@ export namespace h1 {
   /**
    * 模式
    */
-  export const train_modes = [
-    train_mode_passive,
-    train_mode_active,
-    train_mode_intelligent_passive,
-    train_mode_intelligent_active
-  ];
+  export const train_modes = [train_mode_passive, train_mode_active, train_mode_intelligent_passive, train_mode_intelligent_active];
 
   export const REQUEST_HEAD = [0x4d, 0x2d, 0x3e, 0x53];
   export const RESPONSE_HEAD = [0x4d, 0x3c, 0x2d, 0x53];
@@ -237,7 +229,7 @@ export namespace h1 {
   export const checkSum = (data: number[]) => {
     let sum = 0x5a; // 固定值
     for (let i = 4; i < data.length - 1; i++) {
-      sum ^= (data[i] & 0xFF);
+      sum ^= data[i] & 0xff;
     }
     return sum & 0xff;
   };
@@ -272,12 +264,12 @@ export namespace h1 {
 
   /**
    * 模式名
-   * 
+   *
    * @param mode 模式类型
    * @returns 返回模式名
    */
   export function modeName(mode: number) {
-    let tm = train_modes.find(m => m.type == mode);
+    let tm = train_modes.find((m) => m.type == mode);
     return tm ? (tm.name.includes('智能') ? '主被动' : tm.name) : '';
   }
 
@@ -374,7 +366,6 @@ export namespace h1 {
     return (Math.floor(weight * (mileage / 1000.0) * 0.51) * 100) / 100.0;
   }
 
-
   /**
    * 解析读取的配置
    */
@@ -389,7 +380,7 @@ export namespace h1 {
       resistanceOn: data[12] & 0xff, // 智能阻力是否开启 关闭1 开启2
       resistance: data[13] & 0xff, // 设定阻力等级 1-12
     };
-  }
+  };
 
   /**
    * 5.	上报工作参数:开启实时参数上报时,下位机工作时每秒上报的内容
@@ -439,9 +430,9 @@ export namespace h1 {
     let start = 5;
     let fp = <Packet>{
       mode: mode, // 模式
-      modeAlias: mode.name.includes('智能') ? "主被动" : mode.name, // 模式
+      modeAlias: mode.name.includes('智能') ? '主被动' : mode.name, // 模式
       direction: data[2 + start], // 方向
-      directionAlias: ((data[2 + start] == 1) ? '正' : '反'),
+      directionAlias: data[2 + start] == 1 ? '正' : '反',
       countDownMinute: data[3 + start] & 0xff, // 倒计时：分钟
       countDownSecond: data[4 + start] & 0xff, // 倒计时：秒
       mileage: binary.bytesToNumber([data[5 + start], data[6 + start]], false, false), // 里程：1:10、3圈1米
@@ -470,10 +461,8 @@ export namespace h1 {
         break;
     }
     return fp;
-  }
+  };
 }
-
-
 
 /**
  * 上下肢主被动训练车
@@ -483,21 +472,20 @@ export namespace a4 {
    * UUID
    */
   export const uuid = <GattUUID>{
-    service: "0000a002-0000-1000-8000-00805f9b34fb",
-    readCharacteristic: "0000c305-0000-1000-8000-00805f9b34fb",
-    notifyCharacteristic: "0000c305-0000-1000-8000-00805f9b34fb",
-    writeCharacteristic: "0000c304-0000-1000-8000-00805f9b34fb",
-    readDescriptor: "00002902-0000-1000-8000-00805f9b34fb",
+    service: '0000a002-0000-1000-8000-00805f9b34fb',
+    readCharacteristic: '0000c305-0000-1000-8000-00805f9b34fb',
+    notifyCharacteristic: '0000c305-0000-1000-8000-00805f9b34fb',
+    writeCharacteristic: '0000c304-0000-1000-8000-00805f9b34fb',
+    readDescriptor: '00002902-0000-1000-8000-00805f9b34fb',
     mtu: 512,
   };
 
   export class Device implements IDevice {
-
     readonly buf = new ByteBuf();
 
     readonly uuid = uuid;
 
-    push(value?: number[]): number[] | undefined {
+    addBuf(value?: number[]): number[] | undefined {
       let buf = this.buf;
       if (value && value.length > 0) {
         buf.write(value);
@@ -533,63 +521,67 @@ export namespace a4 {
 
   /**
    * 发送状态
-   * 
+   *
    * @param state 状态：2-开始、3-暂停、4-停止
-   * @returns 
+   * @returns
    */
   export const stateCmd = (state: number): number[] => {
     let data = new Array(9);
     binary.arraycopy(PASSWORD, 0, data, 0, PASSWORD.length);
     data[data.length - 1] = state;
     return wrapCmd(0x40, data);
-  }
+  };
 
   /**
-  * 解析
-  * 
-  * @param deviceId 设备ID
-  * @param value 数据
-  */
+   * 解析
+   *
+   * @param deviceId 设备ID
+   * @param value 数据
+   */
   export const resolve = (value: number[]) => {
-    let payload: number[], packet: Packet | undefined = undefined;
+    let payload: number[],
+      packet: Packet | undefined = undefined;
     switch (value[5] & 0xff) {
       case 0x21:
         payload = getPayload(value);
         packet = <Packet>{
           packetType: PacketType.WORK_PARAM,
-          state: states.find(v => v.flag == (payload[0] & 0xff)),
-          type: types.find(v => v.flag == (payload[1] & 0xff)),
+          state: states.find((v) => v.flag == (payload[0] & 0xff)),
+          type: types.find((v) => v.flag == (payload[1] & 0xff)),
         };
         if (packet.state?.name != 'before' && packet.state?.name != 'finish') {
           // 未进入训练界面
-          utils.copyAttrs({
-            mode: modes.find(v => v.flag == (payload[2] & 0xff)),
-            duration: binary.bytesToNumber([payload[3], payload[4]]),
-            speed: payload[5] & 0xff,
-            direction: payload[6] == 1 ? '反' : '正',
-            resistance: payload[7] & 0xff,
-            spasms: (payload[8] & 0xff) > 0 ? payload[8] & 0xff : undefined,
-            zygomorphy: payload.length >= 10 ? payload[9] & 0xff : undefined,
-          }, packet);
-        };
-        break
+          utils.copyAttrs(
+            {
+              mode: modes.find((v) => v.flag == (payload[2] & 0xff)),
+              duration: binary.bytesToNumber([payload[3], payload[4]]),
+              speed: payload[5] & 0xff,
+              direction: payload[6] == 1 ? '反' : '正',
+              resistance: payload[7] & 0xff,
+              spasms: (payload[8] & 0xff) > 0 ? payload[8] & 0xff : undefined,
+              zygomorphy: payload.length >= 10 ? payload[9] & 0xff : undefined,
+            },
+            packet,
+          );
+        }
+        break;
       case 0x23:
         payload = getPayload(value);
         packet = <Packet>{
           packetType: PacketType.SETTINGS_PARAM,
-          state: states.find(v => v.flag == (payload[0] & 0xff)),
-          type: types.find(v => v.flag == (payload[1] & 0xff)),
+          state: states.find((v) => v.flag == (payload[0] & 0xff)),
+          type: types.find((v) => v.flag == (payload[1] & 0xff)),
           duration: binary.bytesToNumber([payload[2], payload[3]]),
           speed: payload[4] & 0xff,
           direction: payload[5] == 1 ? '反' : '正',
           resistance: payload[6] & 0xff,
         };
-        break
+        break;
       case 0x25:
         payload = getPayload(value);
         packet = <Packet>{
           packetType: PacketType.TRAIN_RESULT,
-          state: states.find(v => v.flag == (payload[0] & 0xff)),
+          state: states.find((v) => v.flag == (payload[0] & 0xff)),
           mileage: binary.bytesToNumber([payload[1], payload[2]], false) * 10,
           energy: binary.bytesToNumber([payload[3], payload[4]], false),
           muscleTone: binary.bytesToNumber([payload[5], payload[6]], false),
@@ -598,10 +590,10 @@ export namespace a4 {
           spasms: (payload[10] & 0xff) > 0 ? payload[10] & 0xff : undefined,
           zygomorphy: (payload[11] & 0xff) > 0 ? payload[11] & 0xff : undefined,
         };
-        break
+        break;
     }
     return packet;
-  }
+  };
 
   /**
    * 获取有效数据
@@ -618,23 +610,23 @@ export namespace a4 {
     // 2100 类型，2字节，小端
     // 00000100000000000032 数据
     // 68 结束，固定值：0x68
-    data = binary.asNumberArray(data)
-    return data.slice(7, data.length - 8)
-  }
+    data = binary.asNumberArray(data);
+    return data.slice(7, data.length - 8);
+  };
 
   export const PASSWORD = binary.hexToBytes('666F7572696572'); // fourier
 
   /**
-  * 帧头标识（2字节)
-  * 数据长度（2 字节）
-  * 命令码（1 字节）
-  * 数据字节（n 字节）
-  * 结束，固定值：0x68（1 字节）
-  *
-  * @param type    类型
-  * @param payload 数据
-  * @return 返回是否发送
-  */
+   * 帧头标识（2字节)
+   * 数据长度（2 字节）
+   * 命令码（1 字节）
+   * 数据字节（n 字节）
+   * 结束，固定值：0x68（1 字节）
+   *
+   * @param type    类型
+   * @param payload 数据
+   * @return 返回是否发送
+   */
   function wrapCmd(type: number, payload: number[]) {
     // 数据大小, (包头 + 数据长度 + 包尾)
     let data = new Array(1 + 2 + 1 + 1 + 2 + payload.length + 1);
@@ -662,17 +654,17 @@ export namespace a4 {
     /**
      * 标志
      */
-    flag: number,
+    flag: number;
     /**
      * 名称
      */
-    name: string,
+    name: string;
   }
   export const modes = <TrainMode[]>[
-    { flag: 0x01, name: "智能被动" },
-    { flag: 0x02, name: "智能主动" },
-    { flag: 0x10, name: "被动" },
-    { flag: 0x20, name: "主动" },
+    { flag: 0x01, name: '智能被动' },
+    { flag: 0x02, name: '智能主动' },
+    { flag: 0x10, name: '被动' },
+    { flag: 0x20, name: '主动' },
   ];
 
   /**
@@ -682,11 +674,11 @@ export namespace a4 {
     /**
      * 标志
      */
-    flag: number,
+    flag: number;
     /**
      * 名称
      */
-    name: string
+    name: string;
   }
 
   // 类型
@@ -704,15 +696,15 @@ export namespace a4 {
     /**
      * 类型
      */
-    flag: number,
+    flag: number;
     /**
      * 别名
      */
-    type: string,
+    type: string;
     /**
      * 名称
      */
-    name: string,
+    name: string;
   }
   // 类型
   export const states = <State[]>[
@@ -728,11 +720,11 @@ export namespace a4 {
    */
   export enum PacketType {
     /* 实时数据  */
-    WORK_PARAM = "实时数据",
+    WORK_PARAM = '实时数据',
     /* 设置参数 */
-    SETTINGS_PARAM = "设置参数",
+    SETTINGS_PARAM = '设置参数',
     /* 训练结果 */
-    TRAIN_RESULT = "训练结果",
+    TRAIN_RESULT = '训练结果',
   }
 
   /**
@@ -740,54 +732,54 @@ export namespace a4 {
    */
   export interface Packet {
     /** 数据包类型 */
-    packetType: PacketType,
+    packetType: PacketType;
 
     /** 设备状态：0-未进入训练界面，1-在训练界面准备开始，2-训练中，3-暂停训练，4-结束训练(报告界面) */
-    state: State,
+    state: State;
 
     /** 训练类型 （ 上肢垂直交叉0x00，上肢水平训练0x01，上肢垂直平行0x02，下肢0x10） */
-    type: Type,
+    type: Type;
 
     /** 训练模式（ 主被动训练下的被动 0x01，主被动训练下的主动 0x02，被动训练 0x10, 主动训练 0x20） */
-    mode: TrainMode,
+    mode: TrainMode;
 
     /** 当前的设置训练时间，时间单位：s */
-    duration: number,
+    duration: number;
 
     /** 当前的设置速度 转/分钟 */
-    speed: number,
+    speed: number;
 
     /** 当前的设置方向：0:正（-1:反） */
-    direction: string,
+    direction: string;
 
     /** 当前的设置阻力：级（不同等级对应不同阻力，但是阻力大小未确定） */
-    resistance: number,
+    resistance: number;
 
     /** SN */
-    sn: number,
+    sn: number;
 
     /** 设备名称 */
-    deviceName: string,
+    deviceName: string;
 
     /** 里程，单位：0.01km */
-    mileage: number,
+    mileage: number;
 
     /** 能量消耗，单位：J */
-    energy: number,
+    energy: number;
 
     /** 肌张力：单位：N */
-    muscleTone: number,
+    muscleTone: number;
 
     /** 肌张力最小：单位：N */
-    muscleToneMin: number,
+    muscleToneMin: number;
 
     /** 肌张力最大：单位：N */
-    muscleToneMax: number,
+    muscleToneMax: number;
 
     /** 痉挛次数,单位：次 */
-    spasms: number,
+    spasms: number;
 
     /** 实时对称性：单位%（注：1-99代表左边的力气占比） */
-    zygomorphy: number,
+    zygomorphy: number;
   }
 }

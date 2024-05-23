@@ -59,43 +59,32 @@
 <script lang="ts">
 import WaveForm from './wave-form/wave-form-render.vue'
 import Ecg from '../../libs/waveview/ecg.vue'
-import {
-  uniapp,
-  bluetooth,
-  btcollector as btc,
-  utils
-} from '@benefitjs/uni-plugins'
+import { uniapp, bluetooth, btcollector as btc } from '@benefitjs/uni-plugins'
+import { log } from '@/libs/log'
+import { utils } from '@benefitjs/core'
 
 // 采集器
 const client = new btc.Client(true, true)
 client.addListener(<btc.Listener>{
   onBtStateChange(client, msg) {
-    console.log(`采集器设备扫描，状态改变: ${JSON.stringify(msg)}`)
+    log.debug(`采集器设备扫描，状态改变: ${JSON.stringify(msg)}`)
   },
   onConnected(client, deviceId) {
-    console.log('采集器连接', deviceId, client.device)
+    log.debug('采集器连接', deviceId, client.device)
   },
   onDisconnected(client, deviceId, auto) {
-    console.log('采集器断开', deviceId, client.device, auto)
+    log.debug('采集器断开', deviceId, client.device, auto)
   },
   onCharacteristicChanged(client, deviceId, value, resp) {
-    //console.log(`1、接收到数据[${deviceId}]: ${binary.bytesToHex(value)}`);
+    //log.debug(`1、接收到数据[${deviceId}]: ${binary.bytesToHex(value)}`);
   },
   onData(client, hexDeviceId, data, type, packet) {
-    console.log(
-      `2、接收到数据[${hexDeviceId}], type: ${type.name}, sn: ${
-        packet?.packetSn
-      }, time: ${packet ? utils.dateFmt(packet.time!! * 1000) : ''}, data[${
-        data.length
-      }]`
+    log.debug(
+      `2、接收到数据[${hexDeviceId}], type: ${type.name}, sn: ${packet?.packetSn}, time: ${packet ? utils.dateFmt(packet.time!! * 1000) : ''}, data[${data.length}]`
     )
   },
   onBpData(client, hexDeviceId, data, type, packet) {
-    console.log(
-      `3、接收到血压数据, ${hexDeviceId}, type: ${type}, packet: ${JSON.stringify(
-        packet
-      )}`
-    )
+    log.debug(`3、接收到血压数据, ${hexDeviceId}, type: ${type}, packet: ${JSON.stringify(packet)}`)
   }
 })
 
@@ -109,25 +98,21 @@ const uniInstance = uniapp.uniInstance
 
 const scanner = <uniapp.BtScanner>{
   match(device) {
-    return (
-      device.name.startsWith('HSRG_11') || device.name.startsWith('HSRG_16')
-    )
+    return device.name.startsWith('HSRG_11') || device.name.startsWith('HSRG_16')
   },
   onEvent(start, stop, cancel, error) {
-    console.log(
-      `start: ${start}, stop: ${stop}, cancel: ${cancel}, error: ${error}`
-    )
+    log.debug(`start: ${start}, stop: ${stop}, cancel: ${cancel}, error: ${error}`)
   },
   onScanDevice(device) {
-    //console.log('---------------------------------');
-    console.log(device)
+    //log.debug('---------------------------------');
+    log.debug(device)
     uniInstance.stopBtScan(this)
     setTimeout(() => {
       // 连接
       client
         .connect(device)
-        .then(resp => console.log('连接设备: ' + JSON.stringify(resp)))
-        .catch(err => console.log(err))
+        .then(resp => log.debug('连接设备: ' + JSON.stringify(resp)))
+        .catch(err => log.debug(err))
     }, 1000)
   }
 }
@@ -150,13 +135,13 @@ export default {
   },
   onReady() {},
   onLoad() {
-    console.log('onLoad', this)
+    log.debug('onLoad', this)
 
     setTimeout(() => {
       const ctx = uni.createCanvasContext('canvas22', this)
-      console.log('-------------------ctx')
-      console.log(ctx)
-      console.log('-------------------ctx')
+      log.debug('-------------------ctx')
+      log.debug(ctx)
+      log.debug('-------------------ctx')
 
       // Draw coordinates
       ctx.arc(100, 75, 50, 0, 2 * Math.PI)
@@ -202,7 +187,7 @@ export default {
 
       ctx.draw()
 
-      console.log('绘制。。。')
+      log.debug('绘制。。。')
     }, 1000)
   },
   onMounted() {},
@@ -211,8 +196,8 @@ export default {
       // 打开蓝牙适配器
       uniInstance
         .openBtAdapter()
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     },
     onStartScanClick() {
       uniInstance.startBtScan(0, scanner) // 开始扫描
@@ -233,24 +218,24 @@ export default {
         }
         client
           .connect(device)
-          .then(resp => console.log(JSON.stringify(resp)))
-          .catch(err => console.error(err))
+          .then(resp => log.debug(JSON.stringify(resp)))
+          .catch(err => log.error(err))
       } else {
         client
           .reconnect()
-          .then(resp => console.log(JSON.stringify(resp)))
-          .catch(err => console.error(err))
+          .then(resp => log.debug(JSON.stringify(resp)))
+          .catch(err => log.error(err))
       }
     },
     onDisconnectClick() {
       client
         .disconnect()
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     },
     sendTimeCalibration() {},
     supportNative() {
-      console.log('ble.support: ' + bluetooth.native.support())
+      log.debug('ble.support: ' + bluetooth.native.support())
     },
 
     startBtConnector() {
@@ -261,9 +246,9 @@ export default {
         notify: false // 原始数据
       }
       btcollector.connect(opts, resp => {
-        //console.log('采集器插件数据: ', resp);
+        //log.debug('采集器插件数据: ', resp);
         if (resp.packet && resp.packet.realtime) {
-          console.log(
+          log.debug(
             resp.packet.packetSn +
               ' ==>: ' +
               JSON.stringify(resp.packet.ecgList)
@@ -271,13 +256,13 @@ export default {
           this.chartData.hr_list = JSON.stringify(resp.packet.ecgList)
         }
       })
-      console.log(
+      log.debug(
         'btcollector.support: ' + JSON.stringify(btcollector.getMethods())
       )
     },
     stopBtConnector() {
       btcollector.disconnect({ mac: 'C0:66:B5:54:8D:CC' })
-      console.log(
+      log.debug(
         'btcollector.support: ' + JSON.stringify(btcollector.getMethods())
       )
     },

@@ -1,4 +1,4 @@
-import { binary } from "@benefitjs/core";
+import { binary, logger } from '@benefitjs/core';
 import { uniapp } from '../uni/uniapp';
 import { udp } from '../uni/udp';
 import { collector } from './collector';
@@ -8,6 +8,13 @@ import { bluetooth } from '../uni/bluetooth';
  * 采集器客户端(uni 蓝牙)
  */
 export namespace btcollector {
+  /**
+   * 日志打印
+   */
+  export const log = logger.newProxy('btcollector', logger.Level.warn);
+  /**
+   * 解析器
+   */
   const parser = collector.parser;
 
   const device = <uniapp.BluetoothDevice>{
@@ -43,18 +50,22 @@ export namespace btcollector {
 
     /**
      * 采集器客户端的构造函数
-     * 
+     *
      * @param autoConnect 是否自动连接
      * @param useNative 是否使用本地插件(如果支持)
      */
     constructor(autoConnect: boolean = false, useNative = false) {
-      super(<uniapp.GattUUID>{
-        service: '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
-        readCharacteristic: '6e400003-b5a3-f393-e0a9-e50e24dcca9e',
-        writeCharacteristic: '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
-        notifyCharacteristic: '6e400003-b5a3-f393-e0a9-e50e24dcca9e',
-        mtu: 512,
-      }, autoConnect, useNative);
+      super(
+        <uniapp.GattUUID>{
+          service: '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+          readCharacteristic: '6e400003-b5a3-f393-e0a9-e50e24dcca9e',
+          writeCharacteristic: '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
+          notifyCharacteristic: '6e400003-b5a3-f393-e0a9-e50e24dcca9e',
+          mtu: 512,
+        },
+        autoConnect,
+        useNative,
+      );
       this.addListener(this._handler); // 处理数据包
       // 采集器设备
       this.collector = new collector.Device({
@@ -101,7 +112,7 @@ export namespace btcollector {
      */
     onPacketLost(lost: collector.JointPacket): void {
       let pkg = lost.pkg0 ? lost.pkg0 : lost.pkg1 ? lost.pkg1 : lost.pkg2 ? lost.pkg2 : lost.pkg3;
-      console.log(
+      log.warn(
         `【${parser.getDeviceId(pkg)}】检测到丢包: ${parser.getPacketSn(pkg)}, pk0: ${binary.bytesToHex(lost.pkg0)}, pk1: ${binary.bytesToHex(lost.pkg1)}, pk2: ${binary.bytesToHex(
           lost.pkg2,
         )}, pk3: ${binary.bytesToHex(lost.pkg3)}`,
@@ -109,8 +120,8 @@ export namespace btcollector {
       // 发送一次重传操作
       let deviceId = this.device!!.deviceId;
       this.write(collector.retryCmd(deviceId, lost.sn, 1))
-        .then(resp => console.debug(`[${deviceId}] 发送重传指令: ${lost.sn}`, resp))
-        .catch(err => console.error('发送重传指令出错', err));
+        .then((resp) => log.trace(`[${deviceId}] 发送重传指令: ${lost.sn}`, resp))
+        .catch((err) => log.trace('发送重传指令出错', err));
     }
   }
 
@@ -175,8 +186,8 @@ export namespace btcollector {
 
     /**
      * 采集器 UDP 代理
-     * 
-     * @param addresses 转发的地址 
+     *
+     * @param addresses 转发的地址
      */
     constructor(...addresses: string[]) {
       this.addRemote(...addresses);
@@ -186,7 +197,7 @@ export namespace btcollector {
             this.onUdp(resp.data);
           }
         } catch (err) {
-          console.warn('collector proxy err', err);
+          log.warn('listener', err);
         }
       };
     }
@@ -195,9 +206,9 @@ export namespace btcollector {
       try {
         this.clients.set(new String(hexDeviceId), client);
         let _data = binary.asNumberArray(data);
-        this.remotes.forEach((addr) => udp.send(this.port, _data, addr, resp => { }));
+        this.remotes.forEach((addr) => udp.send(this.port, _data, addr, (resp) => {}));
       } catch (err) {
-        console.warn('collector proxy err', err);
+        log.warn('onData', err);
       }
     }
 
@@ -207,7 +218,7 @@ export namespace btcollector {
         let _data = binary.asNumberArray(data);
         this.remotes.forEach((addr) => udp.send(this.port, _data, addr));
       } catch (err) {
-        console.warn('collector proxy err', err);
+        log.warn('onBpData', err);
       }
     }
 
@@ -220,15 +231,17 @@ export namespace btcollector {
       // 有可能是实时数据反馈
       let deviceId = parser.getDeviceId(msg.data);
       let pkgType = parser.getPacketType(msg.data);
-      //console.log(`[${deviceId}] UDP, remote: ${msg.sender}, type: ${JSON.stringify(pkgType)}, data: ${binary.bytesToHex(msg.data)}`);
+      //log.trace(`[${deviceId}] UDP, remote: ${msg.sender}, type: ${JSON.stringify(pkgType)}, data: ${binary.bytesToHex(msg.data)}`);
       if (pkgType?.type == collector.packet_feedback_realtime.type) {
         return;
       }
       let flag = pkgType?.type !== collector.packet_feedback_realtime.type;
       if (flag) {
-        this.clients.get(new String(deviceId))?.write(msg.data)
-          .then(resp => { })
-          .catch(err => console.error(err));
+        this.clients
+          .get(new String(deviceId))
+          ?.write(msg.data)
+          .then((resp) => log.trace(resp))
+          .catch((err) => log.trace(err));
       }
     }
 
@@ -244,14 +257,18 @@ export namespace btcollector {
           resolve(this.port);
           return;
         }
-        udp.start(port, (resp) => {
-          if (resp.successful) {
-            this.port = resp.data;
-            resolve(this.port);
-          } else {
-            reject('启动UDP转发服务失败: ' + resp.msg);
-          }
-        }, this.listener, );
+        udp.start(
+          port,
+          (resp) => {
+            if (resp.successful) {
+              this.port = resp.data;
+              resolve(this.port);
+            } else {
+              reject('启动UDP转发服务失败: ' + resp.msg);
+            }
+          },
+          this.listener,
+        );
       });
     }
 
@@ -301,14 +318,14 @@ export namespace btcollector {
       });
     }
 
-    onTimeoutData(client: Client, hexDeviceId: string, type: collector.PacketType, jp: collector.JointPacket): void { }
-    onBtStateChange(client: Client, msg: uniapp.UniResponse & { discovering: boolean; available: boolean }): void { }
-    onConnected(client: Client, deviceId: string): void { }
-    onServiceDiscover(client: Client, deviceId: string, services: { uuid: string; isPrimary: boolean }[]): void { }
-    onDisconnected(client: Client, deviceId: string): void { }
-    onCharacteristicWrite(client: Client, deviceId: string, value: number[] | Uint8Array): void { }
-    onCharacteristicChanged(client: Client, deviceId: string, value: number[] | Uint8Array, resp: uniapp.UniBtDeviceResponse): void { }
-    onError(client: Client, deviceId: string, err: Error): void { }
+    onTimeoutData(client: Client, hexDeviceId: string, type: collector.PacketType, jp: collector.JointPacket): void {}
+    onBtStateChange(client: Client, msg: uniapp.UniResponse & { discovering: boolean; available: boolean }): void {}
+    onConnected(client: Client, deviceId: string): void {}
+    onServiceDiscover(client: Client, deviceId: string, services: { uuid: string; isPrimary: boolean }[]): void {}
+    onDisconnected(client: Client, deviceId: string): void {}
+    onCharacteristicWrite(client: Client, deviceId: string, value: number[] | Uint8Array): void {}
+    onCharacteristicChanged(client: Client, deviceId: string, value: number[] | Uint8Array, resp: uniapp.UniBtDeviceResponse): void {}
+    onError(client: Client, deviceId: string, err: Error): void {}
   }
 
   /**
@@ -318,19 +335,19 @@ export namespace btcollector {
     /**
      * 采集器ID
      */
-    deviceId: string,
+    deviceId: string;
     /**
      * 类型
      */
-    type: collector.PacketType,
+    type: collector.PacketType;
     /**
      * 数据
      */
-    data: number[],
+    data: number[];
     /**
      * 远程地址
      */
-    remote: string,
+    remote: string;
     /**
      * 尝试的ID
      */
@@ -341,4 +358,3 @@ export namespace btcollector {
     time: number;
   }
 }
-

@@ -95,6 +95,7 @@ import { ref, watch } from 'vue'
 
 import { binary, utils } from '@benefitjs/core'
 import { WisHealth as wh } from '@benefitjs/uni-plugins'
+import { log } from '@/libs/log';
 
 // uniapp.uniProxy.logLevel = uniapp.LogLevel.debug;
 const uniInstance = uniapp.uniInstance
@@ -110,19 +111,19 @@ const client = new wh.Client()
 // client.requireVerify = false;
 client.addListener(<wh.Listener>{
   onBtStateChange(client, msg) {
-    console.log(`设备状态改变: ${JSON.stringify(msg)}`)
+    log.debug(`设备状态改变: ${JSON.stringify(msg)}`)
   },
   onConnected(client, deviceId) {
-    console.log('呼吸训练器设备连接: ' + deviceId)
+    log.debug('呼吸训练器设备连接: ' + deviceId)
   },
   onDisconnected(client, deviceId, auto) {
-    console.log('呼吸训练器设备断开: ' + deviceId)
+    log.debug('呼吸训练器设备断开: ' + deviceId)
   },
   onCharacteristicWrite(client, deviceId, value) {
-    //console.log(`发送指令: ${binary.bytesToHex(value)}, client.readCmd: ${JSON.stringify(client.readCmd)}`);
+    //log.debug(`发送指令: ${binary.bytesToHex(value)}, client.readCmd: ${JSON.stringify(client.readCmd)}`);
   },
   onCharacteristicChanged(client, deviceId, value, resp) {
-    // console.log('接收到数据['+ deviceId +'] ==>: ' + binary.bytesToHex(value)
+    // log.debug('接收到数据['+ deviceId +'] ==>: ' + binary.bytesToHex(value)
     //   , client.readCmd
     //   , client.writeCmd
     // );
@@ -134,7 +135,7 @@ client.addListener(<wh.Listener>{
       measures.value.push(packet)
     }
 
-    // console.log(`测量数据(${packet?.validate}) ==>: ` + packet?.maxPressure
+    // log.debug(`测量数据(${packet?.validate}) ==>: ` + packet?.maxPressure
     //   , JSON.stringify(packet)
     //   , client.readCmd?.description
     //   , client.writeCmd?.description
@@ -143,9 +144,9 @@ client.addListener(<wh.Listener>{
     //   , "payload: " + binary.bytesToHex(wh.getPayload(data))
     //   );
 
-    console.log(JSON.stringify(packet))
+    log.debug(JSON.stringify(packet))
     if (packet.flag == 'end') {
-      console.log(measures.value)
+      log.debug(measures.value)
     }
   }
 })
@@ -158,42 +159,42 @@ const zykScanner = <uniapp.BtScanner>{
     )
   },
   onEvent(start, stop, cancel, error) {
-    console.log(
+    log.debug(
       `start: ${start}, stop: ${stop}, cancel: ${cancel}, error: ${error}`
     )
   },
   onScanDevice(device) {
     uniInstance.stopBtScan(this)
-    console.log('---------------------------------')
-    console.log(device)
-    console.log('---------------------------------')
+    log.debug('---------------------------------')
+    log.debug(device)
+    log.debug('---------------------------------')
     setTimeout(() => {
       // 连接
       client
         .connect(device)
-        .then(resp => console.log('连接设备: ' + JSON.stringify(resp)))
-        .catch(err => console.log(err))
+        .then(resp => log.debug('连接设备: ' + JSON.stringify(resp)))
+        .catch(err => log.debug(err))
     }, 1000)
   }
 }
 
 const op = wh.OpType
-// console.log(`退出模式: ${binary.bytesToHex(client.cmd(op.write, wh.cmd_exit))}`);
-// console.log(`进入呼气肌力评估: ${binary.bytesToHex(client.cmd(op.write, wh.cmd_exhale_assess))}`);
-// console.log(`读取吸气肌力评估: ${binary.bytesToHex(client.cmd(op.read, wh.cmd_inhale_assess))}`);
-// console.log(`进入呼气肌力训练: ${binary.bytesToHex(client.cmd(op.write, wh.cmd_exhale_train))}`);
-// console.log(`读取呼气肌力训练: ${binary.bytesToHex(client.cmd(op.read, wh.cmd_exhale_train))}`);
-// console.log(`进入吸气肌力训练: ${binary.bytesToHex(client.cmd(op.write, wh.cmd_inhale_train))}`);
-// console.log(`读取吸气肌力训练: ${binary.bytesToHex(client.cmd(op.read, wh.cmd_inhale_train))}`);
-// console.log(`进入缩唇肌力呼吸: ${binary.bytesToHex(client.cmd(op.write, wh.cmd_lip_girdle_train))}`);
-// console.log(`读取缩唇肌力呼吸: ${binary.bytesToHex(client.cmd(op.read, wh.cmd_lip_girdle_train))}`);
+// log.debug(`退出模式: ${binary.bytesToHex(client.cmd(op.write, wh.cmd_exit))}`);
+// log.debug(`进入呼气肌力评估: ${binary.bytesToHex(client.cmd(op.write, wh.cmd_exhale_assess))}`);
+// log.debug(`读取吸气肌力评估: ${binary.bytesToHex(client.cmd(op.read, wh.cmd_inhale_assess))}`);
+// log.debug(`进入呼气肌力训练: ${binary.bytesToHex(client.cmd(op.write, wh.cmd_exhale_train))}`);
+// log.debug(`读取呼气肌力训练: ${binary.bytesToHex(client.cmd(op.read, wh.cmd_exhale_train))}`);
+// log.debug(`进入吸气肌力训练: ${binary.bytesToHex(client.cmd(op.write, wh.cmd_inhale_train))}`);
+// log.debug(`读取吸气肌力训练: ${binary.bytesToHex(client.cmd(op.read, wh.cmd_inhale_train))}`);
+// log.debug(`进入缩唇肌力呼吸: ${binary.bytesToHex(client.cmd(op.write, wh.cmd_lip_girdle_train))}`);
+// log.debug(`读取缩唇肌力呼吸: ${binary.bytesToHex(client.cmd(op.read, wh.cmd_lip_girdle_train))}`);
 
 function onOpenBtAdapter() {
   // 打开蓝牙适配器
   uniInstance
     .openBtAdapter()
-    .then(resp => console.log(JSON.stringify(resp)))
-    .catch(err => console.error(err))
+    .then(resp => log.debug(JSON.stringify(resp)))
+    .catch(err => log.error(err))
 }
 function onStartScanClick() {
   uniInstance.startBtScan(0, zykScanner) // 开始扫描
@@ -222,56 +223,56 @@ function onConnectClick() {
     // }
     client
       .connect(device)
-      .then(resp => console.log(JSON.stringify(resp)))
-      .catch(err => console.error(err))
+      .then(resp => log.debug(JSON.stringify(resp)))
+      .catch(err => log.error(err))
   } else {
     client
       .reconnect()
-      .then(resp => console.log(JSON.stringify(resp)))
-      .catch(err => console.error(err))
+      .then(resp => log.debug(JSON.stringify(resp)))
+      .catch(err => log.error(err))
   }
 }
 function onDisconnectClick() {
   client
     .disconnect()
-    .then(resp => console.log(JSON.stringify(resp)))
-    .catch(err => console.error(err))
+    .then(resp => log.debug(JSON.stringify(resp)))
+    .catch(err => log.error(err))
 }
 function sendExhaleAssessCmd() {
   client
     .sendExhaleAssessCmd()
-    .then(resp => console.log(JSON.stringify(resp)))
-    .catch(err => console.error(err))
+    .then(resp => log.debug(JSON.stringify(resp)))
+    .catch(err => log.error(err))
 }
 function sendInhaleAssessCmd() {
   client
     .sendInhaleAssessCmd()
-    .then(resp => console.log(JSON.stringify(resp)))
-    .catch(err => console.error(err))
+    .then(resp => log.debug(JSON.stringify(resp)))
+    .catch(err => log.error(err))
 }
 function sendExhaleTrainCmd() {
   client
     .sendExhaleTrainCmd()
-    .then(resp => console.log(JSON.stringify(resp)))
-    .catch(err => console.error(err))
+    .then(resp => log.debug(JSON.stringify(resp)))
+    .catch(err => log.error(err))
 }
 function sendInhaleTrainCmd() {
   client
     .sendInhaleTrainCmd()
-    .then(resp => console.log(JSON.stringify(resp)))
-    .catch(err => console.error(err))
+    .then(resp => log.debug(JSON.stringify(resp)))
+    .catch(err => log.error(err))
 }
 function sendLipGirdleTrainCmd() {
   client
     .sendLipGirdleTrainCmd()
-    .then(resp => console.log(JSON.stringify(resp)))
-    .catch(err => console.error(err))
+    .then(resp => log.debug(JSON.stringify(resp)))
+    .catch(err => log.error(err))
 }
 function sendExitCmd() {
   client
     .sendExitCmd()
-    .then(resp => console.log(JSON.stringify(resp)))
-    .catch(err => console.error(err))
+    .then(resp => log.debug(JSON.stringify(resp)))
+    .catch(err => log.error(err))
 }
 
 let resistance = 10
@@ -279,8 +280,8 @@ function sendResistance(delta: number = 0) {
   resistance += delta
   client
     .sendResistanceCmd(resistance)
-    .then(resp => console.log(`设置阻力($delta), ${JSON.stringify(resp)}`))
-    .catch(err => console.error(err))
+    .then(resp => log.debug(`设置阻力($delta), ${JSON.stringify(resp)}`))
+    .catch(err => log.error(err))
 }
 
 function clearData() {

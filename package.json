@@ -5,11 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "pnpm run --filter * dev",
-    "dev:core": "pnpm run --filter @benefitjs/core dev",
+    "start": "pnpm run --filter * build",
     "build:core": "pnpm run --filter @benefitjs/core build",
-    "dev:uni-plugins": "pnpm run --filter @benefitjs/uni-plugins dev",
-    "build:uni-plugins": "pnpm run --filter @benefitjs/uni-plugins build"
+    "build:devices": "pnpm run --filter @benefitjs/devices build",
+    "build:widgets": "pnpm run --filter @benefitjs/widgets build",
+    "build:uni-plugins": "pnpm run --filter @benefitjs/uni-plugins build",
+    "build": "pnpm run build:core && pnpm run build:devices && pnpm run build:widgets && pnpm run build:uni-plugins"
   },
   "keywords": [],
   "author": "",

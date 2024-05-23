@@ -1,9 +1,17 @@
-import { app, BrowserWindow, shell, ipcMain, PrintToPDFOptions } from 'electron'
-import { release } from 'node:os'
-import { join } from 'node:path'
-import { writeFile } from 'fs';
-import { utils } from '@benefitjs/core';
-import { instance } from '../../src/ipc/global_const';
+import {
+  app,
+  BrowserWindow,
+  shell,
+  ipcMain,
+  PrintToPDFOptions,
+} from "electron";
+import { release } from "node:os";
+import { join } from "node:path";
+import { writeFile } from "fs";
+import { utils } from "@benefitjs/core";
+import { helper } from "../../src/public/helper";
+import { log } from "../../src/public/log";
+import { serialport } from "../../src/public/serialport";
 
 // const fs = require('fs');
 
@@ -17,21 +25,21 @@ import { instance } from '../../src/ipc/global_const';
 // ├─┬ dist
 // │ └── index.html    > Electron-Renderer
 //
-process.env.DIST_ELECTRON = join(__dirname, '..')
-process.env.DIST = join(process.env.DIST_ELECTRON, '../dist/app')
+process.env.DIST_ELECTRON = join(__dirname, "..");
+process.env.DIST = join(process.env.DIST_ELECTRON, "../dist/app");
 process.env.VITE_PUBLIC = process.env.VITE_DEV_SERVER_URL
-  ? join(process.env.DIST_ELECTRON, '../public')
-  : process.env.DIST
+  ? join(process.env.DIST_ELECTRON, "../public")
+  : process.env.DIST;
 
 // Disable GPU Acceleration for Windows 7
-if (release().startsWith('6.1')) app.disableHardwareAcceleration()
+if (release().startsWith("6.1")) app.disableHardwareAcceleration();
 
 // Set application name for Windows 10+ notifications
-if (process.platform === 'win32') app.setAppUserModelId(app.getName())
+if (process.platform === "win32") app.setAppUserModelId(app.getName());
 
 if (!app.requestSingleInstanceLock()) {
-  app.quit()
-  process.exit(0)
+  app.quit();
+  process.exit(0);
 }
 
 // Remove electron security warnings
@@ -39,19 +47,19 @@ if (!app.requestSingleInstanceLock()) {
 // Read more on https://www.electronjs.org/docs/latest/tutorial/security
 // process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
-let win: BrowserWindow | null = null
+let win: BrowserWindow | null = null;
 // Here, you can also use other preload
-const preload = join(__dirname, '../preload/index.js')
-const url = process.env.VITE_DEV_SERVER_URL
-const indexHtml = join(process.env.DIST, 'index.html')
+const preload = join(__dirname, "../preload/index.js");
+const url = process.env.VITE_DEV_SERVER_URL;
+const indexHtml = join(process.env.DIST, "index.html");
 
-instance.ipcMain = ipcMain;
-console.log('instance.ipcMain', process.pid);
+helper.ipcMain = ipcMain;
+log.info("instance.ipcMain", process.pid);
 
 async function createWindow() {
   win = new BrowserWindow({
-    title: 'Main window',
-    icon: join(process.env.VITE_PUBLIC, 'favicon.ico'),
+    title: "Main window",
+    icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
     width: 1400,
     height: 1000,
     webPreferences: {
@@ -61,114 +69,91 @@ async function createWindow() {
       // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
       nodeIntegration: true, // 为了解决require 识别问题
       contextIsolation: false,
-      enableRemoteModule: true,
+      // enableRemoteModule: true,
     },
-  })
+  });
 
-  instance.mainWin = win;
-
-  if (process.env.VITE_DEV_SERVER_URL) { // electron-vite-vue#298
-    win.loadURL(url)
+  helper.mainWin = win;
+  if (process.env.VITE_DEV_SERVER_URL) {
+    // electron-vite-vue#298
+    win.loadURL(url);
     // Open devTool if the app is not packaged
-    win.webContents.openDevTools()
+    helper.openDevTools({
+      mode: "bottom",
+    });
   } else {
-    win.loadFile(indexHtml)
+    win.loadFile(indexHtml);
   }
 
   // Test actively push message to the Electron-Renderer
-  win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', utils.dateFmt(Date.now()))
-  })
+  win.webContents.on("did-finish-load", () => {
+    log.info("did-finish-load ...");
+    // 发送到渲染线程(发送到浏览器)
+    win?.webContents.send(
+      "main-process-message",
+      JSON.stringify({ id: utils.uuid(), time: utils.dateFmt(Date.now()) })
+    );
+  });
 
   // Make all links open with the browser, not with the application
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https:')) shell.openExternal(url)
-    return { action: 'deny' }
-  })
+    log.info("setWindowOpenHandler, url:", url);
+    if (url.startsWith("https:")) shell.openExternal(url);
+    return { action: "deny" };
+  });
   // win.webContents.on('will-navigate', (event, url) => { }) #344
 
+  setTimeout(() => {
+    log.info("获取串口 ...");
 
-  ipcMain.on('htmlToPdf', function (event, arg) {
-    //console.log('event ==>: ', event);
-    let args = arguments;
-    console.log('args ==>: ', args);
-    // 导出PDF
-    console.log('win.webContents.getURL ==>:', win.webContents.getURL());
+    serialport
+      .list()
+      .then((ports) => log.info("ports:", ports))
+      .catch((err) => log.error(err));
 
-    win.webContents.loadURL(args[1]);
-    win.webContents.once('did-finish-load', function () {
-      setTimeout(() => {
-        win.webContents
-          .printToPDF(<PrintToPDFOptions>{
-            displayHeaderFooter: true,
-            preferCSSPageSize: true,
-            pageSize: 'A4',
-          })
-          .then(buffer => {
-            // console.log(binary.bytesToStr(buffer))
-
-            console.log(args[1]);
-
-            let url = new URL(args[1]);
-            let id = url.searchParams.get('reportZid')
-            console.log('url.searchParams ==>:', url.searchParams);
-            console.log('id:', id);
-            id = id ? id : "test";
-
-            // fs.writeFile('D:/tmp/test.pdf', buffer, err => {
-            writeFile(`D:/tmp/${id}.pdf`, buffer, err => {
-              if (err) {
-                console.error(err);
-              }
-              // file written successfully
-            });
-          })
-          .catch(err => console.error(err));
-      }, 5000);
-    });
-  });
-
-  
-
+    // // 开始探测
+    serialport.detector.start(true);
+  }, 2000);
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(createWindow);
 
-app.on('window-all-closed', () => {
-  win = null
-  if (process.platform !== 'darwin') app.quit()
-})
+app.on("window-all-closed", () => {
+  log.info("window-all-closed...");
+  win = null;
+  if (process.platform !== "darwin") app.quit();
+});
 
-app.on('second-instance', () => {
+app.on("second-instance", () => {
   if (win) {
     // Focus on the main window if the user tried to open another
-    if (win.isMinimized()) win.restore()
-    win.focus()
+    if (win.isMinimized()) win.restore();
+    win.focus();
   }
-})
+});
 
-app.on('activate', () => {
-  const allWindows = BrowserWindow.getAllWindows()
+app.on("activate", () => {
+  const allWindows = BrowserWindow.getAllWindows();
   if (allWindows.length) {
-    allWindows[0].focus()
+    allWindows[0].focus();
   } else {
-    createWindow()
+    createWindow();
   }
-})
+});
 
 // New window example arg: new windows url
-ipcMain.handle('open-win', (_, arg) => {
+ipcMain.handle("open-win", (_, arg) => {
   const childWindow = new BrowserWindow({
     webPreferences: {
       preload,
       nodeIntegration: true,
       contextIsolation: false,
     },
-  })
+  });
 
   if (process.env.VITE_DEV_SERVER_URL) {
-    childWindow.loadURL(`${url}#${arg}`)
+    childWindow.loadURL(`${url}#${arg}`);
   } else {
-    childWindow.loadFile(indexHtml, { hash: arg })
+    childWindow.loadFile(indexHtml, { hash: arg });
   }
-})
+});

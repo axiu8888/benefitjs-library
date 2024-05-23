@@ -1,10 +1,15 @@
 import { utils } from '../core';
+import { logger } from '../logger';
 import { Paho } from './paho-mqtt';
 
 /**
  * MQTT
  */
 export namespace mqtt {
+  /**
+   * 日志打印
+   */
+  export const log = logger.newProxy('mqtt', logger.Level.warn);
   /**
    * 生成客户端ID
    */
@@ -49,7 +54,7 @@ export namespace mqtt {
               // 分发给订阅者
               subscription.subscriber?.onMessage(client, topic, msg);
             } catch (err) {
-              console.log(`订阅者处理数据时的错误, 请自行处理: ${topic}, ${subscription.subscriber}`, err);
+              log.warn(`订阅者处理数据时的错误, 请自行处理: ${topic}, ${subscription.subscriber}`, err);
             }
           }
         });
@@ -99,7 +104,7 @@ export namespace mqtt {
         this.raw.onMessageArrived = (args: any) => this.onMessageArrived(args);
         this.raw.onMessageDelivered = (args: any) => this.onMessageDelivered(args);
       } catch (err) {
-        console.error(err);
+        log.warn(err);
         throw err;
       }
     }
@@ -146,10 +151,9 @@ export namespace mqtt {
           }),
         );
       } catch (err: any) {
-        console.log(err);
+        log.warn(err);
         throw new Error('连接失败: ' + err);
       }
-
     }
     /**
      * 断开连接
@@ -209,7 +213,7 @@ export namespace mqtt {
         // 调用订阅的方法(多次订阅相同主题没有问题，取消订阅时则需要判断是否有其他订阅者)
         sent = this.rawSubscribe(subscription, topic, qos);
       }
-      //console.log(`subscribe, subscription: ${subscription.topics}, sent: ${sent}, ${this.isConnected()}`);
+      log.trace(`subscribe, subscription: ${subscription.topics}, sent: ${sent}, ${this.isConnected()}`);
     }
 
     /**
@@ -274,7 +278,7 @@ export namespace mqtt {
      */
     protected onConnect(reconnect: boolean, uri: string) {
       try {
-        //console.log('连接成功: ', reconnect, uri);
+        log.trace('连接成功: ', reconnect, uri);
         this.stopAutoReconnect();
         // 订阅
         this.dispatcher.subscriptions.forEach((ms) => {
@@ -282,7 +286,7 @@ export namespace mqtt {
           utils.tryCatch(() => utils.applyFnWithTry(ms.subscriber.onConnected, this));
         });
       } catch (err) {
-        console.error('mqtt onConnect', err);
+        log.warn('mqtt onConnect', err);
       }
     }
 
@@ -306,7 +310,7 @@ export namespace mqtt {
           this.dispatcher.subscriptions.forEach((ms, _topic) => utils.applyFnWithTry(ms.subscriber.onDisconnected, this));
         }
       } catch (err) {
-        console.error('mqtt onConnectionLost', err);
+        log.warn('mqtt onConnectionLost', err);
       }
     }
 
@@ -319,7 +323,7 @@ export namespace mqtt {
       try {
         this.dispatcher.dispatch(this, message.topic, message);
       } catch (err) {
-        console.error(`分发消息时出现错误: ${message.topic}`, err);
+        log.warn(`分发消息时出现错误: ${message.topic}`, err);
       }
     }
 
@@ -344,7 +348,7 @@ export namespace mqtt {
           }
           try {
             this.connect();
-          } catch (err) { }
+          } catch (err) {}
         }, this.opts.autoReconnectInterval);
       }
     }

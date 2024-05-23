@@ -1,4 +1,4 @@
-import { CRC16, binary, utils } from "@benefitjs/core";
+import { CRC16, binary, utils, logger } from '@benefitjs/core';
 import { bluetooth } from '../uni/bluetooth';
 import { uniapp } from '../uni/uniapp';
 
@@ -6,7 +6,10 @@ import { uniapp } from '../uni/uniapp';
  * 星脉：蓝牙血压计
  */
 export namespace v3 {
-  const uniProxy = uniapp.uniProxy;
+  /**
+   * 日志打印
+   */
+  export const log = logger.newProxy('v3', logger.Level.warn);
 
   const device = <uniapp.BluetoothDevice>{
     deviceId: 'BA:03:18:77:70:04',
@@ -71,20 +74,24 @@ export namespace v3 {
 
     /**
      * v3客户端的构造函数
-     * 
+     *
      * @param autoConnect 是否自动连接
      * @param useNative 是否使用本地插件(如果支持)
      */
     constructor(autoConnect: boolean = false, useNative = false) {
-      super(<uniapp.GattUUID>{
-        service: '0000ffe0-0000-1000-8000-00805f9b34fb',
-        readService: '0000ffe0-0000-1000-8000-00805f9b34fb',
-        readCharacteristic: '0000ffe4-0000-1000-8000-00805f9b34fb',
-        writeService: '0000FFE5-0000-1000-8000-00805F9B34FB',
-        writeCharacteristic: '0000ffe9-0000-1000-8000-00805f9b34fb',
-        notifyCharacteristic: '0000ffe4-0000-1000-8000-00805f9b34fb',
-        mtu: 512,
-      }, autoConnect, useNative);
+      super(
+        <uniapp.GattUUID>{
+          service: '0000ffe0-0000-1000-8000-00805f9b34fb',
+          readService: '0000ffe0-0000-1000-8000-00805f9b34fb',
+          readCharacteristic: '0000ffe4-0000-1000-8000-00805f9b34fb',
+          writeService: '0000FFE5-0000-1000-8000-00805F9B34FB',
+          writeCharacteristic: '0000ffe9-0000-1000-8000-00805f9b34fb',
+          notifyCharacteristic: '0000ffe4-0000-1000-8000-00805f9b34fb',
+          mtu: 512,
+        },
+        autoConnect,
+        useNative,
+      );
       this.addListener(this._handler);
     }
 
@@ -128,7 +135,7 @@ export namespace v3 {
         }
         this.responseCall(cmd, data, packet);
       } catch (err) {
-        uniProxy.error(`处理V3数据时出现错误: ${deviceId}`, err, 'value: ' + binary.bytesToHex(data));
+        log.warn(`处理V3数据时出现错误: ${deviceId}`, err, 'value: ' + binary.bytesToHex(data));
       }
     }
 
@@ -223,7 +230,7 @@ export namespace v3 {
                 }
               })
               .catch((err) => {
-                uniProxy.error(err);
+                log.warn(err);
                 call.reject(new Error('无法发送指令: ' + err.errMsg));
               });
           } else {
@@ -350,7 +357,7 @@ export namespace v3 {
   /**
    * 同步调用
    */
-  export interface V3Call extends uniapp.SyncCall<CmdType, BpResponse> { }
+  export interface V3Call extends uniapp.SyncCall<CmdType, BpResponse> {}
 
   export interface BpResponse extends uniapp.UniBtDeviceResponse {
     /**
@@ -484,7 +491,7 @@ export namespace v3 {
       public readonly parser?: Function,
       public readonly data: boolean = false,
       public readonly remarks: string = '',
-    ) { }
+    ) {}
   }
 
   export const CMD_TYPES = <Array<CmdType>>[
@@ -557,7 +564,7 @@ export namespace v3 {
      * @param code 错误码
      * @param errMsg 错误信息
      */
-    constructor(public code: number, public errMsg: string) { }
+    constructor(public code: number, public errMsg: string) {}
 
     /**
      * 是否成功

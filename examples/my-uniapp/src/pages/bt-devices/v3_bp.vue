@@ -72,6 +72,7 @@
 </template>
 
 <script lang="ts">
+import { log } from '@/libs/log'
 import { utils, binary } from '@benefitjs/core'
 import { uniapp, v3 } from '@benefitjs/uni-plugins'
 
@@ -79,23 +80,23 @@ import { uniapp, v3 } from '@benefitjs/uni-plugins'
 const client = new v3.Client()
 client.addListener(<v3.Listener>{
   onBtStateChange(client, msg) {
-    console.log(`星脉血压计设备扫描，状态改变: ${JSON.stringify(msg)}`)
+    log.debug(`星脉血压计设备扫描，状态改变: ${JSON.stringify(msg)}`)
   },
   onConnected(client, deviceId) {
-    console.log(`星脉血压计连接[${deviceId}]`)
+    log.debug(`星脉血压计连接[${deviceId}]`)
   },
   onServiceDiscover(client, deviceId, services) {
-    console.log(
+    log.debug(
       `星脉血压计发现服务[${deviceId}], services: ${JSON.stringify(services)}`
     )
   },
   onDisconnected(client, deviceId, auto) {
-    console.log(`星脉血压计断开[${deviceId}]`)
+    log.debug(`星脉血压计断开[${deviceId}]`)
   },
   onCharacteristicWrite(client, deviceId, value) {
     let cmd = v3.getCmd(value[2])!!
     // 发送指令
-    console.log(
+    log.debug(
       `发送指令: ${deviceId}, cmd: ${
         cmd.description
       } value: ${binary.bytesToHex(value)}`
@@ -103,10 +104,10 @@ client.addListener(<v3.Listener>{
   },
   onCharacteristicChanged(client, deviceId, value, resp) {
     let cmd = v3.getCmd(value[2])!!
-    //console.log(`1、接收到数据[${deviceId}]: ${binary.bytesToHex(value)}, cmd: ${JSON.stringify(cmd)}`);
+    //log.debug(`1、接收到数据[${deviceId}]: ${binary.bytesToHex(value)}, cmd: ${JSON.stringify(cmd)}`);
   },
   onData(client, deviceId, value, type, packet) {
-    console.log(
+    log.debug(
       `接收到数据[${deviceId}]: ${binary.bytesToHex(value)}, cmd: ${
         type.description
       }, packet: ${JSON.stringify(packet)}`
@@ -122,14 +123,14 @@ const scanner = <uniapp.BtScanner>{
     )
   },
   onEvent(start, stop, cancel, error) {
-    console.log(
+    log.debug(
       `start: ${start}, stop: ${stop}, cancel: ${cancel}, error: ${error}`
     )
   },
   onScanDevice(device) {
     uniapp.uniInstance.stopBtScan(this)
-    //console.log('---------------------------------');
-    console.log(device)
+    //log.debug('---------------------------------');
+    log.debug(device)
     setTimeout(() => {
       if (client.isConnected) {
         client.sendStartMeasure()
@@ -138,8 +139,8 @@ const scanner = <uniapp.BtScanner>{
       // 连接
       client
         .connect(device)
-        .then(resp => console.log('连接设备: ' + JSON.stringify(resp)))
-        .catch(err => console.log(err))
+        .then(resp => log.debug('连接设备: ' + JSON.stringify(resp)))
+        .catch(err => log.debug(err))
     }, 1000)
   }
 }
@@ -157,8 +158,8 @@ export default {
       // 打开蓝牙适配器
       uniapp.uniInstance
         .openBtAdapter()
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     },
     onStartScanClick() {
       uniapp.uniInstance.startBtScan(0, scanner) // 开始扫描
@@ -177,80 +178,80 @@ export default {
             advertisServiceUUIDs: ['000003C1-0000-1000-8000-00805F9B34FB'],
             advertisData: {}
           })
-          .then(resp => console.log(JSON.stringify(resp)))
-          .catch(err => console.error(err))
+          .then(resp => log.debug(JSON.stringify(resp)))
+          .catch(err => log.error(err))
       } else {
         client
           .reconnect()
-          .then(resp => console.log(JSON.stringify(resp)))
-          .catch(err => console.error(err))
+          .then(resp => log.debug(JSON.stringify(resp)))
+          .catch(err => log.error(err))
       }
     },
     onDisconnectClick() {
       client
         .disconnect()
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     },
     sendGetSoftwareVersion() {
       // 获取主控软件版本
       client
         .sendGetSoftwareVersion()
         .then(resp => {
-          console.log('获取软件版本: ' + JSON.stringify(resp))
+          log.debug('获取软件版本: ' + JSON.stringify(resp))
         })
-        .catch((err: any) => console.error(err))
+        .catch((err: any) => log.error(err))
     },
     sendSetVoice() {
       client
         .sendSetVoice(5)
         .then(resp => {
-          console.log(JSON.stringify(resp))
+          log.debug(JSON.stringify(resp))
         })
-        .catch((err: any) => console.error(err))
+        .catch((err: any) => log.error(err))
     },
     sendSetDisplaySwitch() {
       client
         .sendSetDisplaySwitch(true)
         .then(resp => {
-          console.log(JSON.stringify(resp))
+          log.debug(JSON.stringify(resp))
         })
-        .catch((err: any) => console.error(err))
+        .catch((err: any) => log.error(err))
     },
     sendClear() {
       client
         .sendClear()
         .then(resp => {
-          console.log(JSON.stringify(resp))
+          log.debug(JSON.stringify(resp))
         })
-        .catch((err: any) => console.error(err))
+        .catch((err: any) => log.error(err))
     },
     sendGetHistory() {
       client
         .sendGetHistory()
         .then(resp => {
-          console.log(JSON.stringify(resp))
+          log.debug(JSON.stringify(resp))
         })
-        .catch((err: any) => console.error(err))
+        .catch((err: any) => log.error(err))
     },
     sendStartMeasure() {
       client
         .sendStartMeasure()
         .then(resp => {
-          console.log(JSON.stringify(resp))
+          log.debug(JSON.stringify(resp))
         })
-        .catch((err: any) => console.error(err))
+        .catch((err: any) => log.error(err))
     },
     sendStopMeasure() {
       client
         .sendStopMeasure()
         .then(resp => {
-          console.log(JSON.stringify(resp))
+          log.debug(JSON.stringify(resp))
         })
-        .catch((err: any) => console.error(err))
+        .catch((err: any) => log.error(err))
     },
     clickPrint() {
-      console.log('打印: ' + utils.dateFmt(Date.now()))
+      log.debug('打印: ' + utils.dateFmt(Date.now()))
     }
   }
 }

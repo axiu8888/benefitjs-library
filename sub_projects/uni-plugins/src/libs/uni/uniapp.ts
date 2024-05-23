@@ -1,8 +1,24 @@
-import { ByteBuf, binary, utils } from "@benefitjs/core";
+import { ByteBuf, binary, utils, logger } from '@benefitjs/core';
 
 export namespace uniapp {
+  // start ==>:
+  /**
+   * 日志打印
+   */
+  export const log = logger.newProxy('uniapp', logger.Level.warn);
+
   //@ts-ignore : 忽略可能不存在的实例
   const global = uni;
+  //@ts-ignore
+  export const sysInfo = uni.getSystemInfoSync();
+  /**
+   * 是否为Android
+   */
+  export const isAndroid = () => `${sysInfo.platform}`.toLowerCase() === 'android';
+  /**
+   * 是否为iOS
+   */
+  export const isIOS = () => `${sysInfo.platform}`.toLowerCase() === 'ios';
 
   export interface IPlugin {
     /**
@@ -14,15 +30,21 @@ export namespace uniapp {
   /**
    * 引入插件的模块
    *
-   * @param module 模塊
+   * @param module 模块
    * @returns 返回插件模块对象
    */
-  export function requireNativePlugin(module: string): UniProxy & IPlugin {
-    // let proxy = new UniProxy(global.requireNativePlugin(module)) as any;
-    // utils.tryCatch(() => proxy.support = proxy.source.support);
-    // return proxy;
-    global.$hs.log('module ==>: ', module);
-    return global.requireNativePlugin(module);
+  export function requireNativePlugin(moduleName: string): UniProxy & IPlugin {
+    let module: any = {};
+    const sysInfo = global.getSystemInfoSync();
+    if (sysInfo.platform === 'android') {
+      module = global.requireNativePlugin(moduleName);
+    }
+    // // #ifdef APP-ANDROID
+    // module = global.requireNativePlugin(moduleName)
+    // // #endif
+    let proxy = new UniProxy(module) as any;
+    proxy.support = proxy.source?.support;
+    return proxy;
   }
 
   /**
@@ -31,10 +53,9 @@ export namespace uniapp {
   export class UniProxy {
     constructor(
       public source: any, // 代理的对象，默认从uni取
-      public logLevel: LogLevel = LogLevel.warn,
       public timeout: number = 2000,
       public interceptor: InvokeInterceptor = () => false,
-    ) { }
+    ) {}
 
     /**
      * 调用
@@ -62,7 +83,8 @@ export namespace uniapp {
               intercepted = false;
               try {
                 wrapPromise.value = fn(
-                  utils.copyAttrs(args, {
+                  {
+                    ...args,
                     success(res: any) {
                       wrapPromise.success(res);
                     },
@@ -72,21 +94,19 @@ export namespace uniapp {
                     complete() {
                       wrapPromise.complete();
                     },
-                  }),
+                  },
                   ...options,
                 );
               } finally {
-                wrapPromise.start();
+                setTimeout(() => wrapPromise.start());
               }
             }
-            if (this.logLevel) {
-              this.debug(`fnName: ${fnName}, intercepted: ${intercepted}, wrapArgs: `, wrapPromise, fn);
-            }
+            log.trace(`fnName: ${fnName}, intercepted: ${intercepted}, wrapArgs: `, wrapPromise, fn);
           } else {
             reject(new Error('无法发现对应函数: ' + fnName));
           }
         } catch (err) {
-          this.error(`[${fnName}] uniProxy.invoke catch`, err);
+          log.warn(`${fnName} throw error`, err);
           reject(err);
         }
       });
@@ -116,51 +136,6 @@ export namespace uniapp {
         }
       });
     }
-
-    debug(...data: any) {
-      if (data.length > 0 && this.logLevel <= LogLevel.debug) {
-        console.log(JSON.stringify(['uni.debug', ...data]))
-        this.traceError(...data);
-      }
-    }
-
-    info(...data: any) {
-      if (data.length > 0 && this.logLevel <= LogLevel.info) {
-        console.log(JSON.stringify(['uni.info', ...data]));
-        this.traceError(...data);
-      }
-    }
-
-    warn(...data: any) {
-      if (data.length > 0 && this.logLevel <= LogLevel.warn) {
-        console.warn(JSON.stringify(['uni.warn', ...data]));
-        this.traceError(...data);
-      }
-    }
-
-    error(...data: any[]) {
-      if (data.length > 0 && this.logLevel <= LogLevel.error) {
-        console.error(JSON.stringify(['uni.error', ...data]));
-        this.traceError(...data);
-      }
-    }
-
-    traceError(...data: any[]) {
-      if (data.length > 0) {
-        data.filter((v) => v instanceof Error).forEach((err) => console.error(err));
-      }
-    }
-  }
-
-  /**
-   * 日志等级
-   */
-  export enum LogLevel {
-    debug = 1,
-    info = 2,
-    warn = 3,
-    error = 4,
-    none = Infinity,
   }
 
   // 全局的uni代理
@@ -187,11 +162,11 @@ export namespace uniapp {
      */
     readonly btScanners = new Set<BtScanner>();
 
-    tryPrint(callback = () => { }) {
+    tryPrint(callback = () => {}) {
       try {
         callback();
       } catch (err: any) {
-        uniProxy.error(err);
+        log.warn(err);
       }
     }
 
@@ -202,12 +177,14 @@ export namespace uniapp {
      * @param call
      */
     deviceFilter(deviceId: any, call: (client: BluetoothClient<any>) => void) {
-      this.bleClients.forEach((client) => {
-        if (!deviceId || client.device?.deviceId == deviceId) {
+      this.bleClients.forEach((client, id) => {
+        if (id == deviceId) {
           call(client);
         }
       });
     }
+
+    private readonly __BleStateChange__ = <{ deviceId: string; connected: boolean; __time__: number } & UniResponse>{};
 
     /**
      * 监听设备的连接状态
@@ -215,8 +192,13 @@ export namespace uniapp {
      * @param res 消息
      */
     onBleStateChange(res: { deviceId: string; connected: boolean } & UniResponse) {
+      let local = this.__BleStateChange__;
+      if (local.deviceId == res.deviceId && Date.now() - local.__time__ <= 500 && local.connected == res.connected) {
+        return;
+      }
+      utils.copyAttrs(res, local);
+      local.__time__ = Date.now();
       // 该方法回调中可以用于处理连接意外断开等异常情况
-      uniProxy.debug(`uni.onBLEConnectionStateChange`, res);
       this.deviceFilter(res.deviceId, (client) => client.onConnectStatusChange(res));
     }
 
@@ -226,7 +208,6 @@ export namespace uniapp {
      * @param res 数据
      */
     onBleCharacteristicChange(res: UniBtDeviceResponse) {
-      uniProxy.debug(`uni.onBLECharacteristicValueChange`, res);
       res.value = binary.asUint8Array(res.value);
       this.deviceFilter(res.deviceId, (client) => client.onCharacteristicChange(res));
     }
@@ -237,7 +218,6 @@ export namespace uniapp {
      * @param res 状态
      */
     onBtStateChange(res: UniResponse & { discovering: boolean; available: boolean }) {
-      uniProxy.debug(`uni.onBluetoothAdapterStateChange`, res);
       // 蓝牙是否可用
       this.btEnable = res.available;
       // 蓝牙是否正在扫描
@@ -249,7 +229,7 @@ export namespace uniapp {
               try {
                 scanner.onEvent(undefined, undefined, undefined, new Error('蓝牙适配器不可用，扫描被停止'));
               } catch (err) {
-                uniProxy.error('scanner.onEvent', err);
+                log.warn('scanner.onEvent', err);
               } finally {
                 // 移除超时操作
                 clearTimeout((scanner as any).timeoutId);
@@ -273,7 +253,6 @@ export namespace uniapp {
      * @param scanInfo 扫描的信息
      */
     onBtScanDevices(scanInfo: { devices: Array<BluetoothDevice> }) {
-      uniProxy.debug(`uni.onBluetoothDeviceFound: ${JSON.stringify(scanInfo)}`);
       scanInfo.devices.forEach((d) => {
         this.btScanners.forEach((scanner) => {
           try {
@@ -281,7 +260,7 @@ export namespace uniapp {
               scanner.onScanDevice(d);
             }
           } catch (err) {
-            uniProxy.error('scanner.onScanDevice', err);
+            log.warn('scanner.onScanDevice', err);
           }
         });
       });
@@ -305,23 +284,33 @@ export namespace uniapp {
      * 注册蓝牙监听
      */
     setupBt(): void {
-      if (!global.btInitialized) {
-        global.btInitialized = true;
+      const $ = global;
+      if (!$.btInitialized) {
+        $.btInitialized = true;
         // 监听设备的连接状态
-        global.onBLEConnectionStateChange((res: { deviceId: string; connected: boolean } & UniResponse) => this.onBleStateChange(res));
+        if (!$.__BLEConnectionStateChange__) $.__BLEConnectionStateChange__ = (res: { deviceId: string; connected: boolean } & UniResponse) => this.onBleStateChange(res);
+        else $.offBLEConnectionStateChange($.__BLEConnectionStateChange__);
+        $.onBLEConnectionStateChange($.__BLEConnectionStateChange__);
+
         // 监听设备的数据
-        global.onBLECharacteristicValueChange((res: UniBtDeviceResponse) => this.onBleCharacteristicChange(res));
+        if (!$.__BLECharacteristicValueChange__) $.__BLECharacteristicValueChange__ = (res: UniBtDeviceResponse) => this.onBleCharacteristicChange(res);
+        else $.offBLECharacteristicValueChange($.__BLECharacteristicValueChange__);
+        $.onBLECharacteristicValueChange($.__BLECharacteristicValueChange__);
+
         // 监听蓝牙适配器的状态
-        global.onBluetoothAdapterStateChange((res: UniResponse & { discovering: boolean; available: boolean }) => this.onBtStateChange(res));
+        if (!$.__BluetoothAdapterStateChange__) $.__BluetoothAdapterStateChange__ = (res: UniResponse & { discovering: boolean; available: boolean }) => this.onBtStateChange(res);
+        else $.offBluetoothAdapterStateChange($.__BluetoothAdapterStateChange__);
+        $.onBluetoothAdapterStateChange($.__BluetoothAdapterStateChange__);
+
         // 扫描到设备
-        global.onBluetoothDeviceFound((scanInfo: { devices: Array<BluetoothDevice> }) => this.onBtScanDevices(scanInfo));
+        if (!$.__BluetoothDeviceFound__) $.__BluetoothDeviceFound__ = (scanInfo: { devices: Array<BluetoothDevice> }) => this.onBtScanDevices(scanInfo);
+        else $.offBluetoothDeviceFound($.__BluetoothDeviceFound__);
+        $.onBluetoothDeviceFound($.__BluetoothDeviceFound__);
 
         // 打开蓝牙适配器
         this.openBtAdapter()
-          .then(() => {
-            /* ignore */
-          })
-          .catch((err) => uniProxy.warn('openBtAdapter.catch ==>: ', err));
+          .then((resp) => log.trace(resp))
+          .catch((err) => log.warn('openBtAdapter.catch ==>: ', err));
       }
     }
 
@@ -385,8 +374,8 @@ export namespace uniapp {
         // }
         uniProxy
           .invoke(this, 'startBluetoothDevicesDiscovery', {})
-          .then((resp) => uniProxy.debug('startBluetoothDevicesDiscovery', resp))
-          .catch((err) => uniProxy.warn('startBluetoothDevicesDiscovery', err));
+          .then((resp) => log.trace('startBluetoothDevicesDiscovery', resp))
+          .catch((err) => log.trace('startBluetoothDevicesDiscovery', err));
       }
     }
 
@@ -407,8 +396,8 @@ export namespace uniapp {
         // 停止扫描
         uniProxy
           .invoke(this, 'stopBluetoothDevicesDiscovery')
-          .then((resp) => uniProxy.debug('stopBluetoothDevicesDiscovery', resp))
-          .catch((err) => uniProxy.warn('stopBluetoothDevicesDiscovery', err));
+          .then((resp) => log.trace('stopBluetoothDevicesDiscovery', resp))
+          .catch((err) => log.trace('stopBluetoothDevicesDiscovery', err));
       }
     }
 
@@ -555,8 +544,8 @@ export namespace uniapp {
     constructor(
       public fnName: string,
       public rawArgs: object,
-      public resolve: Function = (res: any) => uniProxy.warn(`${fnName}.resolve`, res),
-      public reject: Function = (err: any) => uniProxy.warn(`${fnName}.reject`, err),
+      public resolve: Function = (res: any) => log.trace(`${fnName}.resolve`, res),
+      public reject: Function = (err: any) => log.trace(`${fnName}.reject`, err),
       public timeout: number = 2000,
     ) {
       utils.copyAttrs(this.rawArgs, this);
@@ -564,7 +553,17 @@ export namespace uniapp {
 
     start() {
       if (!this.timeoutId) {
-        this.timeoutId = setTimeout(() => this.fail(new Error('请求超时: ' + this.fnName)), this.timeout);
+        if (this.successful) {
+          // ignore ...
+          return;
+        }
+        this.timeoutId = setTimeout(() => {
+          if (this.successful) {
+            this.resolve({});
+          } else {
+            this.fail(new Error('[2]请求超时: ' + this.fnName));
+          }
+        }, this.timeout);
       } else {
         throw new Error('禁止重复调用 start 方法');
       }
@@ -586,7 +585,7 @@ export namespace uniapp {
       try {
         this.reject(err);
       } catch (err) {
-        uniProxy.error(`${this.fnName}.uniPromise`, err);
+        log.warn(`${this.fnName}.uniPromise`, err);
       }
     }
 
@@ -763,7 +762,7 @@ export namespace uniapp {
    * UniWebSocket实现
    */
   export class UniWebSocketImpl implements UniWebSocket {
-    constructor(public socket: any) { }
+    constructor(public socket: any) {}
 
     close(code?: number | undefined, reason?: string | undefined): void {
       this.socket.close(code, reason);
@@ -816,7 +815,7 @@ export namespace uniapp {
 
   /**
    * 拼接完整的UUID
-   * 
+   *
    * @param uuid UUID
    * @returns 返回UUID
    */
@@ -941,7 +940,7 @@ export namespace uniapp {
     /**
      * 连接的设备
      */
-    protected _device?: BluetoothDevice;
+    public _device: BluetoothDevice | any;
     /**
      * 连接状态
      */
@@ -965,7 +964,7 @@ export namespace uniapp {
     /**
      * 监听
      */
-    protected readonly listeners: Array<OnBleClientListener<T>> = [];
+    protected readonly listeners: Set<OnBleClientListener<T>> = new Set();
 
     constructor(public readonly uuid: GattUUID, autoConnect = false) {
       // 初始化蓝牙操作
@@ -976,7 +975,7 @@ export namespace uniapp {
       uuid.notifyService = utils.getOrDefault(uuid.notifyService, uuid.service);
     }
 
-    get device(): BluetoothDevice | undefined {
+    get device(): BluetoothDevice {
       return this._device;
     }
 
@@ -987,9 +986,7 @@ export namespace uniapp {
      * @returns  返回结果
      */
     addListener(listener: OnBleClientListener<T>): boolean {
-      if (this.listeners.indexOf(listener) < 0) {
-        this.listeners.push(listener);
-      }
+      this.listeners.add(listener);
       return true;
     }
 
@@ -1000,11 +997,7 @@ export namespace uniapp {
      * @returns  返回结果
      */
     removeListener(listener: OnBleClientListener<T>): boolean {
-      let index = this.listeners.indexOf(listener);
-      if (index >= 0) {
-        this.listeners.splice(index, 1);
-        return true;
-      }
+      this.listeners.delete(listener);
       return false;
     }
 
@@ -1025,9 +1018,7 @@ export namespace uniapp {
             cb(l as L);
           }
         } catch (err) {
-          console.log(err);
-          //let isError = err instanceof Error;
-          //uniProxy.error('call OnBleClientListener error', err, l, isError, isError ? (err as Error).message : '');
+          log.warn(l, err);
         }
       });
     }
@@ -1053,7 +1044,7 @@ export namespace uniapp {
         let invokeArgs = deviceId ? utils.copyAttrs(args, { deviceId: deviceId }) : args;
         uniProxy
           .invoke(this, fnName, invokeArgs, interceptor, timeout, options)
-          .then((resp) => resolve(utils.copyAttrs(resp, { deviceId: deviceId })))
+          .then((resp) => resolve(utils.copyAttrs(resp, { deviceId: deviceId, requestArgs: args, fnName: fnName })))
           .catch(reject);
       });
     }
@@ -1154,17 +1145,21 @@ export namespace uniapp {
      *
      * @returns 返回 Promise<any>
      */
-    disconnect(): Promise<UniBtDeviceResponse> {
-      let deviceId = this._device?.deviceId;
+    disconnect(deviceId?: string): Promise<UniBtDeviceResponse> {
+      // let deviceId = this._device?.deviceId;
+      deviceId = deviceId ? deviceId : this._device?.deviceId;
       try {
-        return new  Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
           this.invoke('closeBLEConnection')
-            .then(resp => {
+            .then((resp) => {
               try {
-                if((resp as any).successful) {
-                  this.callListeners<OnBleClientListener<any>>(l => l.onDisconnected(this, deviceId!!, false), (l: any) => l && l.onDisconnected)
+                if ((resp as any).successful) {
+                  this.callListeners<OnBleClientListener<any>>(
+                    (l) => l.onDisconnected(this, deviceId!!, false),
+                    (l: any) => l && l.onDisconnected,
+                  );
                 }
-              } catch(err) {
+              } catch (err) {
                 console.error(err);
               } finally {
                 resolve(resp);
@@ -1203,6 +1198,8 @@ export namespace uniapp {
             serviceId: this.uuid.writeService,
             characteristicId: this.uuid.writeCharacteristic,
             value: cmd,
+            //writeType: isIOS() ? 'write' : 'writeNoResponse',
+            writeType: 'writeNoResponse',
           },
           true,
           this.interceptor,
@@ -1251,7 +1248,7 @@ export namespace uniapp {
      * @param msg 消息
      */
     onBtStateChange(msg: UniResponse & { discovering: boolean; available: boolean }) {
-      this.print(`蓝牙状态改变 ==>: `, msg);
+      log.trace(`蓝牙状态改变 ==>: `, msg);
       this.callListeners(
         (l) => l.onBtStateChange(this as any, msg),
         (l: any) => l && l.onBtStateChange,
@@ -1268,7 +1265,7 @@ export namespace uniapp {
      * @param msg 消息
      */
     onConnectStatusChange(msg: { deviceId: string; connected: boolean } & UniResponse) {
-      this.print(`设备连接状态改变 ==>: ${msg.deviceId}, status: ${msg.connected}, json: ${JSON.stringify(msg)}`);
+      log.trace(`设备连接状态改变 ==>: ${msg.deviceId}, status: ${msg.connected}, json: ${JSON.stringify(msg)}`);
       this.isConnected = msg.connected;
       (this as any).discoverServiceFlag = false;
       if (msg.connected) {
@@ -1286,9 +1283,13 @@ export namespace uniapp {
                 if ((resp as any).successful && services && services.length > 0) {
                   try {
                     // 设置通知的状态
-                    if (this.uuid.notifyCharacteristic) { this.enableNotification(); }
+                    if (this.uuid.notifyCharacteristic) {
+                      this.enableNotification();
+                    }
                     // 设置MTU
-                    if (this.uuid.mtu > 0) { this.setMtu(this.uuid.mtu); }
+                    if (this.uuid.mtu > 0) {
+                      this.setMtu(this.uuid.mtu);
+                    }
                     (this as any).discoverServiceFlag = true;
                     // 调用发送service uuid的回调
                     this.callListeners(
@@ -1302,7 +1303,9 @@ export namespace uniapp {
                   }
                 }
               })
-              .catch(() => {/*ignore*/ });
+              .catch(() => {
+                /*ignore*/
+              });
           } else {
             clearInterval(localDiscoverServiceTimerId);
             // 断开了?
@@ -1328,8 +1331,10 @@ export namespace uniapp {
                   }
                 }
               })
-              .catch((err) => { this.print('getServices error: ' + err) });
-          }/*  else {
+              .catch((err) => {
+                log.trace('getServices error: ', err);
+              });
+          } /*  else {
             clearInterval(this.autoCheckStatusTimerId);
           } */
         }, 30_000);
@@ -1337,7 +1342,7 @@ export namespace uniapp {
       } else {
         // 移除
         uniInstance.bleClients.delete(msg.deviceId);
-        this.state = (this.state != 0 && this.state != 4) ? 3 : 4; // 自动断开
+        this.state = this.state != 0 && this.state != 4 ? 3 : 4; // 自动断开
         clearInterval(this.autoCheckStatusTimerId);
         clearInterval(this.discoverServiceTimerId);
         this.callListeners(
@@ -1353,26 +1358,13 @@ export namespace uniapp {
      * @param msg 消息
      */
     onCharacteristicChange(msg: UniBtDeviceResponse) {
-      this.print(`接收到数据 ==>: ${JSON.stringify(msg)}`);
+      log.trace(`接收到数据 ==>: ${JSON.stringify(msg)}`);
       this.isConnected = true;
       this.callListeners(
         (l) => l.onCharacteristicChanged(this as any, msg.deviceId, msg.value, msg),
         (l: any) => l && l.onCharacteristicChanged,
       );
     }
-
-    protected print(msg: string, ...args: any) {
-      if(this.debug) {
-        //@ts-ignore
-        if(uni && uni.$hs) {
-          //@ts-ignore
-          uni.$hs.log(msg, ...args);
-        } else {
-          console.log(msg, ...args);
-        }
-      }
-    }
-
   }
 
   /**
@@ -1412,7 +1404,7 @@ export namespace uniapp {
     /**
      * 特征属性
      */
-    properties: CharacteristicProperty,
+    properties: CharacteristicProperty;
   }
 
   /**
@@ -1579,7 +1571,7 @@ export namespace uniapp {
 
   export const uniInstance = new UniInstance();
   utils.tryCatch(() => uniInstance.setupWS()); // 初始化WebSocket操作
-  utils.tryCatch(() => uniInstance.setupBt()); // 初始化蓝牙操作
+  // utils.tryCatch(() => uniInstance.setupBt()); // 初始化蓝牙操作
 
   let initTimerId: any;
   initTimerId = setInterval(() => {
@@ -1590,10 +1582,9 @@ export namespace uniapp {
     }
   }, 1000);
 
-
   /**
    * 包装回调，避免空指针
-   * 
+   *
    * @param cb 回调
    * @returns 返回包装的回调
    */
@@ -1611,38 +1602,163 @@ export namespace uniapp {
 
   /**
    * 调用UNI函数
-   * 
+   *
    * @param fnName 函数名
    * @param args 参数
    * @param callback 回调
    * @returns 返回调用的结果
    */
-  export async function invokeUni(fnName: string, args: object = {}, callback?: UniCallback) {
+  export function invokeUniCallback(fnName: string, args: object = {}, callback?: UniCallback) {
     //@ts-ignore
     let fn = uni[fnName];
     if (!fn) {
-      throw new Error('无法发现UNI函数: ' + fnName);
+      let err = new Error('无法发现UNI函数: ' + fnName);
+      if (callback && callback.fail) {
+        callback.fail(err);
+      } else {
+        throw err;
+      }
     }
-    return fn(utils.copyAttrs(args, {
-      success(resp: any) {
-        console.log(`[${fnName}], resp: ${JSON.stringify(resp)}`);
-        if (callback && callback.success) {
-          callback.success(resp);
-        }
-      },
-      fail(err: any) {
-        console.error(`[${fnName}], resp: ${JSON.stringify(err)}`);
-        console.error(err);
-        if (callback && callback.fail) {
-          callback.fail(err);
-        }
-      },
-      complete() {
-        if (callback && callback.complete) {
-          callback.complete();
-        }
-      },
-    }))
+    return fn(
+      utils.copyAttrs(args, {
+        success(resp: any) {
+          //console.log(`[${fnName}], resp: ${JSON.stringify(resp)}`);
+          if (callback && callback.success) {
+            callback.success(resp);
+          }
+        },
+        fail(err: any) {
+          //console.error(`[${fnName}], resp: ${JSON.stringify(err)}`);
+          console.error(err);
+          if (callback && callback.fail) {
+            callback.fail(err);
+          }
+        },
+        complete() {
+          if (callback && callback.complete) {
+            callback.complete();
+          }
+        },
+      }),
+    );
   }
-}
 
+  /**
+   * 调用UNI函数
+   *
+   * @param fnName 函数名
+   * @param args 参数
+   * @param callback 回调
+   * @returns 返回调用的结果
+   */
+  export function invokeUni(fnName: string, args: object = {}): Promise<any> {
+    return new Promise((resolve, reject) => {
+      var ref = <any>[];
+      ref[0] = invokeUniCallback(fnName, args, <UniCallback>{
+        success(res) {
+          res.value = ref[0];
+          resolve(res);
+        },
+        fail(err) {
+          reject(err);
+        },
+      });
+    });
+  }
+
+  /**
+   * 蓝牙操作
+   */
+  export const BT = {
+    /**
+     * 打开蓝牙适配器
+     *
+     * @returns 返回结果
+     */
+    openBluetoothAdapter() {
+      return invokeUni('openBluetoothAdapter');
+    },
+
+    /**
+     * 关闭蓝牙适配器
+     *
+     * @returns 返回结果
+     */
+    closeBluetoothAdapter() {
+      return invokeUni('closeBluetoothAdapter');
+    },
+
+    /**
+     * 创建连接
+     *
+     * @param deviceId 设备ID
+     * @returns 返回结果
+     */
+    createBLEConnection(deviceId: string) {
+      return invokeUni('createBLEConnection', { deviceId: deviceId });
+    },
+
+    /**
+     * 关闭连接
+     *
+     * @param deviceId 设备ID
+     * @returns 返回结果
+     */
+    closeBLEConnection(deviceId: string) {
+      return invokeUni('closeBLEConnection', { deviceId: deviceId });
+    },
+
+    /**
+     * 获取设备
+     *
+     * @returns 返回结果
+     */
+    getBluetoothDevices() {
+      return invokeUni('getBluetoothDevices', {});
+    },
+
+    /**
+     * 获取已连接的设备
+     *
+     * @returns 返回结果
+     */
+    getConnectedBluetoothDevices() {
+      return invokeUni('getConnectedBluetoothDevices', {});
+    },
+  };
+
+  /**
+   * 通过解析"BLE扫描的记录"获取蓝牙的本地名称
+   *
+   * @param scanRecord BLE扫描的记录
+   * @return 蓝牙的本地名称
+   */
+  export const getLocalName = (scanRecord: number[] | ArrayBuffer | Uint8Array) => {
+    scanRecord = binary.asNumberArray(scanRecord);
+    if (scanRecord == null || scanRecord.length == 0) return '';
+    let localName = '';
+    try {
+      const DATA_TYPE_LOCAL_NAME_COMPLETE = 0x09;
+      const DATA_TYPE_SERVICE_UUID_16_BIT_PARTIAL = 0x02;
+      let i = 0;
+      while (i < scanRecord.length) {
+        if ((scanRecord[i++] & 0xff) == 0) {
+          break;
+        }
+        let len = (scanRecord[i++] & 0xff) - 1;
+        let type = scanRecord[i++] & 0xff;
+        if (DATA_TYPE_LOCAL_NAME_COMPLETE == type || DATA_TYPE_SERVICE_UUID_16_BIT_PARTIAL == type) {
+          let dest = new Array(len);
+          binary.arraycopy(scanRecord, i, dest, 0, len);
+          localName = binary.bytesToStr(dest, 'UTF-8');
+        }
+        i += len;
+      }
+    } catch (ignored) {
+      /*^_^*/
+    }
+    return localName;
+  };
+
+  // end :<==
+}

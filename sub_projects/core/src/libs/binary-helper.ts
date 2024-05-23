@@ -11,7 +11,12 @@ export class BinaryHelper {
 
   static {
     try {
-      BinaryHelper.hasTextCodec = new TextEncoder() != null && new TextDecoder('utf-8') != null;
+      //@ts-ignore
+      if (typeof TextEncoder == 'undefined') {
+        BinaryHelper.hasTextCodec = false;
+      } else {
+        BinaryHelper.hasTextCodec = new TextEncoder() != null && new TextDecoder('utf-8') != null;
+      }
     } catch (err) {
       BinaryHelper.hasTextCodec = false;
     }
@@ -37,7 +42,7 @@ export class BinaryHelper {
     }
     return dest;
   }
-  
+
   /**
    * 转换成 number[]
    *
@@ -45,8 +50,8 @@ export class BinaryHelper {
    * @returns 返回转换后的 number[]
    */
   asNumberArray(src: number[] | Array<number> | Uint8Array | ArrayBuffer): number[] {
-    if(typeof src == 'undefined' || src == null) {
-      throw new Error('原对象不能是 undefined 或 null !');
+    if (typeof src === 'undefined') {
+      return [];
     }
     if (src instanceof Array) {
       return src;
@@ -67,8 +72,8 @@ export class BinaryHelper {
    * @returns 返回转换后的 number[]
    */
   asUint8Array(src: number[] | Array<number> | Uint8Array | ArrayBuffer): Uint8Array {
-    if(typeof src == 'undefined' || src == null) {
-      throw new Error('原对象不能是 undefined 或 null !');
+    if (typeof src === 'undefined') {
+      return new Uint8Array([]);
     }
     if (src instanceof Uint8Array) {
       return src;
@@ -89,9 +94,6 @@ export class BinaryHelper {
    * @returns 返回转换后的 ArrayBuffer
    */
   asArrayBuffer(src: number[] | Array<number> | Uint8Array | ArrayBuffer): ArrayBuffer {
-    if(typeof src == 'undefined' || src == null) {
-      throw new Error('原对象不能是 undefined 或 null !');
-    }
     if (src instanceof ArrayBuffer) {
       return src;
     }
@@ -191,6 +193,22 @@ export class BinaryHelper {
       }
     }
     return array.join('');
+  }
+
+  /**
+   * base64字符串转为ArrayBuffer
+   *
+   * @param base64 base64字符串
+   * @returns 返回ArrayBuffer
+   */
+  base64ToArrayBuffer(base64: string): ArrayBuffer {
+    const binStr = atob(base64); // 解码 Base64 字符串
+    const length = binStr.length;
+    const bytes = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+      bytes[i] = binStr.charCodeAt(i); // 将每个字符的 ASCII 值存入 TypedArray
+    }
+    return bytes.buffer; // 返回 ArrayBuffer 对象
   }
 
   /**
@@ -402,6 +420,62 @@ export class BinaryHelper {
   }
 
   /**
+   * 整形转单精度浮点数
+   *
+   * @param value 可转换为float的整数值
+   * @returns 返回float值
+   */
+  intBitsToFloat(value: number) {
+    const buffer = new ArrayBuffer(4);
+    const intArray = new Int32Array(buffer);
+    const floatArray = new Float32Array(buffer);
+    intArray[0] = value;
+    return floatArray[0];
+  }
+
+  /**
+   * 单精度浮点数转为整形
+   *
+   * @param value 单浮点数
+   * @returns 返回转换后的整形
+   */
+  floatToIntBits(value: number) {
+    const buffer = new ArrayBuffer(4);
+    const floatArray = new Float32Array(buffer);
+    const intArray = new Uint32Array(buffer);
+    floatArray[0] = value;
+    return intArray[0];
+  }
+
+  /**
+   * 长整形转双精度浮点数
+   *
+   * @param value 可转换为double的整数值
+   * @returns 返回double值
+   */
+  longBitsToDouble(value: number) {
+    const buffer = new ArrayBuffer(8);
+    const intArray = new BigInt64Array(buffer);
+    const floatArray = new Float64Array(buffer);
+    intArray[0] = BigInt(value);
+    return floatArray[0];
+  }
+
+  /**
+   * 双精度浮点数转为长整形
+   *
+   * @param value 双浮点数
+   * @returns 返回转换后的长整形
+   */
+  doubleToLongBits(value: number) {
+    const buffer = new ArrayBuffer(8);
+    const doubleArray = new Float64Array(buffer);
+    const longArray = new BigInt64Array(buffer);
+    doubleArray[0] = value;
+    return longArray[0];
+  }
+
+  /**
    * 将浮点数转换为16进制字符串
    *
    * @param float32 浮点数
@@ -550,6 +624,17 @@ export class BinaryHelper {
       }
     }
     return true;
+  }
+
+  /**
+   * ArrayBuffer 转换为16进制
+   *
+   * @param buffer ArrayBuffer
+   * @returns 返回16进制字符串
+   */
+  ab2hex(buffer: ArrayBuffer) {
+    let u8a = new Uint8Array(buffer);
+    return Array.prototype.map.call(u8a, (bit) => ('00' + bit.toString(16)).slice(-2)).join('');
   }
 }
 

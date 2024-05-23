@@ -34,3 +34,4 @@ packages/**/unpackage/
 pnpm-lock.yaml
 packages/*/types/
 packages/*/dist/
+packages/*/build/

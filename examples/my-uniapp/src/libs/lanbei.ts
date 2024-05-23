@@ -1,4 +1,5 @@
 import { utils, binary, uniapp, bluetooth } from "@benefitjs/uni-plugins";
+import { log } from "./log";
 
 /**
  * 兰贝
@@ -55,11 +56,11 @@ export namespace lanbei {
       },
 
       onCharacteristicWrite(client, deviceId, value) {
-        //console.log(`发送指令: ${deviceId}, value: ${binary.bytesToHex(value)}`);
+        log.debug(`发送指令: ${deviceId}, value: ${binary.bytesToHex(value)}`);
       },
 
       onCharacteristicChanged(client, deviceId, value, resp) {
-        //console.log(`【${deviceId}】接收到数据: ${binary.bytesToHex(value)}`);
+        log.debug(`【${deviceId}】接收到数据: ${binary.bytesToHex(value)}`);
         try {
           if (value.length <= 50) {
             let cmd = findCmdType(value[1]);
@@ -106,7 +107,7 @@ export namespace lanbei {
                   remove.push(c);
                   c.success(value, packet);
                 } catch (err) {
-                  console.warn(err);
+                  log.warn(err);
                 }
               });
               remove.forEach((c) => set?.delete(c));
@@ -120,7 +121,7 @@ export namespace lanbei {
             client.resolvePacket(deviceId);
           }
         } catch (err) {
-          console.warn('兰贝设备', err);
+          log.warn('兰贝设备', err);
         }
       },
     };
@@ -187,7 +188,7 @@ export namespace lanbei {
             }
           }
         } catch (err) {
-          console.log('解析出錯', binary.bytesToHex(data));
+          log.debug('解析出錯', binary.bytesToHex(data));
         }
       }
     }

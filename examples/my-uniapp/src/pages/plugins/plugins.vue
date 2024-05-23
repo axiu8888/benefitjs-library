@@ -41,6 +41,7 @@
 import { ref } from 'vue'
 
 import { uniapp, udp } from '@benefitjs/uni-plugins'
+import { log } from '@/libs/log';
 
 // 使用UniProxy代理调用
 const otgUpload = uniapp.requireNativePlugin('OtgModule')
@@ -59,21 +60,21 @@ export default {
       // 打开蓝牙适配器
       uniapp.uniInstance
         .openBtAdapter()
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     },
     activePorts () {
       udp
         .activePorts()
         .then(resp => {
-          console.log('activePorts', resp)
+          log.debug('activePorts', resp)
           uni.showToast({
             title: 'then ==>: ' + JSON.stringify(resp),
             icon: 'none'
           })
         })
         .catch(err => {
-          console.error('activePorts', err)
+          log.error('activePorts', err)
           uni.showToast({
             title: 'catch ==>: ' + JSON.stringify(err),
             icon: 'none'
@@ -90,13 +91,13 @@ export default {
           })
         },
         msg => {
-          console.log('接收到UDP数据: ', msg)
+          log.debug('接收到UDP数据: ', msg)
         }
       )
     },
     stopUdp () {
       udp.stop(62014, resp => {
-        console.log('stop', resp)
+        log.debug('stop', resp)
         uni.showToast({
           title: 'then ==>: ' + JSON.stringify(resp),
           icon: 'none'
@@ -104,7 +105,7 @@ export default {
       })
     },
     onOtgUpload () {
-      console.log('OTG上传。。。')
+      log.debug('OTG上传。。。')
       otgUpload
         .gotoNativePage(
           {
@@ -114,23 +115,23 @@ export default {
             userId: '952dbd28968e47168e34501e2cf393d4'
           },
           res => {
-            console.log('otg', res)
+            log.debug('otg', res)
           }
         )
-        .then(res => console.log(res))
-        .catch(err => console.error(err))
+        .then(res => log.debug(res))
+        .catch(err => log.error(err))
     },
     onStartAddCircle () {
       autoAddCircle.init(
         { remoteHome: '255.255.255.255', remotePort: '23333', localPort: 1399 },
         resp => {
-          console.log('自动加圈响应', resp, JSON.stringify(resp))
+          log.debug('自动加圈响应', resp, JSON.stringify(resp))
         }
       )
     },
     onStopAddCircle () {
       autoAddCircle.endUdp()
-      console.log('support ==>: ' + autoAddCircle.support())
+      log.debug('support ==>: ' + autoAddCircle.support())
     },
     onMessage () {},
     eventHandler () {}

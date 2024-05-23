@@ -1,12 +1,14 @@
-import { binary } from "@benefitjs/core";
+import { binary } from '@benefitjs/core';
 import { uniapp } from './uniapp';
 
 /**
  * UDP服务
  */
 export namespace udp {
-  // 使用UniProxy代理调用
-  const native = uniapp.requireNativePlugin('udp');
+  /**
+   * 使用UniProxy代理调用
+   */
+  export const native = uniapp.requireNativePlugin('udp');
   /**
    * 获取一个可用的端口
    */
@@ -91,5 +93,4 @@ export namespace udp {
      */
     data: number[];
   }
-
 }

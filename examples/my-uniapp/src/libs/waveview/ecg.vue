@@ -51,26 +51,26 @@ const packetData = ref({})
 
 function mqttInit() {
   try {
-    console.log('===================1');
+    log.debug('===================1');
     // 订阅数据
     let subscriber = {
       onMessage(client, topic, msg) {
-        // console.log(`${client.clientId}, subscriber1 接收到mqtt消息`, topic, msg);
+        //log.debug(`${client.clientId}, subscriber1 接收到mqtt消息`, topic, msg);
         let packet = zcenter.parseZCenter(msg.payloadBytes);
         packetData.value = packet.ecgList
-        console.log(`${topic}, sn: ${packet.packageSn}, time: ${utils.dateFmt(packet.time * 1000)}`);
+        log.debug(`${topic}, sn: ${packet.packageSn}, time: ${utils.dateFmt(packet.time * 1000)}`);
       },
       onConnected(client) {
-        console.log(`${client.clientId}, 客户端连接成功`);
+        log.debug(`${client.clientId}, 客户端连接成功`);
       },
       onDisconnected(client) {
-        console.log(`${client.clientId}, 客户端关闭连接`);
+        log.debug(`${client.clientId}, 客户端关闭连接`);
       },
       onConnectLost(client, lost) {
-        console.log(`${client.clientId}, 客户端连接断开`, lost);
+        log.debug(`${client.clientId}, 客户端连接断开`, lost);
       },
       onMessageDelivered(client, msg) {
-        console.log(`${client.clientId}, 消息送达`, msg.payloadString);
+        log.debug(`${client.clientId}, 消息送达`, msg.payloadString);
       },
     };
     const opt = {
@@ -82,13 +82,13 @@ function mqttInit() {
       clientId: mqtt.nextClientId('mqtt_test_')
     };
     const client = new mqtt.Client(opt);
-    console.log('client', client)
+    log.debug('client', client)
     client.subscribe(subscriber, 'hardware/11000138');
 
     client.connect()
-    console.log('===================2');
+    log.debug('===================2');
   } catch (err) {
-    console.error(err);
+    log.error(err);
   }
 }
 
@@ -114,6 +114,7 @@ defineExpose({
 <script lang="renderjs" module="ecgModule">
 
 import { WaveView, setCanvasPixelRatio, createWaveView, createEcg6 } from './wave-view';
+import { log } from "../log";
 
   export default {
     data() {
@@ -127,7 +128,7 @@ import { WaveView, setCanvasPixelRatio, createWaveView, createEcg6 } from './wav
     },
     methods: {
       dataChange(newValue, oldValue, ownerInstanceA, instance){
-        //console.log('包数据', newValue)
+        //log.debug('包数据', newValue)
 
         let array = [];
         for (let i = 0; i < 6; i++) {
@@ -137,10 +138,10 @@ import { WaveView, setCanvasPixelRatio, createWaveView, createEcg6 } from './wav
       },
       waveInit(){
         // const dom = document.getElementById('wvCanvas') 
-        // console.log('dom.width',dom?.clientWidth)
-        // console.log('dom ==>: ', dom);
-        // console.log(dom.getContext("2d"));
-        // console.log(dom instanceof HTMLCanvasElement);
+        // log.debug('dom.width',dom?.clientWidth)
+        // log.debug('dom ==>: ', dom);
+        // log.debug(dom.getContext("2d"));
+        // log.debug(dom instanceof HTMLCanvasElement);
 
         // let max = (x, y) => x > y ? x : y;
         // 设置canvas
@@ -151,10 +152,10 @@ import { WaveView, setCanvasPixelRatio, createWaveView, createEcg6 } from './wav
         canvasEle.setAttribute('width', content?.clientWidth) //给canvas设置宽度
         canvasEle.setAttribute('height', content?.clientHeight) //给canvas设置高度
         content.appendChild(canvasEle)
-        // console.log(canvas);
+        // log.debug(canvas);
         var ctx = canvasEle.getContext("2d"); //webgl引入
         
-        console.log(ctx)
+        log.debug(ctx)
         
         setCanvasPixelRatio(canvasEle, window.devicePixelRatio, canvasEle?.clientWidth, canvasEle?.clientHeight);
         this.wv = createEcg6(canvasEle);

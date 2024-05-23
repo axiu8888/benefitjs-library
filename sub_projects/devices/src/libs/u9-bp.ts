@@ -24,13 +24,12 @@ export namespace u9 {
    * U9 蓝牙血压计
    */
   export class Device implements IDevice {
-
     buf = new ByteBuf();
     uuid = uuid;
 
     private lastRcv = Date.now();
 
-    push(value?: number[] | undefined): number[] | undefined {
+    addBuf(value?: number[] | undefined): number[] | undefined {
       throw new Error('不支持');
     }
 
@@ -77,7 +76,6 @@ export namespace u9 {
       }
       return result;
     }
-
   }
 
   /**
@@ -88,14 +86,12 @@ export namespace u9 {
    */
   export const startMeasure = (date = new Date()): number[] => {
     return wrapCmd(0x05, date);
-  }
-
+  };
 
   /**
    * 血压数据包
    */
   export interface BpPacket {
-
     /**
      * 设备的MAC地址
      */
@@ -151,10 +147,10 @@ export namespace u9 {
    * 指令类型
    */
   export interface CmdType {
-    readonly type: number,
-    readonly name: string,
-    readonly description: string,
-    readonly parser?: Function,
+    readonly type: number;
+    readonly name: string;
+    readonly description: string;
+    readonly parser?: Function;
   }
   /**
    * 指令类型
@@ -176,11 +172,11 @@ export namespace u9 {
     /**
      * 类型
      */
-    readonly type: number,
+    readonly type: number;
     /**
      * 描述
      */
-    readonly description: string,
+    readonly description: string;
   }
   /**
    * 血压异常
@@ -191,7 +187,7 @@ export namespace u9 {
     <BpError>{ type: 0x02, description: '杂讯干扰' },
     <BpError>{ type: 0x03, description: '充气时间过长' },
     <BpError>{ type: 0x04, description: '测得的结果异常' },
-    <BpError>{ type: 0x0c, description: '校正异常' }
+    <BpError>{ type: 0x0c, description: '校正异常' },
   ];
 
   /**

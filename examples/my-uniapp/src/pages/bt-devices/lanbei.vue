@@ -69,6 +69,7 @@
 import { binary } from '@benefitjs/core'
 import { uniapp } from '@benefitjs/uni-plugins'
 import { lanbei } from '../../libs/lanbei'
+import { log } from '@/libs/log'
 
 const uniInstance = uniapp.uniInstance
 
@@ -77,32 +78,32 @@ const uniInstance = uniapp.uniInstance
 const client = new lanbei.Client(lanbei.lead6)
 client.addListener(<lanbei.Listener>{
   onBtStateChange(client, msg) {
-    console.log(`兰贝设备扫描，状态改变: ${JSON.stringify(msg)}`)
+    log.debug(`兰贝设备扫描，状态改变: ${JSON.stringify(msg)}`)
   },
   onConnected(client, deviceId) {
-    console.log(`兰贝设备连接[${deviceId}]`)
+    log.debug(`兰贝设备连接[${deviceId}]`)
   },
   onServiceDiscover(client, deviceId, services) {
-    console.log(
+    log.debug(
       `兰贝设备发现服务[${deviceId}], services: ${JSON.stringify(services)}`
     )
   },
   onDisconnected(client, deviceId, auto) {
-    console.log(`兰贝设备断开[${deviceId}]`)
+    log.debug(`兰贝设备断开[${deviceId}]`)
   },
   onCharacteristicWrite(client, deviceId, value) {
     // 发送指令
-    console.log(
+    log.debug(
       `发送指令: ${deviceId}, cmd: ${JSON.stringify(
         lanbei.findCmdType(value[1])
       )} value: ${binary.bytesToHex(value)}`
     )
   },
   onCharacteristicChanged(client, deviceId, value, resp) {
-    console.log(`兰贝设备 接收到数据[${deviceId}]: ${binary.bytesToHex(value)}`)
+    log.debug(`兰贝设备 接收到数据[${deviceId}]: ${binary.bytesToHex(value)}`)
   },
   onData(client, deviceId, lead, packet) {
-    console.log('兰贝设备 接收到数据包: ', lead, packet)
+    log.debug('兰贝设备 接收到数据包: ', lead, packet)
   }
 })
 
@@ -114,28 +115,28 @@ const scanner = <uniapp.BtScanner>{
     )
   },
   onEvent(start, stop, cancel, error) {
-    console.log(
+    log.debug(
       `start: ${start}, stop: ${stop}, cancel: ${cancel}, error: ${error}`
     )
   },
   onScanDevice(device) {
-    console.log(device)
+    log.debug(device)
     // if ((device.name.includes('ECG-51') && client.leadType == lead1)
     //   || (device.name.includes('ECG-56') && client.leadType == lead6)) {
     //   uniInstance.stopBtScan(this);
     //   setTimeout(() => {
     //     // 连接
     //     client.connect(device)
-    //       .then(resp => console.log('连接设备: ' + JSON.stringify(resp)))
-    //       .catch(err => console.log(err))
+    //       .then(resp => log.debug('连接设备: ' + JSON.stringify(resp)))
+    //       .catch(err => log.debug(err))
     //   }, 1000);
     // }
     // uniInstance.stopBtScan(this);
     // setTimeout(() => {
     //   // 连接
     //   client.connect(device)
-    //     .then(resp => console.log('连接设备: ' + JSON.stringify(resp)))
-    //     .catch(err => console.log(err))
+    //     .then(resp => log.debug('连接设备: ' + JSON.stringify(resp)))
+    //     .catch(err => log.debug(err))
     // }, 1000);
   }
 }
@@ -153,8 +154,8 @@ export default {
       // 打开蓝牙适配器
       uniInstance
         .openBtAdapter()
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     },
     onStartScanClick() {
       uniInstance.startBtScan(0, scanner) // 开始扫描
@@ -181,63 +182,63 @@ export default {
         }
         client
           .connect(client.leadType == lead1 ? device1 : device6)
-          .then(resp => console.log(JSON.stringify(resp)))
-          .catch(err => console.error(err))
+          .then(resp => log.debug(JSON.stringify(resp)))
+          .catch(err => log.error(err))
       } else {
         client
           .reconnect()
-          .then(resp => console.log(JSON.stringify(resp)))
-          .catch(err => console.error(err))
+          .then(resp => log.debug(JSON.stringify(resp)))
+          .catch(err => log.error(err))
       }
     },
     onDisconnectClick() {
       client
         .disconnect()
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     },
     sendGetStatus() {
       client
         .getStatus()
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     },
     sendGetVersion() {
       client
         .getVersion()
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     },
     sendGetTime() {
       client
         .getTime()
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     },
     sendSetTime() {
       client
         .setTime()
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     },
     sendSetDeviceSn() {
       // client.setDeviceSN('21000001')
       client
         .setDeviceSN(client.leadType == lead1 ? '51000001' : '56000001')
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     },
     sendStartCollect() {
       client
         .startCollector(5)
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     },
     sendStopCollect() {
       client
         .stopCollector()
-        .then(resp => console.log(JSON.stringify(resp)))
-        .catch(err => console.error(err))
+        .then(resp => log.debug(JSON.stringify(resp)))
+        .catch(err => log.error(err))
     }
   }
 }

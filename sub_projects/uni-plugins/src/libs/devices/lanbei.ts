@@ -1,4 +1,4 @@
-import { binary, utils } from "@benefitjs/core";
+import { binary, logger, utils } from '@benefitjs/core';
 import { bluetooth } from '../uni/bluetooth';
 import { uniapp } from '../uni/uniapp';
 
@@ -6,6 +6,13 @@ import { uniapp } from '../uni/uniapp';
  * 兰贝
  */
 export namespace lanbei {
+  /**
+   * 日志打印
+   */
+  export const log = logger.newProxy('lanbei', logger.Level.warn);
+  /**
+   * UNI proxy
+   */
   const uniProxy = uniapp.uniProxy;
 
   const _device1 = <uniapp.BluetoothDevice>{
@@ -56,11 +63,11 @@ export namespace lanbei {
       },
 
       onCharacteristicWrite(client, deviceId, value) {
-        //console.log(`发送指令: ${deviceId}, value: ${binary.bytesToHex(value)}`);
+        //log.trace(`发送指令: ${deviceId}, value: ${binary.bytesToHex(value)}`);
       },
 
       onCharacteristicChanged(client, deviceId, value, resp) {
-        //console.log(`【${deviceId}】接收到数据: ${binary.bytesToHex(value)}`);
+        //log.trace(`【${deviceId}】接收到数据: ${binary.bytesToHex(value)}`);
         try {
           if (value.length <= 50) {
             let cmd = findCmdType(value[1]);
@@ -107,7 +114,7 @@ export namespace lanbei {
                   remove.push(c);
                   c.success(value, packet);
                 } catch (err) {
-                  console.warn(err);
+                  log.warn(err);
                 }
               });
               remove.forEach((c) => set?.delete(c));
@@ -121,27 +128,31 @@ export namespace lanbei {
             client.resolvePacket(deviceId);
           }
         } catch (err) {
-          console.warn('兰贝设备', err);
+          log.warn('兰贝设备', err);
         }
       },
     };
 
     /**
      * 兰贝客户端的构造函数
-     * 
+     *
      * @param autoConnect 是否自动连接
      * @param useNative 是否使用本地插件(如果支持)
      */
     constructor(public readonly leadType: LeadType, autoConnect: boolean = false, useNative = false) {
-      super(<uniapp.GattUUID>{
-        service: '0000fff0-0000-1000-8000-00805f9b34fb',
-        readCharacteristic: '0000fff2-0000-1000-8000-00805f9b34fb',
-        writeCharacteristic: '0000fff1-0000-1000-8000-00805f9b34fb',
-        notifyCharacteristic: '0000fff2-0000-1000-8000-00805f9b34fb',
-        readDescriptor: '00002902-0000-1000-8000-00805f9b34fb',
-        writeDescriptor: '00002901-0000-1000-8000-00805f9b34fb',
-        mtu: 512,
-      }, autoConnect, useNative);
+      super(
+        <uniapp.GattUUID>{
+          service: '0000fff0-0000-1000-8000-00805f9b34fb',
+          readCharacteristic: '0000fff2-0000-1000-8000-00805f9b34fb',
+          writeCharacteristic: '0000fff1-0000-1000-8000-00805f9b34fb',
+          notifyCharacteristic: '0000fff2-0000-1000-8000-00805f9b34fb',
+          readDescriptor: '00002902-0000-1000-8000-00805f9b34fb',
+          writeDescriptor: '00002901-0000-1000-8000-00805f9b34fb',
+          mtu: 512,
+        },
+        autoConnect,
+        useNative,
+      );
       super.addListener(this._handler);
       cmd_types.forEach((c) => this._calls.set(c, new Set()));
     }
@@ -196,7 +207,7 @@ export namespace lanbei {
             }
           }
         } catch (err) {
-          console.log('解析出錯', binary.bytesToHex(data));
+          log.log('解析出錯', binary.bytesToHex(data));
         }
       }
     }
@@ -467,7 +478,7 @@ export namespace lanbei {
   /**
    * 同步调用
    */
-  export interface LanBeiCall extends uniapp.SyncCall<CmdType, LanBeiResponse> { }
+  export interface LanBeiCall extends uniapp.SyncCall<CmdType, LanBeiResponse> {}
 
   /**
    * 响应

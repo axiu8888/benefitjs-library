@@ -55,8 +55,8 @@ export namespace collector {
       if (listener?.onPacketLost) this.onPacketLost = listener.onPacketLost;
     }
 
-    push(value?: number[] | undefined): number[] | undefined {
-      this.push(value);
+    addBuf(value?: number[] | undefined): number[] | undefined {
+      // pass...
       return;
     }
 
@@ -69,7 +69,10 @@ export namespace collector {
         buf.write(data);
         let jointer = this.jointer;
         // 读取缓存，解析数据
+        let max_count = 20;
         while (buf.size() >= 9) {
+          max_count--;
+          if (max_count < 0) break; // 避免死循环
           // 至少需要9个字节的数据
           let start = buf.find(HEAD);
           if (start >= 0) {
@@ -102,7 +105,7 @@ export namespace collector {
                       this.onNotify(hexDeviceId, data, type, hp);
                     } else {
                       // 数据超时了
-                      jointer.checkTimeout(jp => this.onPacketLost(jp));
+                      jointer.checkTimeout((jp) => this.onPacketLost(jp));
                     }
                   } else {
                     let hp = parser.parse(segment, hexDeviceId);
@@ -132,6 +135,8 @@ export namespace collector {
                 buf.read(0, HEAD.length);
                 continue; // 继续下一次解析
               }
+            } else {
+              return; // 长度不够
             }
           } else {
             // 丢弃错误的数据
@@ -822,7 +827,9 @@ export namespace collector {
     }
   }
 
-  // 采集器解析
+  /**
+   * 采集器解析
+   */
   export const parser = new Parser();
 
   /**
@@ -837,7 +844,7 @@ export namespace collector {
       public readonly data: boolean,
       public readonly realtime: boolean,
       public readonly description: string,
-    ) { }
+    ) {}
   }
 
   /**
@@ -906,7 +913,7 @@ export namespace collector {
 
   /**
    * 包装指令
-   * 
+   *
    * @param deviceId 设备ID
    * @param type 类型
    * @param len 长度
@@ -915,9 +922,9 @@ export namespace collector {
   export const wrapCmd = (deviceId: number[] | string, type: number, len: number) => {
     let data = new Array<number>(len);
     data[0] = 0x55;
-    data[1] = 0xAA;
-    data[2] = ((len - 2) >> 8);
-    data[3] = (len - 2);
+    data[1] = 0xaa;
+    data[2] = (len - 2) >> 8;
+    data[3] = len - 2;
     // 4 ~ 7
     deviceId = typeof deviceId == 'string' ? binary.hexToBytes(deviceId) : deviceId;
     binary.arraycopy(deviceId, 0, data, 4, 4);
@@ -927,8 +934,8 @@ export namespace collector {
 
   /**
    * 重传指令
-   * 
-   * @param deviceId 设备ID 
+   *
+   * @param deviceId 设备ID
    * @param sn 包序号
    * @param count 重传的数量
    * @returns 返回指令
@@ -939,23 +946,23 @@ export namespace collector {
     setPacketSn(cmd, sn, 10);
     cmd[cmd.length - 1] = parser.checkSum(cmd);
     return cmd;
-  }
+  };
 
   /**
    * 设置指令的包序号
-   * 
-   * @param buf 字节数组 
+   *
+   * @param buf 字节数组
    * @param sn 报序号
    * @param start 开始的位置
    * @returns 返回设置的指令
    */
   export const setPacketSn = (buf: number[], sn: number, start: number) => {
-    buf[start] = ((sn >> 24) & 0xFF);
-    buf[start + 1] = ((sn >> 16) & 0xFF);
-    buf[start + 2] = ((sn >> 8) & 0xFF);
-    buf[start + 3] = ((sn) & 0xff);
+    buf[start] = (sn >> 24) & 0xff;
+    buf[start + 1] = (sn >> 16) & 0xff;
+    buf[start + 2] = (sn >> 8) & 0xff;
+    buf[start + 3] = sn & 0xff;
     return buf;
-  }
+  };
 
   /**
    * 数据包拼接器
@@ -1016,7 +1023,7 @@ export namespace collector {
      * @param callback 回调
      * @param timeout 超时时长
      */
-    checkTimeout(callback = (jp: JointPacket): void => { }, timeout = 2000) {
+    checkTimeout(callback = (jp: JointPacket): void => {}, timeout = 2000) {
       this.queue.forEach((jp) => {
         if (this.isTimeout(jp, timeout)) {
           try {

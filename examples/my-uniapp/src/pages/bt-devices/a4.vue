@@ -34,6 +34,7 @@
 import { ref } from 'vue'
 import { binary, utils } from '@benefitjs/core';
 import { uniapp, a4 } from '@benefitjs/uni-plugins';
+import { log } from '@/libs/log';
 
 const uniInstance = uniapp.uniInstance;
 const device = ref('暂无')
@@ -48,18 +49,18 @@ const a422 = uniapp.requireNativePlugin('A4Module');
 const client = new a4.Client();
 client.addListener(<a4.Listener>{
   onConnected(client, deviceId) {
-    console.log(`连接[${deviceId}]`, client.device);
+    log.debug(`连接[${deviceId}]`, client.device);
     uni.showToast({
       title: '连接: ' + deviceId + ", useNative: " + client.useNative,
       // icon: 'success'
     })
   },
   onServiceDiscover(client, deviceId, services) {
-    console.log(`发现服务[${deviceId}], services: ${JSON.stringify(services)}`);
-    console.log('services ==>: ', (client as any).rawServices);
+    log.debug(`发现服务[${deviceId}], services: ${JSON.stringify(services)}`);
+    log.debug('services ==>: ', (client as any).rawServices);
   },
   onDisconnected(client, deviceId, auto) {
-    console.log(`断开[${deviceId}], auto: ${auto}`);
+    log.debug(`断开[${deviceId}], auto: ${auto}`);
     uni.showToast({
       title: '断开连接: ' + deviceId,
       // icon: 'success'
@@ -67,14 +68,14 @@ client.addListener(<a4.Listener>{
   },
   onCharacteristicWrite(client, deviceId, value) {
     // 发送指令
-    // console.log(`发送指令: ${deviceId}, cmd: ${cmd.description} value: ${binary.bytesToHex(value)}`);
+    // log.debug(`发送指令: ${deviceId}, cmd: ${cmd.description} value: ${binary.bytesToHex(value)}`);
   },
   onCharacteristicChanged(client, deviceId, value, resp) {
-    console.log(`1、接收到数据[${deviceId}]: ${binary.bytesToHex(value)}`);
+    log.debug(`1、接收到数据[${deviceId}]: ${binary.bytesToHex(value)}`);
   },
 
   onData(client, deviceId, value, packet) {
-    console.log(`2、接收到数据[${deviceId}]: ${binary.bytesToHex(value)}`, packet);
+    log.debug(`2、接收到数据[${deviceId}]: ${binary.bytesToHex(value)}`, packet);
 
     packetOption.value = packet
   },
@@ -86,19 +87,19 @@ const scanner = <uniapp.BtScanner>{
     return device.name.startsWith('A4-');
   },
   onEvent(start, stop, cancel, error) {
-    console.log(`start: ${start}, stop: ${stop}, cancel: ${cancel}, error: ${error}`);
+    log.debug(`start: ${start}, stop: ${stop}, cancel: ${cancel}, error: ${error}`);
   },
   onScanDevice(device) {
     uniInstance.stopBtScan(this);
-    //console.log('---------------------------------');
-    console.log(device);
+    //log.debug('---------------------------------');
+    log.debug(device);
     setTimeout(() => {
       // // 连接
       // client.connect(device)
-      //   .then(resp => console.log('连接设备: ' + JSON.stringify(resp)))
-      //   .catch(err => console.log(err))
+      //   .then(resp => log.debug('连接设备: ' + JSON.stringify(resp)))
+      //   .catch(err => log.debug(err))
       a422.startConnection({macAddress: device.deviceId}, resp => {
-        console.log('resp +=>: ' + resp)
+        log.debug('resp +=>: ' + resp)
       })
     }, 1000);
   },
@@ -107,8 +108,8 @@ const scanner = <uniapp.BtScanner>{
 function onOpenBtAdapter() {
   // 打开蓝牙适配器
   uniInstance.openBtAdapter()
-    .then(resp => console.log(JSON.stringify(resp)))
-    .catch(err => console.error(err));
+    .then(resp => log.debug(JSON.stringify(resp)))
+    .catch(err => log.error(err));
 }
 function onStartScanClick() {
   uniInstance.startBtScan(0, scanner); // 开始扫描
@@ -125,23 +126,23 @@ function onConnectClick() {
       "localName": "A4-;Jm7",
       "advertisServiceUUIDs": []
     })
-      .then(resp => console.log(JSON.stringify(resp)))
-      .catch(err => console.error(err));
+      .then(resp => log.debug(JSON.stringify(resp)))
+      .catch(err => log.error(err));
   } else {
     client.reconnect()
-      .then(resp => console.log(JSON.stringify(resp)))
-      .catch(err => console.error(err));
+      .then(resp => log.debug(JSON.stringify(resp)))
+      .catch(err => log.error(err));
   }
 }
 function onDisconnectClick() {
   client.disconnect()
-    .then(resp => console.log(JSON.stringify(resp)))
-    .catch(err => console.error(err));
+    .then(resp => log.debug(JSON.stringify(resp)))
+    .catch(err => log.error(err));
 }
 function start() {
   // client.send(2)
-  //   .then(resp => console.log(JSON.stringify(resp)))
-  //   .catch(err => console.error(err));
+  //   .then(resp => log.debug(JSON.stringify(resp)))
+  //   .catch(err => log.error(err));
   // uni.showToast({
   //   title: '开始...',
   //   icon: 'success'
@@ -150,8 +151,8 @@ function start() {
 }
 function pause() {
   // client.send(3)
-  //   .then(resp => console.log(JSON.stringify(resp)))
-  //   .catch(err => console.error(err));
+  //   .then(resp => log.debug(JSON.stringify(resp)))
+  //   .catch(err => log.error(err));
   // uni.showToast({
   //   title: '暂停...',
   //   icon: 'success'
@@ -161,8 +162,8 @@ function pause() {
 
 function stop() {
   client.send(4)
-    .then(resp => console.log(JSON.stringify(resp)))
-    .catch(err => console.error(err));
+    .then(resp => log.debug(JSON.stringify(resp)))
+    .catch(err => log.error(err));
   uni.showToast({
     title: '停止...',
     icon: 'success'

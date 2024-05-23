@@ -17,45 +17,57 @@
     ></iframe> -->
     <Button @click="onStartScan">开始扫描</Button>
     <Button @click="onCancelScan">取消扫描</Button>
+    <Button @click="onConnect">连接设备</Button>
+    <Button @click="onDisconnect">断开设备</Button>
   </div>
 </template>
 
 <script lang="ts">
-import { Button } from 'ant-design-vue'
-import WaveView from './components/WaveView.vue'
+import { Button } from "ant-design-vue";
+import WaveView from "./components/WaveView.vue";
 
-import { ipcMain, ipcRenderer } from 'electron'
-import { scanner } from './ipc/bluetooth-api'
+import { ipcMain, ipcRenderer } from "electron";
+import { log } from "./public/log";
 
 export default {
   // `setup` 是一个特殊的钩子，专门用于组合式 API。
   components: {
     WaveView,
-    Button
+    Button,
   },
   setup() {
     // 将 ref 暴露给模板
     return {
-      message: '数据...',
+      message: "数据...",
       // url: 'https://pr.sensecho.com/monitorReports/physical?reportZid=28f45456bc62485897eb132e54d9ed67&loginName=ywtest&version=undefined&extend=undefined&moduleShow=true',
-      url: 'https://pr.sensecho.com/monitorReports/v1/sleepStageAhi?reportZid=94f0e0a2f7de4fa7b936729c2721a698&loginName=ywtest&version=v1&extend=undefined&moduleShow=true&token=eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiI1Yzk2MGUxMDZhZDc0YWYyOTdiZDljMjgzNWViN2Y1MCIsInVzZXJaaWQiOiIyZDg0OTZjYTMyYWM0NzMyOTgxODI2ZWRiOWM5ZDI4MSIsInN1YiI6Inl3dGVzdCIsIm9yZ1ppZCI6IjZFT3BNNm95cUQiLCJ3YXJkQ29kZSI6IjZFT3BNNm95cUQiLCJwbGF0Zm9ybSI6MCwiaXNzIjoiaHNyZyIsImlhdCI6MTY5ODg0NzkwMiwicmVmcmVzaCI6ZmFsc2UsImV4cCI6MTcwMTQzOTkwMn0.YzAdLS7LcnVGBMJ3n4-QST0ypUQ15_4Vmv4dTM86nglTcNnbGX6AZiLK_hSKPyMb3cMAcOWQluY9fUSEkcRKOg'
-    }
+      url: "https://pr.sensecho.com/monitorReports/physical?reportZid=3111c6935b9f48eab1d39836feb48927&loginName=ywtest&version=undefined&extend=undefined&moduleShow=true",
+    };
   },
   methods: {
     onload() {
-      console.log('===========================>')
-      console.log('arguments ==>: ')
-      console.log(arguments)
-      setTimeout(() => ipcRenderer.send('htmlToPdf', this.url), 5000)
+      log.info("arguments ==>: ", arguments);
+      setTimeout(() => ipcRenderer.send("htmlToPdf", this.url), 5000);
     },
     onStartScan(evt: any) {
-      scanner.start()
+      //@ts-ignore
+      navigator.bluetooth
+        .requestDevice({
+          acceptAllDevices: true,
+          //     filters: [
+          //       { services: [collector.uuid.service] },
+          //       { name: 'HSRG_11000923' },
+          //       { namePrefix: 'Prefix' }
+          //     ]
+        })
+        .catch((err: any) => {
+          log.error(err);
+        });
     },
-    onCancelScan(evt: any) {
-      scanner.stop()
-    }
-  }
-}
+    onCancelScan(evt: any) {},
+    onConnect() {},
+    onDisconnect() {},
+  },
+};
 </script>
 
 <style>

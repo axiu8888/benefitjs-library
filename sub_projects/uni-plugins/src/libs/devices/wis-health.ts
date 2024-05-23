@@ -1,4 +1,4 @@
-import { ByteBuf, CRC16, binary, utils } from "@benefitjs/core";
+import { ByteBuf, CRC16, binary, logger, utils } from '@benefitjs/core';
 import { bluetooth } from '../uni/bluetooth';
 import { uniapp } from '../uni/uniapp';
 
@@ -6,6 +6,10 @@ import { uniapp } from '../uni/uniapp';
  * 智益康：呼吸训练器
  */
 export namespace WisHealth {
+  /**
+   * 日志打印
+   */
+  export const log = logger.newProxy('wis-health', logger.Level.warn);
 
   /**
    * 蓝牙名
@@ -41,15 +45,17 @@ export namespace WisHealth {
      */
     writeCmd: Cmd = cmd_exit;
     /**
-     * 要求通过验证
+     * 多条有效数据的最小间隔
      */
-    requireVerify: boolean = true;
+    minInterval: number = 1000;
     /**
      * 上次记录
      */
+    _curTimes = -1;
     _startPacket?: Packet;
     _lastPacket?: Packet;
-    _lastTimes: number = -1;
+    _lastTimes: number = 0;
+    _prevTime: number = 0;
 
     /**
      * 数据处理
@@ -57,26 +63,24 @@ export namespace WisHealth {
     private readonly _handler = <uniapp.OnBleClientListener<Client>>{
       onConnected(client, deviceId) {
         client.resetBuf();
-        client.print(`呼吸训练器已连接: ${deviceId}`);
+        log.trace(`呼吸训练器已连接: ${deviceId}`);
       },
 
       onServiceDiscover(client, deviceId, services) {
         // 无论之前是什么状态，重新连接之后需要退出当前状态，避免测量的指令下发失败(即使加上了也会出现下发同一条指令不起作用的情况)
         let count = 0;
         let exitTimerId: any = 0;
-        exitTimerId = setInterval(() => {
+        exitTimerId = utils.setInterval(() => {
           if (count < 20) {
             // 尝试20次就不再发送
-            client
-              .sendExitCmd()
-              .then((resp: any) => {
-                if (resp.successful) {
-                  clearInterval(exitTimerId);
-                }
-              });
+            client.sendExitCmd().then((resp: any) => {
+              if (resp.successful) {
+                utils.clearInterval(exitTimerId);
+              }
+            });
             count++;
           } else {
-            clearInterval(exitTimerId);
+            utils.clearInterval(exitTimerId);
           }
         }, 1000);
       },
@@ -85,7 +89,7 @@ export namespace WisHealth {
         client.resetBuf();
         // 移除定时读取的操作
         client.stopReadTimer();
-        client.print(`呼吸训练器已断开: ${deviceId}`);
+        log.trace(`呼吸训练器已断开: ${deviceId}`);
       },
 
       onCharacteristicWrite(client, deviceId, value) {
@@ -99,7 +103,7 @@ export namespace WisHealth {
             client.readCmd = r_cmd; // 读取指令
             client.readSize = payload; // 读取长度
           }
-          client.print(`发送读取指令[${deviceId}]: ${hex}, cmd: ${r_cmd?.description}, readCmd: ${client.readCmd?.description}, readSize: ${client.readSize}`);
+          log.trace(`发送读取指令[${deviceId}]: ${hex}, cmd: ${r_cmd?.description}, readCmd: ${client.readCmd?.description}, readSize: ${client.readSize}`);
         } else {
           let w_cmd = findCmd((cmd) => cmd.writeAddress == address && cmd.writePayload == payload);
           if (w_cmd && (w_cmd.type == cmd_exit.type || w_cmd.autoRead)) {
@@ -115,16 +119,14 @@ export namespace WisHealth {
                   break;
                 case cmd_exhale_train.type:
                 case cmd_inhale_train.type:
-                  interval = 200;
-                  break;
-                case cmd_lip_girdle_train.type:
+                  interval = uniapp.isIOS() ? 200 : 50;
                   break;
                 default:
                   return; // 其他的指令不支持
               }
               client.startReadTimer(w_cmd, interval);
             }
-            client.print(`发送写入指令[${deviceId}]: ${hex}, cmd: ${w_cmd?.description}, writeCmd: ${client.writeCmd?.description}`);
+            log.trace(`发送写入指令[${deviceId}]: ${hex}, cmd: ${w_cmd?.description}, writeCmd: ${client.writeCmd?.description}`);
           }
         }
       },
@@ -152,19 +154,23 @@ export namespace WisHealth {
 
     /**
      * 呼吸训练器客户端的构造函数
-     * 
+     *
      * @param autoConnect 是否自动连接
      * @param useNative 是否使用本地插件(如果支持)
      */
     constructor(autoConnect: boolean = false, useNative = false) {
-      super(<uniapp.GattUUID>{
-        service: '0000fff0-0000-1000-8000-00805f9b34fb',
-        readCharacteristic: '0000fff1-0000-1000-8000-00805f9b34fb',
-        writeCharacteristic: '0000fff2-0000-1000-8000-00805f9b34fb',
-        notifyCharacteristic: '0000fff1-0000-1000-8000-00805f9b34fb',
-        readDescriptor: '00002902-0000-1000-8000-00805f9b34fb',
-        writeDescriptor: '00002901-0000-1000-8000-00805f9b34fb',
-      }, autoConnect, useNative);
+      super(
+        <uniapp.GattUUID>{
+          service: '0000fff0-0000-1000-8000-00805f9b34fb',
+          readCharacteristic: '0000fff1-0000-1000-8000-00805f9b34fb',
+          writeCharacteristic: '0000fff2-0000-1000-8000-00805f9b34fb',
+          notifyCharacteristic: '0000fff1-0000-1000-8000-00805f9b34fb',
+          readDescriptor: '00002902-0000-1000-8000-00805f9b34fb',
+          writeDescriptor: '00002901-0000-1000-8000-00805f9b34fb',
+        },
+        autoConnect,
+        useNative,
+      );
       // 添加监听，处理数据
       this.addListener(this._handler);
     }
@@ -175,21 +181,24 @@ export namespace WisHealth {
     protected startReadTimer(cmd: Cmd, interval: number = 1000) {
       this.stopReadTimer();
       // 定时发送读取指令
-      this._lastTimes = -1;
+      this._lastTimes = 0;
+      this._curTimes = -1;
       this._startPacket = undefined;
       this._lastPacket = undefined;
-      let timerId: number;
-      timerId = setInterval(() => {
+      this._prevTime = 0;
+      let timerId = <any>[];
+      // @ts-ignore
+      timerId[0] = utils.setInterval(() => {
         if (this.isConnected) {
           if (this._readTimer === timerId) {
-            this.write(this.cmd(OpType.read, cmd));
+            this.write(this.cmd(OpType.read, cmd), 200);
           } else {
-            clearInterval(timerId);
+            utils.clearInterval(timerId[0]);
           }
         } else {
           // 设备断开了，需要停止此次发送
           this.stopReadTimer();
-          clearInterval(timerId);
+          utils.clearInterval(timerId[0]);
         }
       }, interval);
       this._readTimer = timerId;
@@ -200,11 +209,13 @@ export namespace WisHealth {
      */
     protected stopReadTimer() {
       if (this._readTimer) {
-        clearInterval(this._readTimer);
+        utils.clearInterval(this._readTimer);
         this._readTimer = null;
+        this._curTimes = -1;
         this._startPacket = undefined;
         this._lastPacket = undefined;
-        this._lastTimes = -1;
+        this._lastTimes = 0;
+        this._prevTime = 0;
       }
       // 退出读取了，清空本地的缓存；
       this.resetBuf();
@@ -212,7 +223,7 @@ export namespace WisHealth {
 
     protected resetBuf() {
       if (this.buf.size() > 0) {
-        this.print(`resetBuf size[${this.buf.size()}] ==>: ${binary.bytesToHex(this.buf.read())}`);
+        log.trace(`resetBuf size[${this.buf.size()}] ==>: ${binary.bytesToHex(this.buf.read())}`);
       }
       this.buf.clear();
     }
@@ -237,7 +248,7 @@ export namespace WisHealth {
         if (buf.size() > 0) {
           let len = start >= 0 ? Math.max(start, 1) : buf.size();
           let discard = buf.read(0, len);
-          this.print(`(resolveData)丢弃数据: buf.size[${buf.size()}], discard.size[${discard.length}] =>: ${binary.bytesToHex(discard)}`);
+          log.trace(`(resolveData)丢弃数据: buf.size[${buf.size()}], discard.size[${discard.length}] =>: ${binary.bytesToHex(discard)}`);
           continue;
         }
         return; // 退出循环
@@ -256,6 +267,7 @@ export namespace WisHealth {
       if (cmd.type != cmd_exit.type) {
         let packet = parse(data, payload, cmd);
         if (packet) {
+          packet.data = binary.bytesToHex(data);
           // 检测数据的有效性
           switch (cmd.type) {
             case cmd_inhale_assess.type:
@@ -263,67 +275,79 @@ export namespace WisHealth {
               packet.validate = packet.maxPressure! > 0 && this._lastTimes >= 0 && packet.times !== this._lastTimes;
               this._lastTimes = packet.times;
               if (!packet.validate) {
-                this.print('无效数据: ' + JSON.stringify(packet));
-                if (this.requireVerify) {
-                  return;
-                }
+                log.trace('无效数据: ' + JSON.stringify(packet));
+                return;
               }
               break;
             case cmd_inhale_train.type:
             case cmd_exhale_train.type:
-              packet.validate =  packet.pressure > 1;
+              if (packet.step != 2 && packet.step != 3) {
+                return;
+              }
+              packet.validate = packet.pressure > 1.2;
               let sp = this._startPacket;
-              if (!(sp || packet.validate)) { // 无效数据
-                if (this.requireVerify) {
-                  this.print('无效数据: ' + JSON.stringify(packet));
-                  return;
+              if (sp) {
+                // 存在开始
+                if (sp.rawTimes < packet.rawTimes || (sp.rawTimes === packet.rawTimes && !packet.validate)) {
+                  if (sp.maxPressure <= 3.0 && Date.now() - sp.time < 1000) {
+                    return;
+                  }
+                  // 结束
+                  let lp = this._lastPacket!!;
+                  lp.onceDuration = Math.max(packet.time - sp.time, 100);
+                  sp.maxPressure = Math.max(sp.pressure, lp.pressure);
+                  lp.maxPressure = sp.maxPressure;
+                  lp.flag = 'end';
+                  this._startPacket = undefined;
+                  this._prevTime = Date.now();
+
+                  let pk = <Packet>{ ...lp };
+                  this.callListeners<Listener>(
+                    (l) => l.onData(this, data, pk),
+                    (l) => l && (l as any).onData,
+                  );
+
+                  return; // 直接返回
                 }
               } else {
-                if (!sp || sp.times !== packet.times) {
-                  if (sp) { // 有开始的数据包
-                    // 结束
-                    let lp = this._lastPacket!!;
-                    lp.onceDuration = lp.time - sp.time;
-                    sp.maxPressure = Math.max(sp.pressure, lp.pressure);
-                    lp.maxPressure = sp.maxPressure;
-                    lp.times = sp.times;
-                    lp.flag = 'end';
-                    this._startPacket = undefined;
-                    this.callListeners<Listener>((l) => l.onData(this, data, lp), (l) => l && (l as any).onData);
-                    if (!packet.validate) {
-                      this.print('无效数据: ' + JSON.stringify(packet));
-                      return; // 无效数据，直接返回
-                    }
-                  }
-                  this._startPacket = (sp = packet);
-                  packet.flag = 'start';
-                }
-                packet.onceDuration = packet.time - sp.time;
-                sp.maxPressure = Math.max(sp.pressure, packet.pressure);
-                packet.maxPressure = sp.maxPressure;
-
-                if ((sp.times + 1) == packet.times) {
-                  // 结束
-                  this._startPacket = undefined;
-                  packet.flag = 'end';
-                  packet.times = sp.times;
-                  sp = undefined;
-                }
-
-                this._lastPacket = packet; // 最后一个包
-
-                if (!packet.validate && this.requireVerify) {
+                if (!packet.validate) {
+                  // 没有开始，且数据不符合预期值，则直接忽略
                   return;
                 }
+
+                // 3秒内的次数，视为无效
+                if (Date.now() - this._prevTime < 2000) {
+                  return; // 不足1秒，忽略
+                }
+                this._startPacket = sp = packet;
+                sp.flag = 'start';
+                this._curTimes++; // 次数增加
               }
-              break;
-            case cmd_lip_girdle_train.type:
+              packet.times = this._curTimes;
+              packet.onceDuration = Math.max(packet.time - sp.time, 100);
+              sp.maxPressure = Math.max(sp.pressure, packet.pressure);
+              packet.maxPressure = sp.maxPressure;
+
+              if (sp.rawTimes < packet.rawTimes) {
+                // 结束
+                this._startPacket = undefined;
+                packet.flag = 'end';
+                this._prevTime = Date.now();
+              }
+              this._lastPacket = packet; // 最后一个包
               break;
           }
         }
-        this.callListeners<Listener>((l) => l.onData(this, data, packet), (l) => l && (l as any).onData);
+        let pk = <Packet>{ ...packet };
+        this.callListeners<Listener>(
+          (l) => l.onData(this, data, pk),
+          (l) => l && (l as any).onData,
+        );
       } else if (data.length >= 22) {
-        this.callListeners<Listener>((l) => l.onData(this, data, undefined), (l) => l && (l as any).onData);
+        this.callListeners<Listener>(
+          (l) => l.onData(this, data, undefined),
+          (l) => l && (l as any).onData,
+        );
       }
     }
 
@@ -384,24 +408,15 @@ export namespace WisHealth {
     }
 
     /**
-     * 发送 缩唇呼吸训练 指令
-     */
-    sendLipGirdleTrainCmd(): Promise<uniapp.UniResponse> {
-      return this.write(this.cmd(OpType.write, cmd_lip_girdle_train));
-    }
-
-    /**
      * 发送 设置阻力 指令
+     *
+     * @param value 阻力值
+     * @param inhale 是否为吸气
+     * @returns 返回结果
      */
-    sendResistanceCmd(value: number): Promise<uniapp.UniResponse> {
-      return this.write(this.cmd(OpType.write, utils.copyAttrs(cmd_resistance, { writePayload: value })));
-    }
-
-    /**
-     * 发送 设置缩唇呼吸档位 指令
-     */
-    sendSetGearsCmd(value: number): Promise<uniapp.UniResponse> {
-      return this.write(this.cmd(OpType.write, utils.copyAttrs(cmd_gears, { writePayload: value })));
+    sendResistanceCmd(value: number, inhale: boolean): Promise<uniapp.UniResponse> {
+      let cmd = inhale ? cmd_resistance_inhale : cmd_resistance_exhale;
+      return this.write(this.cmd(OpType.write, { ...cmd, writePayload: value }));
     }
 
     /**
@@ -421,12 +436,12 @@ export namespace WisHealth {
       switch (op) {
         case OpType.read:
           address = cmd.readAddress;
-          payload = binary.numberToBytes(cmd.readPayload, 16);
+          payload = binary.numberToBytes(cmd.readPayload ? cmd.readPayload : 0, 16);
           break;
         case OpType.write:
         case OpType.write2:
           address = cmd.writeAddress;
-          payload = binary.numberToBytes(cmd.writePayload, 16);
+          payload = binary.numberToBytes(cmd.writePayload ? cmd.writePayload : 0, 16);
           break;
       }
       let data = new Array<number>(1 + 1 + 2 + payload.length + 2 + 3);
@@ -484,34 +499,25 @@ export namespace WisHealth {
           step: binary.bytesToNumber([payload[12], payload[13]]), // 状态
         };
         break;
-      case cmd_exhale_train.type: // 呼气肌力训练
       case cmd_inhale_train.type: // 吸气肌力训练
+      case cmd_exhale_train.type: // 呼气肌力训练
         packet = <Packet>{
           data: binary.bytesToHex(data),
           type: cmd.type,
           cmdAlias: cmd.description,
+          rawTimes: binary.bytesToNumber([payload[0], payload[1]]), // 次数
           times: binary.bytesToNumber([payload[0], payload[1]]),
           duration: binary.bytesToNumber([payload[2], payload[3]]),
           resistance: binary.hexToFloat32(binary.bytesToHex([payload[4], payload[5]]), 2),
           pressure: binary.hexToFloat32(binary.bytesToHex([payload[6], payload[7], payload[8], payload[9]]), 4),
+          rawPressure: binary.hexToFloat32(binary.bytesToHex([payload[6], payload[7], payload[8], payload[9]]), 4),
           step: binary.bytesToNumber([payload[10], payload[11]]),
           onceDuration: binary.bytesToNumber([payload[12], payload[13]]), // 单次呼吸时间
+          volume: binary.bytesToNumber([payload[14], payload[15]]), // 容积
         };
-        if(cmd.type === cmd_inhale_train.type) {
+        if (cmd.type === cmd_inhale_train.type) {
           packet.pressure = -packet.pressure; // 如果是呼气，为负值，这里取正
         }
-        break;
-      case cmd_lip_girdle_train.type: // 缩唇呼吸训练
-        packet = <Packet>{
-          data: binary.bytesToHex(data),
-          type: cmd.type,
-          cmdAlias: cmd.description,
-          times: binary.bytesToNumber([payload[0], payload[1]]), // 次数
-          duration: binary.bytesToNumber([payload[2], payload[3]]), // 时长
-          resistance: binary.hexToFloat32(binary.bytesToHex([payload[4], payload[5]]), 2), // 阻力
-          pressure: binary.hexToFloat32(binary.bytesToHex([payload[6], payload[7], payload[8], payload[9]]), 4), // 实时压力
-          step: binary.bytesToNumber([payload[10], payload[11]]), // 状态
-        };
         break;
     }
     if (packet) {
@@ -559,14 +565,14 @@ export namespace WisHealth {
      * @param autoRead 是否需要发送读取反馈
      */
     constructor(
-      public type: string, // 指令类型
-      public description: string, // 描述
-      public writeAddress: number = 0, // 写入地址
-      public writePayload: number = 0, // 写入载荷(指令类型)
-      public readAddress: number = 0, // 读取地址
-      public readPayload: number = 0, // 读取载荷(长度)
-      public autoRead = false, // 是否需要发送读取反馈
-    ) { }
+      public readonly type: string, // 指令类型
+      public readonly description: string, // 描述
+      public readonly writeAddress: number = 0, // 写入地址
+      public readonly writePayload: number = 0, // 写入载荷(指令类型)
+      public readonly readAddress: number = 0, // 读取地址
+      public readonly readPayload: number = 0, // 读取载荷(长度)
+      public readonly autoRead = false, // 是否需要发送读取反馈
+    ) {}
   }
 
   /**
@@ -584,37 +590,35 @@ export namespace WisHealth {
   /**
    * 退出当前模式
    */
-  export const cmd_exit = new Cmd('exit', '退出当前模式', 100, 0, undefined, undefined);
+  export const cmd_exit = new Cmd('exit', '退出当前模式', 250, 0, undefined, undefined);
   /**
    * 呼气肌力评估模式
    */
-  export const cmd_exhale_assess = new Cmd('exhale_assess', '呼气肌力评估模式', 100, 111, 10, 7, true);
+  export const cmd_exhale_assess = new Cmd('exhale_assess', '呼气肌力评估模式', 250, 111, 10, 8, true);
   /**
    * 吸气肌力评估模式
    */
-  export const cmd_inhale_assess = new Cmd('inhale_assess', '吸气肌力评估模式', 100, 112, 18, 7, true);
+  export const cmd_inhale_assess = new Cmd('inhale_assess', '吸气肌力评估模式', 250, 112, 25, 8, true);
   /**
    * 呼气肌力训练
    */
-  export const cmd_exhale_train = new Cmd('exhale_train', '呼气肌力训练', 100, 121, 62, 7, true);
+  export const cmd_exhale_train = new Cmd('exhale_train', '呼气肌力训练', 250, 121, 95, 8, true);
   /**
    * 吸气肌力训练
    */
-  export const cmd_inhale_train = new Cmd('inhale_train', '吸气肌力训练', 100, 122, 69, 7, true);
+  export const cmd_inhale_train = new Cmd('inhale_train', '吸气肌力训练', 250, 122, 110, 8, true);
   /**
-   * 吸气肌力评估模式
+   * 呼气阻力
    */
-  export const cmd_lip_girdle_train = new Cmd('lip_girdle_train', '吸气肌力评估模式', 100, 123, 76, 6, true);
+  export const cmd_resistance_exhale = new Cmd('resistance', '呼气阻力', 300, undefined, undefined, undefined, false);
   /**
-   * 阻力
+   * 吸气阻力
    */
-  export const cmd_resistance = new Cmd('resistance', '阻力', 151, undefined, undefined, undefined, false);
-  /**
-   * 缩唇呼吸档位
-   */
-  export const cmd_gears = new Cmd('gears', '缩唇呼吸档位', 152, undefined, undefined, undefined, false);
+  export const cmd_resistance_inhale = new Cmd('resistance', '吸气阻力', 301, undefined, undefined, undefined, false);
 
-  // 全部的指令
+  /**
+   * 全部的指令
+   */
   export const cmds = [
     cmd_compile_time_and_version,
     cmd_pressure,
@@ -624,9 +628,8 @@ export namespace WisHealth {
     cmd_inhale_assess,
     cmd_exhale_train,
     cmd_inhale_train,
-    cmd_lip_girdle_train,
-    cmd_resistance,
-    cmd_gears,
+    cmd_resistance_exhale,
+    cmd_resistance_inhale,
   ];
 
   /**
@@ -666,6 +669,10 @@ export namespace WisHealth {
      */
     times: number;
     /**
+     * 评估次数: 2字节
+     */
+    rawTimes: number;
+    /**
      * 时长
      */
     duration: number;
@@ -676,11 +683,15 @@ export namespace WisHealth {
     /**
      * 最大压力
      */
-    maxPressure?: number;
+    maxPressure: number;
     /**
      * 实时压力
      */
     pressure: number;
+    /**
+     * 实时压力
+     */
+    rawPressure: number;
     /**
      * 仪器状态 第一次评估、第二次评估、第三次(维持 3秒), 5的时候为结果, 7 的时候为最终结果
      */
@@ -697,6 +708,10 @@ export namespace WisHealth {
      * 档位：1~6
      */
     gears: number;
+    /**
+     * 容积
+     */
+    volume: number;
     /**
      * 是否有效
      */
