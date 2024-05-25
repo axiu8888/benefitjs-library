@@ -1,0 +1,119 @@
+import { utils, mqtt } from "@benefitjs/core";
+import { zcenter } from "@benefitjs/devices";
+import { EventEmitter } from "eventemitter3";
+import { log } from "./log";
+
+/**
+ * MQTT
+ */
+export namespace local_mqtt {
+  /**
+   * mqtt客户端连接
+   */
+  export const client = new mqtt.Client(<mqtt.MqttOptions>{
+    // host: "192.168.1.198",
+    host: "pr.sensecho.com",
+    port: 80,
+    path: "/support/mqtt",
+    clientId: `mqttjs_${utils.uuid().substring(0, 16)}`,
+    timeout: 3, // 连接超时
+    autoReconnectInterval: 5, // 自动重连的间隔
+    keepAliveInterval: 30,
+  });
+
+  /**
+   * 事件总线，用于发送订阅的数据
+   */
+  export const emitter = new EventEmitter();
+
+  // 空的订阅
+  client.subscribe(
+    <mqtt.MqttSubscriber>{
+      onConnected(client) {
+        log.debug(`${client.clientId}, 客户端连接成功`);
+        emitter.emit(`client`, { type: "connected" });
+      },
+      onDisconnected(client) {
+        log.debug(`${client.clientId}, 客户端关闭连接`);
+        emitter.emit(`client`, { type: "disconnected" });
+      },
+      onConnectLost(client, lost) {
+        log.debug(`${client.clientId}, 客户端连接断开`, lost);
+        emitter.emit(`client`, { type: "connectLost", msg: lost });
+      },
+      onMessageDelivered(client, msg) {
+        log.debug(`${client.clientId}, 消息送达`, msg);
+        emitter.emit(`client`, { type: "messageDelivered", msg: msg });
+      },
+    },
+    `/ignored/${utils.uuid()}`
+  );
+
+  /**
+   * 采集器数据订阅
+   */
+  const collector_subscriber = <mqtt.MqttSubscriber>{
+    onMessage(client, topic, msg) {
+      log.trace(`接收到采集器消息`, topic, msg);
+      let pkg = zcenter.parseZCenter(msg.payloadBytes);
+      const pkgTime = utils.dateFmt(pkg.time * 1000);
+      //log.debug(`${topic}, sn: ${pkg.packageSn}, time: ${pkgTime}`);
+      emitter.emit(`collector/${pkg.deviceId}`, pkg);
+    },
+  };
+
+  /**
+   * 订阅采集器数据
+   *
+   * @param deviceId 采集器ID, 如 01001234、11001234
+   */
+  export const subscribeCollector = (
+    deviceId: string,
+    cb?: (evt: any) => void
+  ) => {
+    client.subscribe(collector_subscriber, `hardware/${deviceId}`);
+    if (cb) emitter.on(`collector/${deviceId}`, cb);
+  };
+  /**
+   * 取消采集器数据订阅
+   *
+   * @param deviceId 采集器ID, 如 01001234、11001234
+   */
+  export const unsubscribeCollector = (deviceId: string) => {
+    client.unsubscribe(collector_subscriber, `hardware/${deviceId}`);
+  };
+
+  /**
+   * 搏英数据订阅
+   */
+  const holter_subscriber = <mqtt.MqttSubscriber>{
+    onMessage(client, topic, msg) {
+      log.trace(`接收到Holter消息`, topic, msg);
+      let pkg = JSON.parse(msg.payloadString);
+      emitter.emit(`holter/${pkg.mac}`, pkg);
+    },
+  };
+
+  /**
+   * 订阅搏英数据
+   *
+   * @param mac 搏英MAC地址, 如 00195D244F11
+   */
+  export const subscribeHolter = (mac: string, cb?: (evt: any) => void) => {
+    client.subscribe(holter_subscriber, `hardware/boying12/${mac}`);
+    if (cb) emitter.on(`holter/${mac}`, cb);
+  };
+
+  /**
+   * 取消搏英数据订阅
+   *
+   * @param mac 搏英MAC地址, 如 00195D244F11
+   */
+  export const unsubscribeHolter = (mac: string, cb?: (evt: any) => void) => {
+    client.unsubscribe(holter_subscriber, `hardware/boying12/${mac}`);
+    if (cb) emitter.removeListener(`holter/${mac}`, cb);
+  };
+
+  // 连接
+  setTimeout(() => client.connect());
+}

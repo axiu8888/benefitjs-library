@@ -5,7 +5,7 @@ import Antd from 'ant-design-vue';
 import './style.css'
 import './antd.less'
 
-import './demos/ipc'
+import './public/node-ipc'
 import { log } from './public/log';
 
 log.info('app create...');

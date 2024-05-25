@@ -104,11 +104,10 @@ async function createWindow() {
 
   // const url = 'https://pr.sensecho.com/monitorReports/physical?reportZid=3111c6935b9f48eab1d39836feb48927&loginName=ywtest&version=undefined&extend=undefined&moduleShow=true'
   // const url = 'https://pr.sensecho.com/supportReport/v1/smwt?version=v1&reportId=599e5b01bf94422696874a1f23276ca1&extend=pfTest'
-  const url =
-    "https://pr.sensecho.com/supportReport/sgrq?version=null&reportId=85d0bf6e8ed74c3d9dfad61036006d9f&extend=null";
+  // const url = "https://pr.sensecho.com/supportReport/sgrq?version=null&reportId=85d0bf6e8ed74c3d9dfad61036006d9f&extend=null";
   // const url = 'https://pr.sensecho.com/supportReport/sportRecory?version=null&reportId=d104d411ac1242a385aa9d2f2ab2918f&extend=null';
   // const url = 'http://192.168.1.198/supportAdmin/question.html#/preview?item=saq&reportId=c2b976f7cd974e45b86ce99b8ac4d243&version=null&extend=null';
-  // const url = 'http://192.168.1.198/supportAdmin/question.html#/preview?item=saq&reportId=c2b976f7cd974e45b86ce99b8ac4d243&version=null&extend=null';
+  const url = 'http://192.168.1.198/supportAdmin/question.html#/preview?item=saq&reportId=c2b976f7cd974e45b86ce99b8ac4d243&version=null&extend=null';
   const searchParams = new URLSearchParams(url.substring(url.indexOf("?")));
   let reportType = "";
   let reportId = "test";
@@ -167,7 +166,7 @@ async function createWindow() {
           });
         })
         .catch((err) => console.error(err));
-    }, 8000);
+    }, 6000);
   });
   win.webContents.on("did-finish-load", function (evt) {
     log.debug("加载完成 ==>: " + JSON.stringify(evt));

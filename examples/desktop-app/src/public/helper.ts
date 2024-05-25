@@ -32,5 +32,5 @@ export namespace helper {
    */
   export const closeDevTools = () => mainWin.webContents.closeDevTools();
 
-  log.info("helper 当前进程:", process.pid);
+  log.debug("helper 当前进程:", process.pid);
 }

@@ -13,7 +13,7 @@ export namespace mqtt {
   /**
    * 生成客户端ID
    */
-  export const nextClientId = (prefix = 'mqttjs_') => prefix + utils.nextUUID().substring(0, 12);
+  export const nextClientId = (prefix = 'mqttjs_') => prefix + utils.uuid().substring(0, 16);
 
   /**
    * MQTT客户端
@@ -97,6 +97,8 @@ export namespace mqtt {
         path: '/mqtt',
         userName: '',
         password: '',
+        mqttVersion: 4,
+        mqttVersionExplicit: false,
       });
       try {
         this.raw = new Paho.Client(opts.host, opts.port, opts.path, opts.clientId);
@@ -131,7 +133,7 @@ export namespace mqtt {
      * 是否已连接
      */
     isConnected(): boolean {
-      return this.raw?.connected && true;
+      return this.raw?.connected;
     }
 
     /**
@@ -143,12 +145,12 @@ export namespace mqtt {
       // connect the client
       //userName: 'admin', password: 'public'
       try {
-        let { userName, password } = this.opts;
+        let { userName, password, timeout, keepAliveInterval, willMessage, cleanSession, useSSL, mqttVersion, mqttVersionExplicit } = this.opts;
         this.raw.connect(
-          utils.copyAttrs({ userName, password }, <any>{
+          utils.copyAttrs({ userName, password, timeout, keepAliveInterval, willMessage, cleanSession, useSSL, mqttVersion, mqttVersionExplicit }, <any>{
             onSuccess: (res: any) => this.onConnect(false, this.raw.connectOptions.uri),
             onFailure: (lost: ConnectLost) => this.onConnectionLost(lost),
-          }),
+          }, false),
         );
       } catch (err: any) {
         log.warn(err);
@@ -588,10 +590,6 @@ export namespace mqtt {
      */
     clientId: string;
     /**
-     * 断开后自动连接的间隔，至少3秒，如果小于等于0，表示不自动重连
-     */
-    autoReconnectInterval: number;
-    /**
      * 主机地址
      */
     host: string;
@@ -611,32 +609,22 @@ export namespace mqtt {
      * 密码
      */
     password: string;
-  }
-
-  /**
-   * 连接参数
-   */
-  export interface ConnectOptions {
     /**
      * 如果在这个秒数内连接没有成功，则认为连接失败。缺省值是30秒。
      */
     timeout?: number;
     /**
-     * 此连接的身份验证用户名。
+     * 断开后自动连接的间隔，至少3秒，如果小于等于0，表示不自动重连
      */
-    username?: string;
-    /**
-     * 此连接的身份验证密码。
-     */
-    password?: string;
-    /**
-     * 客户端异常断开连接时服务器发送，Paho.Message
-     */
-    willMessage?: any;
+    autoReconnectInterval: number;
     /**
      * 如果在这几秒内没有活动,服务器将断开连接此客户端。假设如果不设置,默认值为60秒。
      */
     keepAliveInterval?: number;
+    /**
+     * 客户端异常断开连接时服务器发送，Paho.Message
+     */
+    willMessage?: any;
     /**
      * 如果为true(默认值)，则在连接成功时删除客户端和服务器的持久状态。
      */
@@ -645,25 +633,6 @@ export namespace mqtt {
      * 如果存在且为true，则使用SSL Websocket连接。
      */
     useSSL?: boolean;
-    /**
-     * 传递给onSuccess回调或onFailure回调。
-     */
-    invocationContext?: any;
-    /**
-     * 如果存在，则包含一组主机名或完全限定的WebSocket uri (ws://mqtt.eclipseprojects.io:80/mqtt)，
-     * 它们将按顺序代替构造器上的主机和端口参数。每次依次尝试一个主机，直到其中一个成功。
-     */
-    hosts: Array<string>;
-    /**
-     * 如果存在与主机匹配的端口集。如果主机包含uri，则不使用此属性。
-     */
-    ports: Array<number>;
-    /**
-     * 设置如果连接丢失，客户端是否会自动尝试重新连接到服务器。
-     *    如果设置为false，在连接丢失的情况下，客户端将不会尝试自动重新连接到服务器。
-     *    如果设置为true，在连接丢失的情况下，客户端将尝试重新连接到服务器。它将在尝试重新连接之前等待1秒，对于每一次失败的重新连接尝试，延迟将加倍，直到2分钟，此时延迟将保持在2分钟。
-     */
-    reconnect: boolean;
     /**
      * 用于连接到MQTT代理的MQTT版本。
      * 3 - MQTT v3.1
@@ -674,12 +643,6 @@ export namespace mqtt {
      * 如果设置为true，将强制连接使用所选的MQTT版本，否则将连接失败。
      */
     mqttVersionExplicit: boolean;
-    /**
-     * 如果存在，应该包含一个完全限定的WebSocket uri列表(例如ws://mqtt.eclipseprojects.io:80/mqtt)，
-     * 这些uri将按顺序代替构造函数的主机和端口参数进行尝试。依次尝试一个uri，直到其中一个成功。
-     * 不要将此属性与hosts一起使用，因为hosts数组将被转换为uri并覆盖此属性。
-     */
-    uris: Array<string>;
   }
 
   /**

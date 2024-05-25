@@ -563,11 +563,14 @@ export namespace utils {
    *
    * @param from 源对象
    * @param to  目标对象
+   * @param allowUndefiled 是否允许undefined值
    */
-  export function copyAttrs(from: any, to: any): any {
+  export function copyAttrs(from: any, to: any, allowUndefiled = true): any {
     // 拷贝数据
-    for (var attr in from) {
-      to[attr] = from[attr];
+    for (let attr in from) {
+      let v = from[attr];
+      if (allowUndefiled || (v != undefined && v != null))
+        to[attr] = v;
     }
     return to;
   }
@@ -769,6 +772,5 @@ export namespace utils {
 
   // ========================================================
   export const rawUUID = (): string => uuidv4();
-  export const uuid = (): string => rawUUID().replaceAll('-', '');
-  export const nextUUID = (): string => rawUUID().replace(new RegExp('-', 'gm'), '');
+  export const uuid = (): string => rawUUID().replace(new RegExp('-', 'gm'), '');
 }

@@ -3,6 +3,7 @@ import {
   BrowserWindow,
   shell,
   ipcMain,
+  screen,
   PrintToPDFOptions,
 } from "electron";
 import { release } from "node:os";
@@ -12,6 +13,7 @@ import { utils } from "@benefitjs/core";
 import { helper } from "../../src/public/helper";
 import { log } from "../../src/public/log";
 import { serialport } from "../../src/public/serialport";
+import "../../src/public/ws-server";
 
 // const fs = require('fs');
 
@@ -54,14 +56,30 @@ const url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = join(process.env.DIST, "index.html");
 
 helper.ipcMain = ipcMain;
-log.info("instance.ipcMain", process.pid);
+log.debug("instance.ipcMain", process.pid);
 
 async function createWindow() {
+  const displays = screen.getAllDisplays();
+  const primaryDisplay = displays[0];
+
+  // 获取显示器的宽度和高度
+  const { width, height } = primaryDisplay.size;
+
+  log.debug(`屏幕，宽度: ${width}, 高度: ${height}`);
+
+  // 不显示界面
+  app.setLoginItemSettings({
+    openAtLogin: true,
+    openAsHidden: true,
+  });
+
+  log.debug(`win.width: ${width * 0.6}, win.height: ${height * 0.8}`);
+
   win = new BrowserWindow({
     title: "Main window",
     icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
-    width: 1400,
-    height: 1000,
+    width: Math.max(width * 0.7, 1920),
+    height: Math.max(height * 0.9, 1080),
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -87,7 +105,7 @@ async function createWindow() {
 
   // Test actively push message to the Electron-Renderer
   win.webContents.on("did-finish-load", () => {
-    log.info("did-finish-load ...");
+    log.debug("did-finish-load ...");
     // 发送到渲染线程(发送到浏览器)
     win?.webContents.send(
       "main-process-message",
@@ -97,31 +115,32 @@ async function createWindow() {
 
   // Make all links open with the browser, not with the application
   win.webContents.setWindowOpenHandler(({ url }) => {
-    log.info("setWindowOpenHandler, url:", url);
+    log.debug("setWindowOpenHandler, url:", url);
     if (url.startsWith("https:")) shell.openExternal(url);
     return { action: "deny" };
   });
-  // win.webContents.on('will-navigate', (event, url) => { }) #344
+  win.webContents.on('will-navigate', (event, url) => { log.debug('[will-navigate] url ==>', url) }) //#344
 
   setTimeout(() => {
-    log.info("获取串口 ...");
+    log.debug("获取串口 ...");
 
     serialport
       .list()
-      .then((ports) => log.info("ports:", ports))
+      .then((ports) => log.debug("ports:", ports))
       .catch((err) => log.error(err));
 
-    // // 开始探测
-    serialport.detector.start(true);
+    // // // 开始探测
+    // serialport.detector.start(true);
   }, 2000);
 }
 
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
-  log.info("window-all-closed...");
+  log.debug("window-all-closed...");
   win = null;
   if (process.platform !== "darwin") app.quit();
+  // app.quit();
 });
 
 app.on("second-instance", () => {
