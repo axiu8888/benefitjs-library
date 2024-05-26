@@ -5,7 +5,7 @@ import { Paho } from './paho-mqtt';
 /**
  * MQTT
  */
-export namespace mqtt {
+export namespace MQTT {
   /**
    * 日志打印
    */

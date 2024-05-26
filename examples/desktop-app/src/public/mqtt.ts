@@ -1,4 +1,4 @@
-import { utils, mqtt } from "@benefitjs/core";
+import { utils, MQTT } from "@benefitjs/core";
 import { zcenter } from "@benefitjs/devices";
 import { EventEmitter } from "eventemitter3";
 import { log } from "./log";
@@ -6,11 +6,11 @@ import { log } from "./log";
 /**
  * MQTT
  */
-export namespace local_mqtt {
+export namespace mqtt {
   /**
    * mqtt客户端连接
    */
-  export const client = new mqtt.Client(<mqtt.MqttOptions>{
+  export const client = new MQTT.Client(<MQTT.MqttOptions>{
     // host: "192.168.1.198",
     host: "pr.sensecho.com",
     port: 80,
@@ -28,7 +28,7 @@ export namespace local_mqtt {
 
   // 空的订阅
   client.subscribe(
-    <mqtt.MqttSubscriber>{
+    <MQTT.MqttSubscriber>{
       onConnected(client) {
         log.debug(`${client.clientId}, 客户端连接成功`);
         emitter.emit(`client`, { type: "connected" });
@@ -52,7 +52,7 @@ export namespace local_mqtt {
   /**
    * 采集器数据订阅
    */
-  const collector_subscriber = <mqtt.MqttSubscriber>{
+  const collector_subscriber = <MQTT.MqttSubscriber>{
     onMessage(client, topic, msg) {
       log.trace(`接收到采集器消息`, topic, msg);
       let pkg = zcenter.parseZCenter(msg.payloadBytes);
@@ -86,7 +86,7 @@ export namespace local_mqtt {
   /**
    * 搏英数据订阅
    */
-  const holter_subscriber = <mqtt.MqttSubscriber>{
+  const holter_subscriber = <MQTT.MqttSubscriber>{
     onMessage(client, topic, msg) {
       log.trace(`接收到Holter消息`, topic, msg);
       let pkg = JSON.parse(msg.payloadString);

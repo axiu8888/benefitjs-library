@@ -1,12 +1,11 @@
-<!--
- * @Description:
- * @LastEditTime: 2023-03-07 10:33:41
- * @LastEditors: Please set LastEditors
- * @FilePath: \core\README.md
--->
+# 组件
 
-## 版本
+## 波形绘制 WaveView
 
-### 0.1.0
+example:
+```
+<div>
+    <WaveView></WaveView>
+</div>
+```
 
-1. 初始化提交

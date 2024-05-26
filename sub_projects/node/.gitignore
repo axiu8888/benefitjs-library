@@ -1,0 +1,7 @@
+node_modules
+./dist
+./types
+
+package-lock.json
+dist
+types

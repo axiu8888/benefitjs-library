@@ -3,8 +3,8 @@ packages:
   - "sub_projects/**"
   # - "examples/**"
   - "examples/desktop-app"
-  # - "examples/my-uniapp"
   # - "examples/pdf-creator"
+  # - "examples/my-uniapp"
 
   # 不包括在 test 文件夹下的 package
   - "!**/test/**"

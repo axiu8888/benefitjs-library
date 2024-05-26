@@ -7,10 +7,11 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "pnpm run --filter * build",
     "build:core": "pnpm run --filter @benefitjs/core build",
+    "build:node": "pnpm run --filter @benefitjs/node build",
     "build:devices": "pnpm run --filter @benefitjs/devices build",
     "build:widgets": "pnpm run --filter @benefitjs/widgets build",
     "build:uni-plugins": "pnpm run --filter @benefitjs/uni-plugins build",
-    "build": "pnpm run build:core && pnpm run build:devices && pnpm run build:widgets && pnpm run build:uni-plugins"
+    "build": "pnpm run build:core && npm run build:node && pnpm run build:devices && pnpm run build:widgets && pnpm run build:uni-plugins"
   },
   "keywords": [],
   "author": "",

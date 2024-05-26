@@ -10,12 +10,11 @@ import { release } from "node:os";
 import { join } from "node:path";
 import { writeFile } from "fs";
 import { utils } from "@benefitjs/core";
+import { sqlite } from "@benefitjs/node";
+import { serialport } from '../../src/public/serialport';
 import { helper } from "../../src/public/helper";
 import { log } from "../../src/public/log";
-import { serialport } from "../../src/public/serialport";
-import "../../src/public/ws-server";
-
-// const fs = require('fs');
+// import "../../src/public/ws-server";
 
 // The built directory structure
 //
@@ -74,6 +73,8 @@ async function createWindow() {
   });
 
   log.debug(`win.width: ${width * 0.6}, win.height: ${height * 0.8}`);
+
+  log.info('sqlite ==>:', sqlite);
 
   win = new BrowserWindow({
     title: "Main window",

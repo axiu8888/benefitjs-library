@@ -1,9 +1,9 @@
 {
-  "name": "@benefitjs/devices",
+  "name": "@benefitjs/node",
   "version": "0.1.0",
-  "description": "设备",
-  "main": "dist/devices.umd.js",
-  "module": "dist/devices.mjs",
+  "description": "Node环境的封装库",
+  "main": "dist/node.umd.js",
+  "module": "dist/node.mjs",
   "types": "types/index.d.ts",
   "files": [
     "dist",
@@ -20,13 +20,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@benefitjs/core": "workspace:^"
+    "@benefitjs/core": "workspace:^",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
+    "@types/node": "^20.12.12",
     "prettier": "^2.8.8",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^5.2.2",
+    "typescript": "^5.4.3",
     "vite": "~4.3.9"
   }
 }
