@@ -9,7 +9,7 @@ export namespace MQTT {
   /**
    * 日志打印
    */
-  export const log = logger.newProxy('mqtt', logger.Level.warn);
+  export const log = logger.newProxy('MQTT', logger.Level.warn);
   /**
    * 生成客户端ID
    */
@@ -34,7 +34,7 @@ export namespace MQTT {
       /**
        * 订阅
        */
-      subscriptions: new Map<MqttSubscriber, MqttSubscription>(),
+      subscriptions: new Map<Subscriber, Subscription>(),
 
       match(topic, subscription): boolean {
         if (subscription.topics.size > 0) {
@@ -72,7 +72,7 @@ export namespace MQTT {
         this.subscriptions.delete(subscriber);
       },
 
-      getTopics(filter: utils.Predicate<MqttSubscription> = (_ms) => true) {
+      getTopics(filter: utils.Predicate<Subscription> = (_ms) => true) {
         if (this.subscriptions.size <= 0) {
           return <string[]>[];
         }
@@ -90,8 +90,8 @@ export namespace MQTT {
       },
     };
 
-    constructor(public opts: MqttOptions) {
-      this.opts = utils.copyAttrs(opts, <MqttOptions>{
+    constructor(public opts: Options) {
+      this.opts = utils.copyAttrs(opts, <Options>{
         clientId: nextClientId(),
         port: 8083,
         path: '/mqtt',
@@ -111,7 +111,7 @@ export namespace MQTT {
       }
     }
 
-    protected rawSubscribe(ms: MqttSubscription, topic: string, qos: number = 0): boolean {
+    protected rawSubscribe(ms: Subscription, topic: string, qos: number = 0): boolean {
       if (this.isConnected()) {
         this.raw.subscribe(topic, <any>{ qos: qos });
         return true;
@@ -119,7 +119,7 @@ export namespace MQTT {
       return false;
     }
 
-    protected rawUnsubscribe(ms: MqttSubscription, topic: string) {
+    protected rawUnsubscribe(ms: Subscription, topic: string) {
       if (this.isConnected()) {
         this.raw.unsubscribe(topic, <any>{});
       }
@@ -174,15 +174,15 @@ export namespace MQTT {
      * @param topic 过滤规则：/device/#
      * @param opts 订阅参数
      */
-    subscribe(subscriber: MqttSubscriber, topic: string, qos: number = 0) {
+    subscribe(subscriber: Subscriber, topic: string, qos: number = 0) {
       if (!topic) throw new Error('topic不能为空');
       if (!subscriber) throw new Error('订阅者不能为null');
 
       let subscription = this.dispatcher.getSubscription(subscriber);
       let exist = subscription ? true : false;
       if (!subscription) {
-        subscription = <MqttSubscription>{
-          topics: new Map<String, MqttSubscriptionTopic>(),
+        subscription = <Subscription>{
+          topics: new Map<String, SubscriptionTopic>(),
           subscriber: subscriber,
           getTopics(filter) {
             return utils.mapValuesToArray(this.topics).filter(filter);
@@ -193,8 +193,8 @@ export namespace MQTT {
           addTopics(...topics) {
             topics.forEach((topic) => this.topics.set(topic.topic.topicName, topic));
           },
-          removeTopics(...topics): MqttSubscriptionTopic[] {
-            let removed = <MqttSubscriptionTopic[]>[];
+          removeTopics(...topics): SubscriptionTopic[] {
+            let removed = <SubscriptionTopic[]>[];
             this.topics.forEach((mt) => {
               if (topics.includes(mt.topic.topicName)) {
                 removed.push(mt);
@@ -224,7 +224,7 @@ export namespace MQTT {
      * @param 订阅者
      * @param topic 过滤规则：/device/#
      */
-    unsubscribe(subscriber: MqttSubscriber, topic: string = 'all') {
+    unsubscribe(subscriber: Subscriber, topic: string = 'all') {
       let subscription = this.dispatcher.getSubscription(subscriber);
       if (subscription) {
         try {
@@ -373,7 +373,7 @@ export namespace MQTT {
     /**
      * 订阅的主题和订阅对象
      */
-    subscriptions: Map<MqttSubscriber, MqttSubscription>;
+    subscriptions: Map<Subscriber, Subscription>;
 
     /**
      * 分发消息
@@ -391,30 +391,30 @@ export namespace MQTT {
      * @param subscription 订阅者
      * @returns 是否匹配
      */
-    match(topic: string, subscription: MqttSubscription): boolean;
+    match(topic: string, subscription: Subscription): boolean;
 
     /**
-     * 获取MqttSubscription
+     * 获取Subscription
      *
      * @param subscriber 订阅者
      * @returns 返回订阅者
      */
-    getSubscription(subscriber: MqttSubscriber): MqttSubscription;
+    getSubscription(subscriber: Subscriber): Subscription;
 
     /**
-     * 添加MqttSubscription
+     * 添加Subscription
      *
      * @param 订阅者
      */
-    addSubscription(subscription: MqttSubscription): void;
+    addSubscription(subscription: Subscription): void;
 
     /**
-     * 移除MqttSubscription
+     * 移除Subscription
      *
      * @param subscriber 订阅者
      * @returns 返回被移除的订阅者
      */
-    removeSubscription(subscriber: MqttSubscriber): MqttSubscription;
+    removeSubscription(subscriber: Subscriber): Subscription;
 
     /**
      * 全部的topic
@@ -422,7 +422,7 @@ export namespace MQTT {
      * @param filter 过滤
      * @returns 获取匹配的主题
      */
-    getTopics(filter: utils.Predicate<MqttSubscription>): string[];
+    getTopics(filter: utils.Predicate<Subscription>): string[];
 
     /**
      * 获取订阅者唯一的topic(其他订阅没有此主题)
@@ -430,26 +430,26 @@ export namespace MQTT {
      * @param subscription 订阅者
      * @returns 获取匹配的主题
      */
-    getUniqueTopics(subscription: MqttSubscription): string[];
+    getUniqueTopics(subscription: Subscription): string[];
   }
 
-  export interface MqttSubscription {
+  export interface Subscription {
     /**
      * 订阅的主题
      */
-    readonly topics: Map<String, MqttSubscriptionTopic>;
+    readonly topics: Map<String, SubscriptionTopic>;
 
     /**
      * 订阅者
      */
-    readonly subscriber: MqttSubscriber;
+    readonly subscriber: Subscriber;
 
     /**
      * 过滤主题
      *
      * @param filter 过滤器
      */
-    getTopics(filter: utils.Predicate<MqttSubscriptionTopic>): MqttSubscriptionTopic[];
+    getTopics(filter: utils.Predicate<SubscriptionTopic>): SubscriptionTopic[];
 
     /**
      * 判断主题是否已存在
@@ -457,14 +457,14 @@ export namespace MQTT {
      * @param topic 主题
      * @returns 返回判断结果
      */
-    hasTopic(topic: string | MqttTopic): boolean;
+    hasTopic(topic: string | Topic): boolean;
 
     /**
      * 添加主题
      *
      * @param topics 主题
      */
-    addTopics(...topics: MqttSubscriptionTopic[]): void;
+    addTopics(...topics: SubscriptionTopic[]): void;
 
     /**
      * 移除主题
@@ -472,14 +472,14 @@ export namespace MQTT {
      * @param topics 主题
      * @returns 返回被移除的主题
      */
-    removeTopics(...topics: string[]): MqttSubscriptionTopic[];
+    removeTopics(...topics: string[]): SubscriptionTopic[];
   }
 
-  export interface MqttSubscriptionTopic {
+  export interface SubscriptionTopic {
     /**
      * 主题
      */
-    topic: MqttTopic;
+    topic: Topic;
     /**
      * 服务质量
      */
@@ -489,7 +489,7 @@ export namespace MQTT {
   /**
    * MQTT消息订阅
    */
-  export interface MqttSubscriber {
+  export interface Subscriber {
     /**
      * 接收到消息
      *
@@ -584,7 +584,7 @@ export namespace MQTT {
   /**
    * MQTT参数
    */
-  export interface MqttOptions {
+  export interface Options {
     /**
      * 客户端ID: mqttjs_12233334343333
      */
@@ -648,7 +648,7 @@ export namespace MQTT {
   /**
    * MQTT topic
    */
-  export class MqttTopic {
+  export class Topic {
     /**
      * 节点片段
      */
@@ -690,11 +690,11 @@ export namespace MQTT {
     /**
      * 匹配 topic
      */
-    match(topic: MqttTopic | string): boolean {
+    match(topic: Topic | string): boolean {
       if (typeof topic == 'string') {
         topic = getTopic(topic as string);
       }
-      return this.node.match((topic as MqttTopic).node);
+      return this.node.match((topic as Topic).node);
     }
   }
 
@@ -812,8 +812,8 @@ export namespace MQTT {
   // const MULTI_NODE = new Node('#', undefined as any, undefined as any, 0)
   // const SINGLE_NODE = new Node('+', undefined as any, undefined as any, 0)
   const PURE_FILTER: utils.Predicate<Node> = (n) => !(n.part == MULTI || n.part == SINGLE);
-  const EMPTY_TOPIC = new MqttTopic('');
-  const TOPICS = new Map<String, MqttTopic>();
+  const EMPTY_TOPIC = new Topic('');
+  const TOPICS = new Map<String, Topic>();
 
   /**
    * 获取主题
@@ -821,16 +821,16 @@ export namespace MQTT {
    * @param name 主题名
    * @returns 返回主题
    */
-  export function getTopic(name: string | MqttTopic): MqttTopic {
+  export function getTopic(name: string | Topic): Topic {
     if (!name) {
       return EMPTY_TOPIC;
     }
     if (typeof name !== 'string') {
-      return name as MqttTopic;
+      return name as Topic;
     }
     let topic = TOPICS.get(name);
     if (!topic) {
-      TOPICS.set(name, (topic = new MqttTopic(name)));
+      TOPICS.set(name, (topic = new Topic(name)));
     }
     return topic!!;
   }
