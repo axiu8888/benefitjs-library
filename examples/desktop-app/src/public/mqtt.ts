@@ -22,6 +22,14 @@ export namespace mqtt {
   });
 
   /**
+   * 发布消息
+   * 
+   * @param topic 主题
+   * @param payload 消息
+   */
+  export const publish = (topic: string, payload: string) => client.publish(topic, payload);
+
+  /**
    * 事件总线，用于发送订阅的数据
    */
   export const emitter = new EventEmitter();
