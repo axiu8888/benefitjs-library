@@ -18,20 +18,20 @@ export namespace processEnv {
    * 环境类型
    */
   export enum Type {
-    Browser = 'Browser', // 浏览器
-    Electron = 'Electron', // Electron
-    Node = 'Node', // NodeJS
-    Uni = 'Uni', // UNI
-    WeiXin = 'WeiXin', // 微信小程序
-    Unknown = 'Unknown', // 未知
+    Browser = 'browser', // 浏览器
+    Electron = 'electron', // Electron
+    Node = 'node', // NodeJS
+    Uni = 'uni', // UNI
+    WeiXin = 'weixin', // 微信小程序
+    Unknown = 'unknown', // 未知
   }
 
   /**
    * 获取环境类型
    */
   export const getType = () => {
-    if(isUni()) return Type.Uni;
-    if(isWeiXin()) return Type.WeiXin;
+    if (isUni()) return Type.Uni;
+    if (isWeiXin()) return Type.WeiXin;
     if (isNode()) return isElectron() ? Type.Electron : Type.Node;
     if (isBrowser()) return Type.Browser;
     return Type.Unknown;
@@ -40,14 +40,17 @@ export namespace processEnv {
   /**
    * 是否为Node环境
    */
+  //@ts-ignore
   export const isNode = () => typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
   /**
    * 是否为浏览器环境
    */
+  //@ts-ignore
   export const isBrowser = () => typeof window !== 'undefined' && typeof window.document !== 'undefined';
   /**
    * 是否为Electron环境
    */
+  //@ts-ignore
   export const isElectron = () => typeof process !== 'undefined' && process.versions != null && process.versions.electron != null;
   /**
    * 判断是否为微信小程序
@@ -78,5 +81,4 @@ export namespace processEnv {
       return Browser.Unknown;
     }
   };
-
 }

@@ -1,4 +1,5 @@
 import { utils } from './core';
+import { processEnv } from './process-env';
 
 /**
  * 日志打印
@@ -145,20 +146,21 @@ export namespace logger {
           arr.push(el);
         }
       });
-      return `${level} [${tag}] ==>: ${arr.join(' ')}`;
+      return `[${processEnv.getType()}] ${level} [${tag}] ==>: ${arr.join(' ')}`;
     }
     //@ts-ignore
     if ((typeof window == 'undefined' || typeof document == 'undefined') && typeof process !== 'undefined' && process.versions.node) {
       // nodejs环境
-      return [`${utils.dateFmt(Date.now(), 'yyyy-MM-dd HH:mm:ss.SSS')} ${level} [${tag}] ==>: `, ...msg];
+      let _date = utils.dateFmt(Date.now(), 'yyyy-MM-dd HH:mm:ss.SSS')
+      return [`${_date} [${processEnv.getType()}] ${level} [${tag}] ==>: `, ...msg];
     }
     //@ts-ignore
     if (typeof window !== 'undefined' || typeof document !== 'undefined') {
-      // console.info('浏览器环境...', `window ==>: ${typeof window !== 'undefined'}, document ==>: ${typeof document !== 'undefined'}, nodejs ==>: ${typeof process !== 'undefined'}`);
       // 浏览器环境
-      return [`${utils.dateFmt(Date.now(), 'yyyy-MM-dd HH:mm:ss.SSS')} ${level} [${tag}] ==>: `, ...msg];
+      let _date = utils.dateFmt(Date.now(), 'yyyy-MM-dd HH:mm:ss.SSS')
+      return [`${_date} [${processEnv.getType()}] ${level} [${tag}] ==>: `, ...msg];
     }
-    return [`${level} [${tag}] ==>: `, ...msg];
+    return [`[${processEnv.getType()}] ${level} [${tag}] ==>: `, ...msg];
   };
 
   /**
