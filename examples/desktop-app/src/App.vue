@@ -1,6 +1,9 @@
 <template>
-  <div id ='app'>
+  <div id="app">
     <h3>{{ title }}</h3>
+
+    <qrcode></qrcode>
+
     <WaveView></WaveView>
     <!-- <holter></holter> -->
   </div>
@@ -10,6 +13,7 @@
 import { Button } from "ant-design-vue";
 import WaveView from "./components/WaveView.vue";
 import holter from "./components/holter.vue";
+import qrcode from "./components/qrcode.vue";
 
 import { ipcMain, ipcRenderer } from "electron";
 import { log } from "./public/log";
@@ -20,6 +24,7 @@ export default {
   components: {
     WaveView,
     holter,
+    qrcode,
     Button,
   },
   setup() {
@@ -35,8 +40,8 @@ export default {
     },
   },
   onMounted() {
-    const app = document.getElementById('app')!!
-    log.info('app ==>:', app.style);
+    const app = document.getElementById("app")!!;
+    log.info("app ==>:", app.style);
   },
 };
 </script>

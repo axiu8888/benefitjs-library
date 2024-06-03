@@ -10,11 +10,12 @@ import { release } from "node:os";
 import { join } from "node:path";
 import { writeFile } from "fs";
 import { utils } from "@benefitjs/core";
-import { sqlite } from "@benefitjs/node";
-import { serialport } from '../../src/public/serialport';
+import {  /*serialport,*/ sqlite } from "@benefitjs/node";
 import { helper } from "../../src/public/helper";
 import { log } from "../../src/public/log";
 // import "../../src/public/ws-server";
+
+
 
 // The built directory structure
 //
@@ -79,7 +80,7 @@ async function createWindow() {
   win = new BrowserWindow({
     title: "Main window",
     icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
-    width: Math.max(width * 0.7, 1920),
+    width: Math.max(width * 0.8, 1920),
     height: Math.max(height * 0.9, 1080),
     webPreferences: {
       preload,
@@ -97,9 +98,9 @@ async function createWindow() {
     // electron-vite-vue#298
     win.loadURL(url);
     // Open devTool if the app is not packaged
-    // helper.openDevTools({
-    //   mode: "bottom",
-    // });
+    helper.openDevTools({
+      mode: "right",
+    });
   } else {
     win.loadFile(indexHtml);
   }
@@ -125,10 +126,10 @@ async function createWindow() {
   setTimeout(() => {
     log.debug("获取串口 ...");
 
-    serialport
-      .list()
-      .then((ports) => log.debug("ports:", ports))
-      .catch((err) => log.error(err));
+    // serialport
+    //   .list()
+    //   .then((ports) => log.debug("ports:", ports))
+    //   .catch((err) => log.error(err));
 
     // // // 开始探测
     // serialport.detector.start(true);

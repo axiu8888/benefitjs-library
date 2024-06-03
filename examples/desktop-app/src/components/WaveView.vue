@@ -37,9 +37,7 @@ mqtt.subscribeCollector(
     if (!wv) return;
     // 创建
     wv.push([...packet.ecgList], [...packet.respList], [...packet.spo2List]);
-    // wv.push([...packet.ecgList], [...packet.respList]);
     // log.debug("采集器数据:", packet.packageSn, packet);
-    log.debug("采集器数据:", packet.packageSn, packet.respList);
   })
 );
 
@@ -75,7 +73,7 @@ onMounted(() => {
       container.clientWidth,
       container.clientHeight
     );
-    wv = new waveview.createEcgRespSpo2(wvCanvas);
+    wv = waveview.createEcgRespSpo2(wvCanvas);
     log.info("wv ==>:", wv);
   }, 50);
 });

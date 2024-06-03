@@ -10,7 +10,7 @@ export namespace mqtt {
   /**
    * mqtt客户端连接
    */
-  export const client = new MQTT.Client(<MQTT.MqttOptions>{
+  export const client = new MQTT.Client(<MQTT.Options>{
     // host: "192.168.1.198",
     host: "pr.sensecho.com",
     port: 80,
@@ -36,7 +36,7 @@ export namespace mqtt {
 
   // 空的订阅
   client.subscribe(
-    <MQTT.MqttSubscriber>{
+    <MQTT.Subscriber>{
       onConnected(client) {
         log.debug(`${client.clientId}, 客户端连接成功`);
         emitter.emit(`client`, { type: "connected" });
@@ -60,7 +60,7 @@ export namespace mqtt {
   /**
    * 采集器数据订阅
    */
-  const collector_subscriber = <MQTT.MqttSubscriber>{
+  const collector_subscriber = <MQTT.Subscriber>{
     onMessage(client, topic, msg) {
       log.trace(`接收到采集器消息`, topic, msg);
       let pkg = zcenter.parseZCenter(msg.payloadBytes);
@@ -94,7 +94,7 @@ export namespace mqtt {
   /**
    * 搏英数据订阅
    */
-  const holter_subscriber = <MQTT.MqttSubscriber>{
+  const holter_subscriber = <MQTT.Subscriber>{
     onMessage(client, topic, msg) {
       log.trace(`接收到Holter消息`, topic, msg);
       let pkg = JSON.parse(msg.payloadString);

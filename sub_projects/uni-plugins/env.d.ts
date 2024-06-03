@@ -1,1 +1,1 @@
-declare module '@sensecho/uni-plugins';
+declare module '@benefitjs/uni-plugins';

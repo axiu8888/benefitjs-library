@@ -1,4 +1,11 @@
+import { processEnv } from "@benefitjs/core";
 import { log } from "./log";
+
+
+if(!processEnv.isNode()) {
+  throw new Error('仅支持node环境!');
+}
+
 
 // 安装 npm i ws
 

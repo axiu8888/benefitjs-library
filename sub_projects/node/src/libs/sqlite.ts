@@ -1,4 +1,4 @@
-import { logger } from "@benefitjs/core";
+import { logger } from '@benefitjs/core';
 
 /**
  * SQLite3
@@ -9,13 +9,12 @@ export namespace sqlite {
   /**
    * 日志打印
    */
-  export const log = logger.newProxy('sqlite', logger.Level.warn);
+  export const log = logger.newProxy('sqlite3', logger.Level.warn);
 
-
-  var sqlite3 = require("sqlite3").verbose();
-  log.info('sqlite3 ==>:', sqlite3)
+  var sqlite3 = require('sqlite3').verbose();
+  log.info('sqlite3 ==>:', sqlite3);
   sqlite3.verbose();
-  var db = new sqlite3.Database("D:/tmp/cache/test.db", () => {
+  var db = new sqlite3.Database('D:/tmp/cache/test.db', () => {
     // 增:
     // var add = db.prepare("INSERT OR REPLACE INTO human (name, age) VALUES (?,?)");
     // add.run("小白1",3);
