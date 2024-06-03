@@ -45,15 +45,10 @@ mqtt.subscribeCollector(
 
 onMounted(() => {
   // 监听是否在当前页，并置为已读
-  document.addEventListener("visibilitychange", function () {
-    if (document.hidden) {
-      log.debug("visibilitychange ==>: pause");
-      wv.pause();
-    } else {
-      wv.resume();
-      //处于当前页面
-      log.debug("visibilitychange ==>: resume");
-    }
+  document.addEventListener("visibilitychange", () => {
+    log.debug("visibilitychange, hidden = " + document.hidden);
+    if (document.hidden) wv.pause(); 
+    else wv.resume();
   });
 
   setTimeout(() => {
@@ -89,7 +84,7 @@ onMounted(() => {
 .wvParent {
   position: relative;
   width: 100%;
-  height: 50%;
+  height: 100%;
   background-color: #333333;
 }
 

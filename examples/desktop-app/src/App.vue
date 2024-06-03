@@ -1,5 +1,5 @@
 <template>
-  <div id ='app' style="width: 100%; height: 100%; background-color: white">
+  <div id ='app'>
     <h3>{{ title }}</h3>
     <WaveView></WaveView>
     <!-- <holter></holter> -->
@@ -57,5 +57,6 @@ html {
   width: 100%;
   height: 100%;
   color: #969696;
+  /* background-color: #EBEEF3 */
 }
 </style>

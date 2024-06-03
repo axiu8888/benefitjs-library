@@ -689,7 +689,7 @@ export namespace waveview {
           step: step, // 步长
           baseLine: height / 4, // 基线
           maxCacheSize: 2, // 缓存数量
-          scaleRatio: 0.8, // 缩放比
+          scaleRatio: 1.0, // 缩放比
           wipeWidth: 16, // 空白填充
           startX: 0,
           startY: 0,
@@ -705,7 +705,7 @@ export namespace waveview {
           step: step * 8, // 步长
           baseLine: height * (1 / 4.0), // 基线
           maxCacheSize: 2, // 缓存数量
-          scaleRatio: 0.3, // 缩放比
+          scaleRatio: 0.2, // 缩放比
           wipeWidth: 16, // 空白填充
           startX: 0,
           startY: height / 2 - 2,
@@ -721,7 +721,7 @@ export namespace waveview {
           step: step * 8, // 步长
           baseLine: height * (1 / 4.0), // 基线
           maxCacheSize: 2, // 缓存数量
-          scaleRatio: 0.3, // 缩放比
+          scaleRatio: 0.2, // 缩放比
           wipeWidth: 16, // 空白填充
           startX: 0,
           startY: height / 2 + 2,
@@ -775,7 +775,7 @@ export namespace waveview {
           step: step * 8, // 步长
           baseLine: height * (1 / 6.0), // 基线
           maxCacheSize: 2, // 缓存数量
-          scaleRatio: 0.3, // 缩放比
+          scaleRatio: 0.2, // 缩放比
           wipeWidth: 16, // 空白填充
           startX: -2,
           startY: height * (2 / 6.0) + 0,
