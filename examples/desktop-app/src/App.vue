@@ -2,12 +2,14 @@
   <div id ='app' style="width: 100%; height: 100%; background-color: white">
     <h3>{{ title }}</h3>
     <WaveView></WaveView>
+    <!-- <holter></holter> -->
   </div>
 </template>
 
 <script lang="ts">
 import { Button } from "ant-design-vue";
 import WaveView from "./components/WaveView.vue";
+import holter from "./components/holter.vue";
 
 import { ipcMain, ipcRenderer } from "electron";
 import { log } from "./public/log";
@@ -17,6 +19,7 @@ export default {
   // `setup` 是一个特殊的钩子，专门用于组合式 API。
   components: {
     WaveView,
+    holter,
     Button,
   },
   setup() {
