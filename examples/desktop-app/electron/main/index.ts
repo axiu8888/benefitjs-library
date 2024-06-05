@@ -8,11 +8,14 @@ import {
 } from "electron";
 import { release } from "node:os";
 import { join } from "node:path";
+import fs from 'fs';
 import { writeFile } from "fs";
+import axios from "axios";
 import { utils } from "@benefitjs/core";
 import {  /*serialport,*/ sqlite } from "@benefitjs/node";
 import { helper } from "../../src/public/helper";
 import { log } from "../../src/public/log";
+import { upload } from "../../src/public/upload";
 // import "../../src/public/ws-server";
 
 
@@ -133,6 +136,20 @@ async function createWindow() {
 
     // // // 开始探测
     // serialport.detector.start(true);
+
+
+    //
+    try {
+      let file = 'D:/Jicco_2.3.8.apk'
+      let url = 'http://192.168.142.1:80/api/simple/uploadStream?filename=Jicco_2.3.8.apk';
+      axios
+        .post(url, { file: fs.createReadStream(file) }, { headers: { "Content-Type": "multipart/form-data" }})
+        .then(resp => log.info(resp))
+        .catch(err => log.error(err))
+    } catch (err) {
+      log.error(err);
+    }
+
   }, 2000);
 }
 

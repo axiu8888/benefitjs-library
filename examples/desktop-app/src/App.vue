@@ -2,7 +2,7 @@
   <div id="app">
     <h3>{{ title }}</h3>
 
-    <qrcode></qrcode>
+    <!-- <qrcode></qrcode> -->
 
     <WaveView></WaveView>
     <!-- <holter></holter> -->
