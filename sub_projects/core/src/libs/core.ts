@@ -381,7 +381,6 @@ export namespace DateUtils {
    * @returns 返回格式化后的字符串或null
    */
   export const dateFmt = (value: any, pattern: string = 'yyyy-MM-dd HH:mm:ss'): string | null => dateUtils.format(value, pattern);
-
   /**
    * 时间解析
    *
@@ -413,6 +412,22 @@ export namespace utils {
    * @returns 返回Date或null
    */
   export const dateParse = (value: any, pattern: string = 'yyyy-MM-dd HH:mm:ss'): Date => DateUtils.dateParse(value, pattern) as any;
+
+  /**
+   * 日期格式化，模式: yyyy-MM-dd HH:mm:ss.SSS
+   *
+   * @param value  时间
+   * @returns 返回格式化后的字符串或null
+   */
+  export const dateFmtS = (value: any): string | null => dateFmt(value, 'yyyy-MM-dd HH:mm:ss.SSS');
+  
+  /**
+   * 时间解析，模式: yyyy-MM-dd HH:mm:ss.SSS
+   *
+   * @param value  时间
+   * @returns 返回Date或null
+   */
+  export const dateParseS = (value: any): Date | null => dateParse(value, 'yyyy-MM-dd HH:mm:ss.SSS');
 
   /**
    * 获取全局的对象

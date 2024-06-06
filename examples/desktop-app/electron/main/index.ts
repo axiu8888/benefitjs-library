@@ -140,12 +140,21 @@ async function createWindow() {
 
     //
     try {
-      let file = 'D:/Jicco_2.3.8.apk'
-      let url = 'http://192.168.142.1:80/api/simple/uploadStream?filename=Jicco_2.3.8.apk';
+
       axios
-        .post(url, { file: fs.createReadStream(file) }, { headers: { "Content-Type": "multipart/form-data" }})
-        .then(resp => log.info(resp))
+        .get('http://pr.sensecho.com/support/api/system/time')
+        .then(resp => {
+          log.info(resp.status, resp.data, resp.headers);
+          log.info('\n当前时间: ' + utils.dateFmtS(resp.data['result']));
+        })
         .catch(err => log.error(err))
+
+      // let file = 'D:/Jicco_2.3.8.apk'
+      // let url = 'http://192.168.142.1:80/api/simple/uploadStream?filename=Jicco_2.3.8.apk';
+      // axios
+      //   .post(url, { file: fs.createReadStream(file) }, { headers: { "Content-Type": "multipart/form-data" }})
+      //   .then(resp => log.info(resp))
+      //   .catch(err => log.error(err))
     } catch (err) {
       log.error(err);
     }
