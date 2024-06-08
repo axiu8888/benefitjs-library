@@ -12,10 +12,10 @@ import fs from 'fs';
 import { writeFile } from "fs";
 import axios from "axios";
 import { utils } from "@benefitjs/core";
-import {  /*serialport,*/ sqlite } from "@benefitjs/node";
+// import {  /*serialport,*/ sqlite } from "@benefitjs/node";
 import { helper } from "../../src/public/helper";
 import { log } from "../../src/public/log";
-import { upload } from "../../src/public/upload";
+import { sqlite } from "../../src/public/sqlite";
 // import "../../src/public/ws-server";
 
 
@@ -136,6 +136,8 @@ async function createWindow() {
 
     // // // 开始探测
     // serialport.detector.start(true);
+
+    sqlite.log
 
 
     //

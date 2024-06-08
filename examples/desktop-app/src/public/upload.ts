@@ -20,7 +20,7 @@ export namespace upload {
    * @param file 文件
    * @returns 返回请求结果
    */
-  export function post(url: string, file: string) {
+  export function postStream(url: string, file: string) {
     return axios.post(url, { file: fs.createReadStream(file) }, { headers: { "Content-Type": "multipart/form-data" }})
   }
   
