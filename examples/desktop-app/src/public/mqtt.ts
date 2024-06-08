@@ -13,11 +13,12 @@ export namespace mqtt {
   export const client = new MQTT.Client(<MQTT.Options>{
     // host: "192.168.1.198",
     host: "pr.sensecho.com",
+    // host: "192.168.124.15",
     port: 80,
     path: "/support/mqtt",
     clientId: `mqttjs_${utils.uuid().substring(0, 16)}`,
-    timeout: 3, // 连接超时
-    autoReconnectInterval: 5, // 自动重连的间隔
+    timeout: 2, // 连接超时
+    autoReconnectInterval: 10, // 自动重连的间隔
     keepAliveInterval: 30,
   });
 
@@ -69,6 +70,14 @@ export namespace mqtt {
       emitter.emit(`collector/${pkg.deviceId}`, pkg);
     },
   };
+  const collector_subscriber2 = <MQTT.Subscriber>{
+    onMessage(client, topic, msg) {
+      log.trace(`接收到采集器消息`, topic, msg);
+      let pkg = JSON.parse(msg.payloadString)
+      //log.debug(`${topic}, sn: ${pkg.packageSn}, time: ${pkgTime}`);
+      emitter.emit(`collector/${pkg.deviceId}`, pkg);
+    },
+  };
 
   /**
    * 订阅采集器数据
@@ -80,6 +89,7 @@ export namespace mqtt {
     cb?: (evt: any) => void
   ) => {
     client.subscribe(collector_subscriber, `hardware/${deviceId}`);
+    client.subscribe(collector_subscriber2, `/device/collector/${deviceId}`);
     if (cb) emitter.on(`collector/${deviceId}`, cb);
   };
   /**
@@ -89,6 +99,7 @@ export namespace mqtt {
    */
   export const unsubscribeCollector = (deviceId: string) => {
     client.unsubscribe(collector_subscriber, `hardware/${deviceId}`);
+    client.unsubscribe(collector_subscriber2, `/device/collector/${deviceId}`);
   };
 
   /**

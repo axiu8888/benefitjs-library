@@ -22,24 +22,23 @@
 
 <script lang="ts" setup>
 import { onMounted, ref } from "vue";
-import { zcenter } from "@benefitjs/devices";
+import { collector, zcenter } from "@benefitjs/devices";
 import { waveview } from "@benefitjs/widgets";
 import { log } from "../public/log";
 import { mqtt } from "../public/mqtt";
 
 let wv: waveview.View;
 // 订阅采集器数据
-let collectorListener: (evt: any) => void;
-mqtt.subscribeCollector(
-  "01001148",
-  (collectorListener = (evt) => {
-    let packet = evt as zcenter.Packet;
-    if (!wv) return;
-    // 创建
-    wv.push([...packet.ecgList], [...packet.respList], [...packet.spo2List]);
-    // log.debug("采集器数据:", packet.packageSn, packet);
-  })
-);
+let collectorListener: (evt: any) => void = (evt) => {
+  // let packet = evt as zcenter.Packet;
+  let packet = evt as any;
+  if (!wv) return;
+  // 创建
+  wv.push([...packet.ecgList], [...packet.respList], [...packet.spo2List]);
+  log.debug("采集器数据:", packet.packageSn ? packet.packageSn : packet.packetSn, packet);
+};
+mqtt.subscribeCollector("01001148", collectorListener);
+mqtt.subscribeCollector("01000860", collectorListener);
 
 onMounted(() => {
   // 监听是否在当前页，并置为已读
@@ -73,7 +72,9 @@ onMounted(() => {
       container.clientWidth,
       container.clientHeight
     );
-    wv = waveview.createEcgRespSpo2(wvCanvas);
+    wv = waveview.createEcgRespSpo2(wvCanvas, v => {
+      v.models[1].scaleRatio = 0.35;
+    });
     log.info("wv ==>:", wv);
   }, 50);
 });
