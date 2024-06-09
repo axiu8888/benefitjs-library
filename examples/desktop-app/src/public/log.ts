@@ -3,7 +3,7 @@ import { utils, logger, processEnv } from "@benefitjs/core";
 /**
  * 日志打印
  */
-export const log = logger.newProxy("desktop-app", logger.Level.debug);
+export const log = logger.newProxy("desktop-app", logger.Level.info);
 // 允许打印的日志等级
 logger.global.level = logger.Level.debug;
 // 自定义消息格式

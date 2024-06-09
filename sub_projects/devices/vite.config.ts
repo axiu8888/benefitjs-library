@@ -13,6 +13,14 @@ export default defineConfig({
       name: "devices", //导出的类名称
       fileName: "devices",
     },
+    // minify: false, // 禁用压缩
+    // terserOptions: {
+    //   compress: false, // 禁用压缩
+    //   mangle: false, // 禁用混淆
+    //   format: {
+    //     beautify: true // 美化输出
+    //   }
+    // },
   },
   define: { "process.env": {} },
   // plugins: [vue()],

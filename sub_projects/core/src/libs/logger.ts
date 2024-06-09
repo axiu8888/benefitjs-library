@@ -9,12 +9,13 @@ export namespace logger {
    * 日志等级
    */
   export enum Level {
-    trace = 0, // console.trace();
-    debug = 1, // console.debug();
-    log = 2, // console.log();
+    assert = 1, // console.assert();
+    debug = 2, // console.debug();
     info = 3, // console.info();
-    warn = 4, // console.warn();
-    error = 5, // console.error();
+    log = 4, // console.log();
+    warn = 5, // console.warn();
+    error = 6, // console.error();
+    trace = 7, // console.trace();
     none = 1000, // print nothing
   }
 
@@ -32,11 +33,11 @@ export namespace logger {
     tag: string;
 
     /**
-     * 打印日志 Console.trace(...msg)
+     * 打印日志 Console.assert(...msg)
      *
      * @param msg 信息
      */
-    trace(...msg: any): void;
+    assert(...msg: any): void;
 
     /**
      * 打印日志 Console.debug(...msg)
@@ -46,18 +47,18 @@ export namespace logger {
     debug(...msg: any): void;
 
     /**
-     * 打印日志 Console.log(...msg)
-     *
-     * @param msg 信息
-     */
-    log(...msg: any): void;
-
-    /**
      * 打印日志 Console.info(...msg)
      *
      * @param msg 信息
      */
     info(...msg: any): void;
+
+    /**
+     * 打印日志 Console.log(...msg)
+     *
+     * @param msg 信息
+     */
+    log(...msg: any): void;
 
     /**
      * 打印日志 Console.warn(...msg)
@@ -72,6 +73,14 @@ export namespace logger {
      * @param msg 信息
      */
     error(...msg: any): void;
+
+    /**
+     * 打印日志 Console.trace(...msg)
+     *
+     * @param msg 信息
+     */
+    trace(...msg: any): void;
+
   }
 
   /**
@@ -171,7 +180,7 @@ export namespace logger {
      * 打印
      *
      * @param current 输出等级
-     * @param level 当前等级
+     * @param level 当前日志等级
      * @param tag 标记
      * @param msg 消息
      */
@@ -181,8 +190,8 @@ export namespace logger {
   /**
    * 打印日志
    *
-   * @param current 当前等级
-   * @param level 输出等级
+   * @param current 输出等级
+   * @param level 当前日志等级
    * @param tag 标记
    * @param msg 消息
    */
@@ -205,18 +214,20 @@ export namespace logger {
    */
   export const levelTag = (level: Level): string => {
     switch (level) {
-      case Level.trace:
-        return 'trace';
+      case Level.assert:
+        return 'assert';
       case Level.debug:
         return 'debug';
-      case Level.log:
-        return 'log';
       case Level.info:
         return 'info';
+      case Level.log:
+        return 'log';
       case Level.warn:
         return 'warn';
       case Level.error:
         return 'error';
+      case Level.trace:
+        return 'trace';
       default:
         return '';
     }
@@ -230,18 +241,20 @@ export namespace logger {
    */
   export const consoleFn = (level: Level): Function => {
     switch (level) {
-      case Level.trace:
-        return console.trace;
+      case Level.assert:
+        return console.assert;
       case Level.debug:
         return console.debug;
-      case Level.log:
-        return console.log;
       case Level.info:
         return console.info;
+      case Level.log:
+        return console.log;
       case Level.warn:
         return console.warn;
       case Level.error:
         return console.error;
+      case Level.trace:
+        return console.trace;
       default:
         return console.log;
     }
@@ -251,22 +264,22 @@ export namespace logger {
    * 日志打印默认实现
    */
   export class SimpleLogger implements Logger {
-    constructor(public tag: string, public level: Level = Level.none) {}
+    constructor(public tag: string, public level: Level = Level.none) { }
 
-    trace(...msg: any): void {
-      global.printer(Level.trace, this.level, this.tag, ...msg);
+    assert(...msg: any): void {
+      global.printer(Level.assert, this.level, this.tag, ...msg);
     }
 
     debug(...msg: any): void {
       global.printer(Level.debug, this.level, this.tag, ...msg);
     }
 
-    log(...msg: any): void {
-      global.printer(Level.log, this.level, this.tag, ...msg);
-    }
-
     info(...msg: any): void {
       global.printer(Level.info, this.level, this.tag, ...msg);
+    }
+
+    log(...msg: any): void {
+      global.printer(Level.log, this.level, this.tag, ...msg);
     }
 
     warn(...msg: any): void {
@@ -276,13 +289,26 @@ export namespace logger {
     error(...msg: any): void {
       global.printer(Level.error, this.level, this.tag, ...msg);
     }
+
+    trace(...msg: any): void {
+      global.printer(Level.trace, this.level, this.tag, ...msg);
+    }
+
   }
 
   /**
    * 日志代理
    */
   export class LoggerProxy implements Logger {
+
     constructor(public logger: Logger) {}
+
+    /**
+     * 全局日志对象
+     */
+    global() {
+      return logger.global;
+    }
 
     set tag(tag: string) {
       this.logger.tag = tag;
@@ -300,20 +326,20 @@ export namespace logger {
       return this.logger.level;
     }
 
-    trace(...msg: any): void {
-      this.logger.trace(...msg);
+    assert(...msg: any): void {
+      this.logger.assert(...msg);
     }
 
     debug(...msg: any): void {
       this.logger.debug(...msg);
     }
 
-    log(...msg: any): void {
-      this.logger.log(...msg);
-    }
-
     info(...msg: any): void {
       this.logger.info(...msg);
+    }
+
+    log(...msg: any): void {
+      this.logger.log(...msg);
     }
 
     warn(...msg: any): void {
@@ -323,15 +349,30 @@ export namespace logger {
     error(...msg: any): void {
       this.logger.error(...msg);
     }
+
+    trace(...msg: any): void {
+      this.logger.trace(...msg);
+    }
   }
 
   /**
    * 创建日志代理
    *
-   * @param log 代理日志
-   * @returns 代理
+   * @param tag 标志
+   * @param level 日志等级
+   * @returns 返回日志代理
    */
   export const newProxy = (tag: string, level: Level = Level.warn) => new LoggerProxy(new SimpleLogger(tag, level));
+
+  // 全局日志打印
+  global.log = newProxy('logger', Level.warn);
+  global.convert = converter;
+  global.printer = print;
+
+
+  // =====================================================================================================================
+  // =====================================================================================================================
+  // =====================================================================================================================
 
   /**
    * ArrayBuffer 转换为16进制
@@ -344,8 +385,4 @@ export namespace logger {
     return Array.prototype.map.call(u8a, (bit) => ('00' + bit.toString(16)).slice(-2)).join('');
   };
 
-  // 全局日志打印
-  global.log = newProxy('logger', Level.warn);
-  global.convert = converter;
-  global.printer = print;
 }

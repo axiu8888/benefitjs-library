@@ -9,13 +9,12 @@ import {
 import { release } from "node:os";
 import { join } from "node:path";
 import fs from 'fs';
-import { writeFile } from "fs";
 import axios from "axios";
-import { utils } from "@benefitjs/core";
-// import {  /*serialport,*/ sqlite } from "@benefitjs/node";
+import CircularJson from 'circular-json'
+import { logger, utils } from "@benefitjs/core";
+import { io, sqlite, serialport } from "@benefitjs/node";
 import { helper } from "../../src/public/helper";
 import { log } from "../../src/public/log";
-import { sqlite } from "../../src/public/sqlite";
 // import "../../src/public/ws-server";
 
 
@@ -59,7 +58,7 @@ const url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = join(process.env.DIST, "index.html");
 
 helper.ipcMain = ipcMain;
-log.debug("instance.ipcMain", process.pid);
+log.info("instance.ipcMain", process.pid);
 
 async function createWindow() {
   const displays = screen.getAllDisplays();
@@ -68,7 +67,7 @@ async function createWindow() {
   // 获取显示器的宽度和高度
   const { width, height } = primaryDisplay.size;
 
-  log.debug(`屏幕，宽度: ${width}, 高度: ${height}`);
+  log.info(`屏幕，宽度: ${width}, 高度: ${height}`);
 
   // 不显示界面
   app.setLoginItemSettings({
@@ -76,9 +75,7 @@ async function createWindow() {
     openAsHidden: true,
   });
 
-  log.debug(`win.width: ${width * 0.6}, win.height: ${height * 0.8}`);
-
-  log.info('sqlite ==>:', sqlite);
+  log.info(`win.width: ${width * 0.6}, win.height: ${height * 0.8}`);
 
   win = new BrowserWindow({
     title: "Main window",
@@ -110,7 +107,7 @@ async function createWindow() {
 
   // Test actively push message to the Electron-Renderer
   win.webContents.on("did-finish-load", () => {
-    log.debug("did-finish-load ...");
+    log.info("did-finish-load ...");
     // 发送到渲染线程(发送到浏览器)
     win?.webContents.send(
       "main-process-message",
@@ -120,46 +117,95 @@ async function createWindow() {
 
   // Make all links open with the browser, not with the application
   win.webContents.setWindowOpenHandler(({ url }) => {
-    log.debug("setWindowOpenHandler, url:", url);
+    log.info("setWindowOpenHandler, url:", url);
     if (url.startsWith("https:")) shell.openExternal(url);
     return { action: "deny" };
   });
-  win.webContents.on('will-navigate', (event, url) => { log.debug('[will-navigate] url ==>', url) }) //#344
+  win.webContents.on('will-navigate', (event, url) => { log.info('[will-navigate] url ==>', url) }) //#344
 
   setTimeout(() => {
-    log.debug("获取串口 ...");
+    log.info("获取串口 ...");
 
-    // serialport
-    //   .list()
-    //   .then((ports) => log.debug("ports:", ports))
-    //   .catch((err) => log.error(err));
+    serialport
+      .list()
+      .then((ports) => log.info("ports:", ports))
+      .catch((err) => log.error(err));
 
     // // // 开始探测
     // serialport.detector.start(true);
 
-    sqlite.log
-
 
     //
-    try {
+    // try {
 
-      axios
-        .get('http://pr.sensecho.com/support/api/system/time')
-        .then(resp => {
-          log.info(resp.status, resp.data, resp.headers);
-          log.info('\n当前时间: ' + utils.dateFmtS(resp.data['result']));
+    //   axios
+    //     .get('http://pr.sensecho.com/support/api/system/time')
+    //     .then(resp => {
+    //       log.info(resp.status, resp.data, resp.headers);
+    //       log.info('\n当前时间: ' + utils.dateFmtS(resp.data['result']));
+    //     })
+    //     .catch(err => log.error(err))
+
+    //   // let file = 'D:/Jicco_2.3.8.apk'
+    //   // let url = 'http://192.168.142.1:80/api/simple/uploadStream?filename=Jicco_2.3.8.apk';
+    //   // axios
+    //   //   .post(url, { file: fs.createReadStream(file) }, { headers: { "Content-Type": "multipart/form-data" }})
+    //   //   .then(resp => log.info(resp))
+    //   //   .catch(err => log.error(err))
+    // } catch (err) {
+    //   log.error(err);
+    // }
+
+
+    sqlite.log.level = logger.global.level; // 打印日志
+    sqlite.log.global().level = sqlite.log.level;
+    console.log('global ==>: ' + (logger.global == sqlite.log.global()));
+    const dbName = io.createFile('./sqlite.db');
+    log.info('dbName ==>:', dbName)
+    const db = new sqlite.Database(dbName);
+    db.serialize(() => {
+      // 检查表是否存在
+      db.createTableIfNotExits('sys_user', `
+      CREATE TABLE sys_user (
+          id VARCHAR(32) PRIMARY KEY NOT NULL,
+          username VARCHAR(100),
+          password VARCHAR(100),
+          create_time NUMERIC
+      )`)
+        .then(res => {
+          let record = { id: utils.uuid(), username: 'admin', password: '123456', create_time: new Date() };
+          log.info('types ==>:', sqlite.findTypes(record))
+          // 插入数据
+          // db.insert('sys_user', [record])
         })
-        .catch(err => log.error(err))
+        .catch(err => log.error(err));
 
-      // let file = 'D:/Jicco_2.3.8.apk'
-      // let url = 'http://192.168.142.1:80/api/simple/uploadStream?filename=Jicco_2.3.8.apk';
-      // axios
-      //   .post(url, { file: fs.createReadStream(file) }, { headers: { "Content-Type": "multipart/form-data" }})
-      //   .then(resp => log.info(resp))
-      //   .catch(err => log.error(err))
-    } catch (err) {
-      log.error(err);
-    }
+      setTimeout(() => {
+        // 查询数据
+        // db.raw.each("SELECT * FROM sys_user", (err, row) => {
+        //   log.info('查询的数据 ==>:', row);
+        // });
+        db.each((err, row) => {
+          if (err) {
+            log.error(err);
+          } else {
+            log.info('查询的数据 ==>:', row);
+          }
+        }, "SELECT * FROM sys_user");
+
+
+        // setTimeout(() => {
+        //   // 删除表
+        //   db.dropTable('sys_user')
+        //     .then(res => log.info('删除表:', res))
+        //     .catch(err => log.error(err));
+        // }, 1000);
+
+      }, 1000);
+
+    });
+
+
 
   }, 2000);
 }
@@ -167,7 +213,7 @@ async function createWindow() {
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
-  log.debug("window-all-closed...");
+  log.info("window-all-closed...");
   win = null;
   if (process.platform !== "darwin") app.quit();
   // app.quit();

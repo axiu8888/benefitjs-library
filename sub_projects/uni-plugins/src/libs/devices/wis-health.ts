@@ -63,7 +63,7 @@ export namespace WisHealth {
     private readonly _handler = <uniapp.OnBleClientListener<Client>>{
       onConnected(client, deviceId) {
         client.resetBuf();
-        log.trace(`呼吸训练器已连接: ${deviceId}`);
+        log.debug(`呼吸训练器已连接: ${deviceId}`);
       },
 
       onServiceDiscover(client, deviceId, services) {
@@ -89,7 +89,7 @@ export namespace WisHealth {
         client.resetBuf();
         // 移除定时读取的操作
         client.stopReadTimer();
-        log.trace(`呼吸训练器已断开: ${deviceId}`);
+        log.debug(`呼吸训练器已断开: ${deviceId}`);
       },
 
       onCharacteristicWrite(client, deviceId, value) {
@@ -103,7 +103,7 @@ export namespace WisHealth {
             client.readCmd = r_cmd; // 读取指令
             client.readSize = payload; // 读取长度
           }
-          log.trace(`发送读取指令[${deviceId}]: ${hex}, cmd: ${r_cmd?.description}, readCmd: ${client.readCmd?.description}, readSize: ${client.readSize}`);
+          log.debug(`发送读取指令[${deviceId}]: ${hex}, cmd: ${r_cmd?.description}, readCmd: ${client.readCmd?.description}, readSize: ${client.readSize}`);
         } else {
           let w_cmd = findCmd((cmd) => cmd.writeAddress == address && cmd.writePayload == payload);
           if (w_cmd && (w_cmd.type == cmd_exit.type || w_cmd.autoRead)) {
@@ -126,7 +126,7 @@ export namespace WisHealth {
               }
               client.startReadTimer(w_cmd, interval);
             }
-            log.trace(`发送写入指令[${deviceId}]: ${hex}, cmd: ${w_cmd?.description}, writeCmd: ${client.writeCmd?.description}`);
+            log.debug(`发送写入指令[${deviceId}]: ${hex}, cmd: ${w_cmd?.description}, writeCmd: ${client.writeCmd?.description}`);
           }
         }
       },
@@ -223,7 +223,7 @@ export namespace WisHealth {
 
     protected resetBuf() {
       if (this.buf.size() > 0) {
-        log.trace(`resetBuf size[${this.buf.size()}] ==>: ${binary.bytesToHex(this.buf.read())}`);
+        log.debug(`resetBuf size[${this.buf.size()}] ==>: ${binary.bytesToHex(this.buf.read())}`);
       }
       this.buf.clear();
     }
@@ -248,7 +248,7 @@ export namespace WisHealth {
         if (buf.size() > 0) {
           let len = start >= 0 ? Math.max(start, 1) : buf.size();
           let discard = buf.read(0, len);
-          log.trace(`(resolveData)丢弃数据: buf.size[${buf.size()}], discard.size[${discard.length}] =>: ${binary.bytesToHex(discard)}`);
+          log.debug(`(resolveData)丢弃数据: buf.size[${buf.size()}], discard.size[${discard.length}] =>: ${binary.bytesToHex(discard)}`);
           continue;
         }
         return; // 退出循环
@@ -275,7 +275,7 @@ export namespace WisHealth {
               packet.validate = packet.maxPressure! > 0 && this._lastTimes >= 0 && packet.times !== this._lastTimes;
               this._lastTimes = packet.times;
               if (!packet.validate) {
-                log.trace('无效数据: ' + JSON.stringify(packet));
+                log.debug('无效数据: ' + JSON.stringify(packet));
                 return;
               }
               break;

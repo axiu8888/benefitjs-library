@@ -432,7 +432,7 @@ export namespace utils {
   /**
    * 获取全局的对象
    */
-  export const getValue = function (...objs: any) {
+  export const firstNotNull = function (...objs: any) {
     for (const obj of objs) {
       if (typeof obj !== 'undefined') {
         return obj;
@@ -449,7 +449,7 @@ export namespace utils {
    * 从 window、global、uni、self 中获取可用的全局对象
    */
   export const getGlobal = () =>
-    getValue(
+    firstNotNull(
       //@ts-ignore : 忽略可能不存在的实例
       typeof uni !== 'undefined' ? uni : undefined,
       //@ts-ignore : 忽略可能不存在的实例

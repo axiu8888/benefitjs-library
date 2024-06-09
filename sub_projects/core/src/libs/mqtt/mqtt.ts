@@ -215,7 +215,7 @@ export namespace MQTT {
         // 调用订阅的方法(多次订阅相同主题没有问题，取消订阅时则需要判断是否有其他订阅者)
         sent = this.rawSubscribe(subscription, topic, qos);
       }
-      log.trace(`subscribe, subscription: ${subscription.topics}, sent: ${sent}, ${this.isConnected()}`);
+      log.debug(`subscribe, subscription: ${subscription.topics}, sent: ${sent}, ${this.isConnected()}`);
     }
 
     /**
@@ -280,7 +280,7 @@ export namespace MQTT {
      */
     protected onConnect(reconnect: boolean, uri: string) {
       try {
-        log.trace('连接成功: ', reconnect, uri);
+        log.debug('连接成功: ', reconnect, uri);
         this.stopAutoReconnect();
         // 订阅
         this.dispatcher.subscriptions.forEach((ms) => {

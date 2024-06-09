@@ -120,8 +120,8 @@ export namespace btcollector {
       // 发送一次重传操作
       let deviceId = this.device!!.deviceId;
       this.write(collector.retryCmd(deviceId, lost.sn, 1))
-        .then((resp) => log.trace(`[${deviceId}] 发送重传指令: ${lost.sn}`, resp))
-        .catch((err) => log.trace('发送重传指令出错', err));
+        .then((resp) => log.debug(`[${deviceId}] 发送重传指令: ${lost.sn}`, resp))
+        .catch((err) => log.warn('发送重传指令出错', err));
     }
   }
 
@@ -231,7 +231,7 @@ export namespace btcollector {
       // 有可能是实时数据反馈
       let deviceId = parser.getDeviceId(msg.data);
       let pkgType = parser.getPacketType(msg.data);
-      //log.trace(`[${deviceId}] UDP, remote: ${msg.sender}, type: ${JSON.stringify(pkgType)}, data: ${binary.bytesToHex(msg.data)}`);
+      //log.debug(`[${deviceId}] UDP, remote: ${msg.sender}, type: ${JSON.stringify(pkgType)}, data: ${binary.bytesToHex(msg.data)}`);
       if (pkgType?.type == collector.packet_feedback_realtime.type) {
         return;
       }
@@ -240,8 +240,8 @@ export namespace btcollector {
         this.clients
           .get(new String(deviceId))
           ?.write(msg.data)
-          .then((resp) => log.trace(resp))
-          .catch((err) => log.trace(err));
+          .then((resp) => log.debug(resp))
+          .catch((err) => log.warn(err));
       }
     }
 

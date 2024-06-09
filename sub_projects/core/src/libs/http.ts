@@ -2,6 +2,21 @@
  * HTTP工具
  */
 export namespace http {
+
+  /**
+   * 发送POST请求，上传文件流
+   * 
+   * axios.post(url, { file: fs.createReadStream(file) }, { headers: { "Content-Type": "multipart/form-data" }})
+   * 
+   * @param url 请求路径
+   * @param file 文件
+   * @returns 返回请求结果
+   */
+  export function postStream(url: string, file: string) {
+    //return axios.post(url, { file: fs.createReadStream(file) }, { headers: { "Content-Type": "multipart/form-data" }})
+    throw new Error('demo仅供参考: axios.post(url, { file: fs.createReadStream(file) }, { headers: { "Content-Type": "multipart/form-data" }})');
+  }
+
   /**
    * 对象转换为File
    *

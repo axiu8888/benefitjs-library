@@ -30,7 +30,7 @@ onMounted(() => {
           },
           (errorMessage) => {
             // parse error, ignore it.
-            log.debug(errorMessage);
+            log.info(errorMessage);
           }
         )
         .catch((err) => {

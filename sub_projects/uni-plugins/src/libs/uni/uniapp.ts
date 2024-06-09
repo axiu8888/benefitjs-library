@@ -101,7 +101,7 @@ export namespace uniapp {
                 setTimeout(() => wrapPromise.start());
               }
             }
-            log.trace(`fnName: ${fnName}, intercepted: ${intercepted}, wrapArgs: `, wrapPromise, fn);
+            log.debug(`fnName: ${fnName}, intercepted: ${intercepted}, wrapArgs: `, wrapPromise, fn);
           } else {
             reject(new Error('无法发现对应函数: ' + fnName));
           }
@@ -309,7 +309,7 @@ export namespace uniapp {
 
         // 打开蓝牙适配器
         this.openBtAdapter()
-          .then((resp) => log.trace(resp))
+          .then((resp) => log.debug(resp))
           .catch((err) => log.warn('openBtAdapter.catch ==>: ', err));
       }
     }
@@ -374,8 +374,8 @@ export namespace uniapp {
         // }
         uniProxy
           .invoke(this, 'startBluetoothDevicesDiscovery', {})
-          .then((resp) => log.trace('startBluetoothDevicesDiscovery', resp))
-          .catch((err) => log.trace('startBluetoothDevicesDiscovery', err));
+          .then((resp) => log.debug('startBluetoothDevicesDiscovery', resp))
+          .catch((err) => log.debug('startBluetoothDevicesDiscovery', err));
       }
     }
 
@@ -396,8 +396,8 @@ export namespace uniapp {
         // 停止扫描
         uniProxy
           .invoke(this, 'stopBluetoothDevicesDiscovery')
-          .then((resp) => log.trace('stopBluetoothDevicesDiscovery', resp))
-          .catch((err) => log.trace('stopBluetoothDevicesDiscovery', err));
+          .then((resp) => log.debug('stopBluetoothDevicesDiscovery', resp))
+          .catch((err) => log.debug('stopBluetoothDevicesDiscovery', err));
       }
     }
 
@@ -544,8 +544,8 @@ export namespace uniapp {
     constructor(
       public fnName: string,
       public rawArgs: object,
-      public resolve: Function = (res: any) => log.trace(`${fnName}.resolve`, res),
-      public reject: Function = (err: any) => log.trace(`${fnName}.reject`, err),
+      public resolve: Function = (res: any) => log.debug(`${fnName}.resolve`, res),
+      public reject: Function = (err: any) => log.debug(`${fnName}.reject`, err),
       public timeout: number = 2000,
     ) {
       utils.copyAttrs(this.rawArgs, this);
@@ -1248,7 +1248,7 @@ export namespace uniapp {
      * @param msg 消息
      */
     onBtStateChange(msg: UniResponse & { discovering: boolean; available: boolean }) {
-      log.trace(`蓝牙状态改变 ==>: `, msg);
+      log.debug(`蓝牙状态改变 ==>: `, msg);
       this.callListeners(
         (l) => l.onBtStateChange(this as any, msg),
         (l: any) => l && l.onBtStateChange,
@@ -1265,7 +1265,7 @@ export namespace uniapp {
      * @param msg 消息
      */
     onConnectStatusChange(msg: { deviceId: string; connected: boolean } & UniResponse) {
-      log.trace(`设备连接状态改变 ==>: ${msg.deviceId}, status: ${msg.connected}, json: ${JSON.stringify(msg)}`);
+      log.debug(`设备连接状态改变 ==>: ${msg.deviceId}, status: ${msg.connected}, json: ${JSON.stringify(msg)}`);
       this.isConnected = msg.connected;
       (this as any).discoverServiceFlag = false;
       if (msg.connected) {
@@ -1332,7 +1332,7 @@ export namespace uniapp {
                 }
               })
               .catch((err) => {
-                log.trace('getServices error: ', err);
+                log.debug('getServices error: ', err);
               });
           } /*  else {
             clearInterval(this.autoCheckStatusTimerId);
@@ -1358,7 +1358,7 @@ export namespace uniapp {
      * @param msg 消息
      */
     onCharacteristicChange(msg: UniBtDeviceResponse) {
-      log.trace(`接收到数据 ==>: ${JSON.stringify(msg)}`);
+      log.debug(`接收到数据 ==>: ${JSON.stringify(msg)}`);
       this.isConnected = true;
       this.callListeners(
         (l) => l.onCharacteristicChanged(this as any, msg.deviceId, msg.value, msg),

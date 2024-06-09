@@ -1,14 +1,14 @@
-import fs from "fs";
+import fs from 'fs';
 import { logger } from "@benefitjs/core";
 
 /**
- * 文件操作
+ * IO操作(文件)
  */
-export namespace files {
+export namespace io {
   /**
    * 日志打印
    */
-  export const log = logger.newProxy("node file", logger.Level.debug);
+  export const log = logger.newProxy("IO", logger.Level.debug);
 
   /**
    * 替换路径的双斜杠和双反斜杠
@@ -54,15 +54,18 @@ export namespace files {
    * 创建目录
    *
    * @param path 路径
+   * @param throwError 是否抛出异常
    * @returns 返回创建的路径
    */
-  export function mkdir(path: string): string {
+  export function mkdir(path: string, throwError: boolean = false): string {
     try {
       path = replaceWithCurDir(path);
       fs.mkdirSync(path, { recursive: true });
       return path;
     } catch (err) {
       log.warn(`Failed to create directory: ${path}`, err);
+      if(throwError) throw err;
+      else return path;
     }
   }
 
@@ -81,16 +84,20 @@ export namespace files {
    * 创建文件
    *
    * @param path 文件路径
+   * @param throwError 是否抛出异常
    * @returns 返回创建的文件
    */
-  export function createFile(path: string): string {
+  export function createFile(path: string, throwError: boolean = false): string {
     try {
+      path = replaceWithCurDir(path);
       if (exist(path)) return path;
       mkdir(getParent(path));
       fs.writeFileSync(path, Buffer.from([]));
       return path;
     } catch (err) {
       log.warn(`Failed to create file: ${path}`, err);
+      if(throwError) throw err;
+      else return path;
     }
   }
 }

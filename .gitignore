@@ -9,9 +9,11 @@ lerna-debug.log*
 
 package-lock.json
 
+**/sqlite.db
 *.local
 dist/
-./**/dist/
+**/dist/
+**/typs/
 
 # Editor directories and files
 .vscode/*
@@ -24,14 +26,10 @@ dist/
 *.sln
 *.sw?
 
-node_modules/
-packages/**/node_modules/
-packages/uni-app-admin
-packages/standard-wave1
-packages/**/unpackage/
-
 ./pnpm-lock.yaml
 pnpm-lock.yaml
-packages/*/types/
-packages/*/dist/
-packages/*/build/
+node_modules/
+./**/node_modules/
+./sub_projects/**/types/
+./sub_projects/**/dist/
+./sub_projects/**/build/

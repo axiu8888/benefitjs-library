@@ -63,11 +63,11 @@ export namespace lanbei {
       },
 
       onCharacteristicWrite(client, deviceId, value) {
-        //log.trace(`发送指令: ${deviceId}, value: ${binary.bytesToHex(value)}`);
+        //log.debug(`发送指令: ${deviceId}, value: ${binary.bytesToHex(value)}`);
       },
 
       onCharacteristicChanged(client, deviceId, value, resp) {
-        //log.trace(`【${deviceId}】接收到数据: ${binary.bytesToHex(value)}`);
+        //log.debug(`【${deviceId}】接收到数据: ${binary.bytesToHex(value)}`);
         try {
           if (value.length <= 50) {
             let cmd = findCmdType(value[1]);

@@ -30,7 +30,7 @@ let wv_array: waveview.View[] = [];
 let collectorListener: (evt: any) => void;
 mqtt.subscribeCollector("01001148", collectorListener = (evt) => {
   let packet = evt as zcenter.Packet;
-  log.debug("采集器数据:", packet.packageSn, packet);
+  log.info("采集器数据:", packet.packageSn, packet);
   if (wv_array.length <= 0) return;
   // 创建
   wv_array.forEach((wv) => {

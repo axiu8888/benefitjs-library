@@ -4,7 +4,7 @@ import "./style.css";
 import "./public/node-ipc";
 import { log } from "./public/log";
 
-log.debug('create vue app ...')
+log.info('create vue app ...')
 
 createApp(App)
   .mount("#app")

@@ -63,7 +63,7 @@ export namespace mqtt {
    */
   const collector_subscriber = <MQTT.Subscriber>{
     onMessage(client, topic, msg) {
-      log.trace(`接收到采集器消息`, topic, msg);
+      log.debug(`接收到采集器消息`, topic, msg);
       let pkg = zcenter.parseZCenter(msg.payloadBytes);
       const pkgTime = utils.dateFmt(pkg.time * 1000);
       //log.debug(`${topic}, sn: ${pkg.packageSn}, time: ${pkgTime}`);
@@ -72,7 +72,7 @@ export namespace mqtt {
   };
   const collector_subscriber2 = <MQTT.Subscriber>{
     onMessage(client, topic, msg) {
-      log.trace(`接收到采集器消息`, topic, msg);
+      log.debug(`接收到采集器消息`, topic, msg);
       let pkg = JSON.parse(msg.payloadString)
       //log.debug(`${topic}, sn: ${pkg.packageSn}, time: ${pkgTime}`);
       emitter.emit(`collector/${pkg.deviceId}`, pkg);
@@ -107,7 +107,7 @@ export namespace mqtt {
    */
   const holter_subscriber = <MQTT.Subscriber>{
     onMessage(client, topic, msg) {
-      log.trace(`接收到Holter消息`, topic, msg);
+      log.debug(`接收到Holter消息`, topic, msg);
       let pkg = JSON.parse(msg.payloadString);
       emitter.emit(`holter/${pkg.mac}`, pkg);
     },

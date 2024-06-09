@@ -13,6 +13,14 @@ export default defineConfig({
       name: "core", //导出的类名称
       fileName: "core",
     },
+    // minify: false, // 禁用压缩
+    // terserOptions: {
+    //   compress: false, // 禁用压缩
+    //   mangle: false, // 禁用混淆
+    //   format: {
+    //     beautify: true // 美化输出
+    //   }
+    // },
   },
   define: { "process.env": {} },
   // plugins: [vue()],

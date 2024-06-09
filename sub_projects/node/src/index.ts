@@ -1,8 +1,9 @@
 /*
  * 导出的接口
  */
-// export * from './libs/serialport'; // 串口
-// export * from './libs/sqlite'; // sqlite3
+export * from './libs/io'; // IO
+export * from './libs/sqlite'; // sqlite3
+export * from './libs/serialport'; // 串口
 
 
 // try {

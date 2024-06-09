@@ -27,6 +27,7 @@ import { waveview } from "@benefitjs/widgets";
 import { log } from "../public/log";
 import { mqtt } from "../public/mqtt";
 
+
 let wv: waveview.View;
 // 订阅采集器数据
 let collectorListener: (evt: any) => void = (evt) => {
@@ -35,7 +36,8 @@ let collectorListener: (evt: any) => void = (evt) => {
   if (!wv) return;
   // 创建
   wv.push([...packet.ecgList], [...packet.respList], [...packet.spo2List]);
-  log.debug("采集器数据:", packet.packageSn ? packet.packageSn : packet.packetSn, packet);
+  // log.info("采集器数据:", packet.packageSn ? packet.packageSn : packet.packetSn, packet);
+  log.info("采集器数据:", packet.packageSn ? packet.packageSn : packet.packetSn, packet);
 };
 mqtt.subscribeCollector("01001148", collectorListener);
 mqtt.subscribeCollector("01000860", collectorListener);
@@ -43,7 +45,7 @@ mqtt.subscribeCollector("01000860", collectorListener);
 onMounted(() => {
   // 监听是否在当前页，并置为已读
   document.addEventListener("visibilitychange", () => {
-    log.debug("visibilitychange, hidden = " + document.hidden);
+    log.info("visibilitychange, hidden = " + document.hidden);
     if (document.hidden) wv.pause(); 
     else wv.resume();
   });

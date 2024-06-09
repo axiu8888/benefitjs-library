@@ -149,7 +149,7 @@ export namespace bluetooth {
      */
     private _intervalNativeHandler(msg: BlePluginMessage) {
       try {
-        log.trace('_intervalNativeHandler ==>: ', msg);
+        log.debug('_intervalNativeHandler ==>: ', msg);
         let _this = this as any;
         // onFailure、onBtStateChange、onConnected、onDisconnected、onServicesDiscovered、onCharacteristicRead、onCharacteristicWrite、onCharacteristicChanged、onMtuChanged
         switch (msg.type) {
