@@ -3,9 +3,18 @@
     <h3>{{ title }}</h3>
 
     <!-- <qrcode></qrcode> -->
-
-    <WaveView></WaveView>
+    <!-- <WaveView></WaveView> -->
     <!-- <holter></holter> -->
+
+    <div>
+      <button
+        hover-class="button-hover"
+        @click="onStartScan"
+      >
+        扫描蓝牙
+      </button>
+    </div>
+
   </div>
 </template>
 
@@ -38,6 +47,31 @@ export default {
       log.info("arguments ==>: ", arguments);
       //setTimeout(() => ipcRenderer.send("htmlToPdf", this.url), 5000);
     },
+    onStartScan() {
+      try {
+        navigator.bluetooth
+          .getAvailability()
+          .then(available => {
+            if (available) log.info('This device supports Bluetooth!') 
+            else log.info('Doh! Bluetooth is not supported')
+
+            if (available) {
+              log.info('扫描蓝牙...');
+              navigator.bluetooth
+                .requestDevice({
+                  filters: [{ namePrefix: 'HSRG' }, { namePrefix: 'Bluetooth BP' }],
+                  //optionalServices: [serviceUUID]
+                  //acceptAllDevices: true
+                })
+                .then(device => log.info(device))
+                .catch(err => log.error(err))
+            }
+          })
+          .catch(err => log.error(err))
+      } catch(err) {
+        log.error(err);
+      }
+    }
   },
   onMounted() {
     const app = document.getElementById("app")!!;

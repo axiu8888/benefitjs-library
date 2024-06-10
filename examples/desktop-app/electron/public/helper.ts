@@ -1,5 +1,5 @@
 import { BrowserWindow, IpcMain } from "electron";
-import { log } from "./log";
+import { log } from "../../src/public/log";
 
 /**
  * 工具类
