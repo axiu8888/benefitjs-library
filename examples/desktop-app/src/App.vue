@@ -5,16 +5,7 @@
     <!-- <qrcode></qrcode> -->
     <!-- <WaveView></WaveView> -->
     <!-- <holter></holter> -->
-
-    <div>
-      <button
-        hover-class="button-hover"
-        @click="onStartScan"
-      >
-        扫描蓝牙
-      </button>
-    </div>
-
+    <CollectorView></CollectorView>
   </div>
 </template>
 
@@ -23,10 +14,10 @@ import { Button } from "ant-design-vue";
 import WaveView from "./components/WaveView.vue";
 import holter from "./components/holter.vue";
 import qrcode from "./components/qrcode.vue";
+import CollectorView from "./components/CollectorView.vue";
 
 import { ipcMain, ipcRenderer } from "electron";
 import { log } from "./public/log";
-import { collector } from "@benefitjs/devices";
 
 export default {
   // `setup` 是一个特殊的钩子，专门用于组合式 API。
@@ -34,6 +25,7 @@ export default {
     WaveView,
     holter,
     qrcode,
+    CollectorView,
     Button,
   },
   setup() {
@@ -47,31 +39,6 @@ export default {
       log.info("arguments ==>: ", arguments);
       //setTimeout(() => ipcRenderer.send("htmlToPdf", this.url), 5000);
     },
-    onStartScan() {
-      try {
-        navigator.bluetooth
-          .getAvailability()
-          .then(available => {
-            if (available) log.info('This device supports Bluetooth!') 
-            else log.info('Doh! Bluetooth is not supported')
-
-            if (available) {
-              log.info('扫描蓝牙...');
-              navigator.bluetooth
-                .requestDevice({
-                  filters: [{ namePrefix: 'HSRG' }, { namePrefix: 'Bluetooth BP' }],
-                  //optionalServices: [serviceUUID]
-                  //acceptAllDevices: true
-                })
-                .then(device => log.info(device))
-                .catch(err => log.error(err))
-            }
-          })
-          .catch(err => log.error(err))
-      } catch(err) {
-        log.error(err);
-      }
-    }
   },
   onMounted() {
     const app = document.getElementById("app")!!;

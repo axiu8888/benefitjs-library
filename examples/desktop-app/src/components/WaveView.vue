@@ -28,6 +28,10 @@ import { log } from "../public/log";
 import { mqtt } from "../public/mqtt";
 
 
+const _ecg = new Array<number>(200).fill(512);
+const _resp = new Array<number>(25).fill(512);
+const _spo2 = new Array<number>(50).fill(0);
+let lastSn = 0;
 let wv: waveview.View;
 // 订阅采集器数据
 let collectorListener: (evt: any) => void = (evt) => {
@@ -35,12 +39,20 @@ let collectorListener: (evt: any) => void = (evt) => {
   let packet = evt as any;
   if (!wv) return;
   // 创建
+  let sn = packet.packageSn ? packet.packageSn : packet.packetSn;
+  if(lastSn > 0 && lastSn + 1 != sn) {
+    wv.push([..._ecg], [..._resp], [..._spo2]); // 丢包填充
+    log.error('检测到丢包:', sn, lastSn, sn - lastSn);
+  }
+  lastSn = sn;
   wv.push([...packet.ecgList], [...packet.respList], [...packet.spo2List]);
-  // log.info("采集器数据:", packet.packageSn ? packet.packageSn : packet.packetSn, packet);
-  log.info("采集器数据:", packet.packageSn ? packet.packageSn : packet.packetSn, packet);
+  
+  // log.info("采集器数据:", sn, packet);
 };
-mqtt.subscribeCollector("01001148", collectorListener);
-mqtt.subscribeCollector("01000860", collectorListener);
+// mqtt.subscribeCollector("01001148", collectorListener);
+// mqtt.subscribeCollector("01000860", collectorListener);
+// mqtt.subscribeCollector("01001279", collectorListener);
+mqtt.subscribeCollector("01001307", collectorListener);
 
 onMounted(() => {
   // 监听是否在当前页，并置为已读
@@ -75,7 +87,7 @@ onMounted(() => {
       container.clientHeight
     );
     wv = waveview.createEcgRespSpo2(wvCanvas, v => {
-      v.models[1].scaleRatio = 0.35;
+      v.models[1].scaleRatio = 0.20;
     });
     log.info("wv ==>:", wv);
   }, 50);

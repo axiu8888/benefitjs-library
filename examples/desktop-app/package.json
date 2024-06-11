@@ -54,8 +54,6 @@
     "echarts": "^5.5.0",
     "eventemitter3": "^5.0.1",
     "html5-qrcode": "^2.3.8",
-    "noble": "^1.9.1",
-    "node-bluetooth-serial-port": "^2.2.7",
     "pinia": "^2.1.7",
     "sass": "^1.74.1",
     "scss": "^0.2.4",
