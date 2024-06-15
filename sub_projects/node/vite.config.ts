@@ -12,14 +12,14 @@ export default defineConfig({
       name: "node", //导出的类名称
       fileName: "node",
     },
-    // minify: false, // 禁用压缩
-    // terserOptions: {
-    //   compress: false, // 禁用压缩
-    //   mangle: false, // 禁用混淆
-    //   format: {
-    //     beautify: true // 美化输出
-    //   }
-    // },
+    minify: 'terser', // 禁用压缩
+    terserOptions: {
+      compress: false, // 禁用压缩
+      mangle: false, // 禁用混淆
+      format: {
+        beautify: true // 美化输出
+      }
+    },
     rollupOptions: {
       external: ['fs', 'sqlite3', 'serialport'],
       output: {

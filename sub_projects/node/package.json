@@ -20,7 +20,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@benefitjs/core": "workspace:^"
+    "@benefitjs/core": "workspace:^",
+    "terser": "^5.31.1"
   },
   "devDependencies": {
     "@serialport/bindings-interface": "^1.2.2",

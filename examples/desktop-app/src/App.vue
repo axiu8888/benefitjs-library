@@ -1,11 +1,11 @@
 <template>
   <div id="app">
     <h3>{{ title }}</h3>
+    <CollectorView></CollectorView>
 
     <!-- <qrcode></qrcode> -->
-    <!-- <WaveView></WaveView> -->
+    <WaveView></WaveView>
     <!-- <holter></holter> -->
-    <CollectorView></CollectorView>
   </div>
 </template>
 

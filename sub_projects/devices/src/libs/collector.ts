@@ -57,7 +57,7 @@ export namespace collector {
 
     addBuf(value?: number[] | undefined): number[] | undefined {
       // pass...
-      return;
+      throw new Error('不支持此操作!');
     }
 
     /**
@@ -715,9 +715,9 @@ export namespace collector {
      * @return 返回计算后的数组
      */
     parseSpo2Array(data: number[] | number[], start: number, end: number) {
-      let wave = this.parseArray(data, start, end, 1);
-      for (let i = 0; i < wave.length; i++) {
-        wave[i] = wave[i] & 0b01111111;
+      let wave = <number[]>[];
+      for (let i = start, j = 0; i < end; i++, j++) {
+        wave[j] = data[i] & 0b01111111;
       }
       return wave;
     }

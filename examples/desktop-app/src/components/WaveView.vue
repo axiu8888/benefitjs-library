@@ -22,7 +22,6 @@
 
 <script lang="ts" setup>
 import { onMounted, ref } from "vue";
-import { collector, zcenter } from "@benefitjs/devices";
 import { waveview } from "@benefitjs/widgets";
 import { log } from "../public/log";
 import { mqtt } from "../public/mqtt";
@@ -35,7 +34,6 @@ let lastSn = 0;
 let wv: waveview.View;
 // 订阅采集器数据
 let collectorListener: (evt: any) => void = (evt) => {
-  // let packet = evt as zcenter.Packet;
   let packet = evt as any;
   if (!wv) return;
   // 创建
@@ -45,14 +43,13 @@ let collectorListener: (evt: any) => void = (evt) => {
     log.error('检测到丢包:', sn, lastSn, sn - lastSn);
   }
   lastSn = sn;
-  wv.push([...packet.ecgList], [...packet.respList], [...packet.spo2List]);
+  wv.push([...packet.ecgList], packet.respList ? [...packet.respList] : [], [...packet.spo2List]);
   
   // log.info("采集器数据:", sn, packet);
 };
 // mqtt.subscribeCollector("01001148", collectorListener);
 // mqtt.subscribeCollector("01000860", collectorListener);
-// mqtt.subscribeCollector("01001279", collectorListener);
-mqtt.subscribeCollector("01001307", collectorListener);
+mqtt.subscribeCollector("11000138", collectorListener);
 
 onMounted(() => {
   // 监听是否在当前页，并置为已读

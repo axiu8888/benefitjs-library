@@ -779,6 +779,14 @@ export namespace utils {
       }
     }
   };
+  /**
+   * 获取属性
+   */
+  export const getProperties = (target: any): string[] => {
+    let array = <string[]>[];
+    forEachProperty(target, (k, v) => array.push(k));
+    return array;
+  }
 
   /**
    * 打印属性

@@ -13,14 +13,14 @@ export default defineConfig({
       name: "uniPlugins", //导出的类名称
       fileName: "uni-plugins",
     },
-    // minify: false, // 禁用压缩
-    // terserOptions: {
-    //   compress: false, // 禁用压缩
-    //   mangle: false, // 禁用混淆
-    //   format: {
-    //     beautify: true // 美化输出
-    //   }
-    // },
+    minify: 'terser', // 禁用压缩
+    terserOptions: {
+      compress: false, // 禁用压缩
+      mangle: false, // 禁用混淆
+      format: {
+        beautify: true // 美化输出
+      }
+    },
   },
   define: { "process.env": {} },
   // plugins: [vue()],

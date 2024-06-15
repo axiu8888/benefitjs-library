@@ -23,7 +23,7 @@ export namespace bluetooth {
         log.info('select-bluetooth-device ==>', deviceList.map(d => <any>{ name: d.deviceName, id: d.deviceId}));
         event.preventDefault();
         selectBluetoothCallback = callback;
-        const result = deviceList.find((device) => device.deviceName === "HSRG_1");
+        const result = deviceList.find((device) => device.deviceName === "HSRG_11000138");
         if (result) {
           callback(result.deviceId);
         } else {
