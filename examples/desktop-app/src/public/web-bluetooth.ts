@@ -1,4 +1,4 @@
-import { logger, processEnv } from "@benefitjs/core";
+import { binary, logger, processEnv } from "@benefitjs/core";
 import { GattUUID } from "@benefitjs/devices";
 
 /**
@@ -14,24 +14,24 @@ export namespace WebBluetooth {
    * 获取蓝牙对象
    */
   //@ts-ignore
-  export const getNavigatorBluetooth = () => processEnv.isBrowser() ? navigator.bluetooth : undefined;
+  export const bluetooth = () => processEnv.isBrowser() ? navigator.bluetooth : undefined;
   /**
    * 是否支持蓝牙
    */
-  export const support = () => typeof getNavigatorBluetooth() != 'undefined';
+  export const support = () => typeof bluetooth() != 'undefined';
   /**
    * 检查蓝牙是否可用
    */
   export function getAvailability() {
     return new Promise<boolean>((resolve, reject) => {
       if (support()) {
-        getNavigatorBluetooth()
+        bluetooth()
           .getAvailability()
           //.then((available: boolean) => {})
           .then(resolve)
           .catch(reject);
       } else {
-        reject(new Error('当前环境不支持蓝牙操作'));
+        reject(new Error(`当前环境不支持蓝牙操作[${processEnv.getType()}]`));
       }
     });
   }
@@ -53,9 +53,9 @@ export namespace WebBluetooth {
   export function startScan(optional: ScanOptional) {
     return new Promise<WebBluetooth.BluetoothDevice>((resolve, reject) => {
       if (support()) {
-        return getNavigatorBluetooth()
+        return bluetooth()
           .requestDevice(optional)
-          .then((device: WebBluetooth.BluetoothDevice) => device)
+          //.then((device: WebBluetooth.BluetoothDevice) => device)
           .then(resolve)
           .catch(reject);
       }
@@ -74,7 +74,7 @@ export namespace WebBluetooth {
     /**
      * 是否接收全部设备，配合optionalServices使用
      */
-    acceptAllDevices: boolean;
+    acceptAllDevices?: boolean;
     /**
      * 过滤
      */
@@ -178,6 +178,38 @@ export namespace WebBluetooth {
         }
       });
     }
+    
+    /**
+     * 写入数据，并返回结果
+     */
+    writeValueWithResponse(value: number[] | Uint8Array | ArrayBuffer) {
+      return new Promise<any>((resolve, reject) => {
+        this.getWriteCharacteristic()
+        .then(ch => {
+          value = binary.asArrayBuffer(value)
+          ch.writeValueWithResponse(value)
+            .then(resolve)
+            .catch(reject);
+        })
+        .catch(reject);
+      });
+    }
+
+    /**
+     * 写入数据，无响应
+     */
+    writeValueWithoutResponse(value: number[] | Uint8Array | ArrayBuffer) {
+      return new Promise<any>((resolve, reject) => {
+        this.getWriteCharacteristic()
+        .then(ch => {
+          value = binary.asArrayBuffer(value)
+          ch.writeValueWithoutResponse(value)
+            .then(resolve)
+            .catch(reject);
+        })
+        .catch(reject);
+      });
+    }
 
     /**
      * 获取主要的服务
@@ -230,6 +262,24 @@ export namespace WebBluetooth {
     }
 
     /**
+     * 获取读取的特征
+     */
+    geReadCharacteristic(serviceId?: string, characteristicId?: string) {
+      serviceId = [serviceId, this.uuid.readService, this.uuid.service].filter(id => id && id.length > 0)[0];
+      characteristicId = [characteristicId, this.uuid.readCharacteristic].filter(id => id && id.length > 0)[0];
+      return this.getCharacteristic(serviceId!, characteristicId!);
+    }
+
+    /**
+     * 获取写入的特征
+     */
+    getWriteCharacteristic(serviceId?: string, characteristicId?: string) {
+      serviceId = [serviceId, this.uuid.writeService, this.uuid.service].filter(id => id && id.length > 0)[0];
+      characteristicId = [characteristicId, this.uuid.writeCharacteristic].filter(id => id && id.length > 0)[0];
+      return this.getCharacteristic(serviceId!, characteristicId!);
+    }
+
+    /**
      * 开启数据通知
      */
     startNotifications(serviceId?: string, characteristicId?: string) {
@@ -254,6 +304,10 @@ export namespace WebBluetooth {
           .catch(reject);
       });
     }
+
+    // ===========================================================================================================================
+    // ===========================================================================================================================
+    // ===========================================================================================================================
 
     protected onConnected(...args: any) {
       log.debug("onConnected", ...args);
@@ -466,22 +520,22 @@ export namespace WebBluetooth {
     /**
      * 读取值
      */
-    readValue(): Promise<any>;
+    readValue(): Promise<DataView>;
 
     /**
      * 写入值
      */
-    writeValue(value: any): Promise<any>;
+    writeValue(value: ArrayBuffer): Promise<any>;
 
     /**
      * 写入值
      */
-    writeValueWithResponse(value: any): Promise<any>;
+    writeValueWithResponse(value: ArrayBuffer): Promise<any>;
 
     /**
      * 写入值
      */
-    writeValueWithoutResponse(value: any): Promise<any>;
+    writeValueWithoutResponse(value: ArrayBuffer): Promise<DataView>;
 
     /**
      * 开启通知
@@ -570,7 +624,7 @@ export namespace WebBluetooth {
    * @param fn 函数
    * @param args 参数
    */
-  function apply(fn?: Function, ...args: any) {
+  export function apply(fn?: Function, ...args: any) {
     if (fn) {
       try {
         fn(...args);

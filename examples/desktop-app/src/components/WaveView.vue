@@ -36,14 +36,19 @@ let wv: waveview.View;
 let collectorListener: (evt: any) => void = (evt) => {
   let packet = evt as any;
   if (!wv) return;
+  if (packet.clear) {
+    lastSn = -1;
+    wv.clearView();
+    return;
+  }
   // 创建
   let sn = packet.packageSn ? packet.packageSn : packet.packetSn;
   if(lastSn > 0 && lastSn + 1 != sn) {
     wv.push([..._ecg], [..._resp], [..._spo2]); // 丢包填充
-    log.error('检测到丢包:', sn, lastSn, sn - lastSn);
+    log.info('检测到丢包:', sn, lastSn, sn - lastSn);
   }
   lastSn = sn;
-  wv.push([...packet.ecgList], packet.respList ? [...packet.respList] : [], [...packet.spo2List]);
+  wv.push([...packet.ecgList], packet.respList ? [...packet.respList] : [...packet.rawRespList], [...packet.spo2List]);
   
   // log.info("采集器数据:", sn, packet);
 };
@@ -57,6 +62,7 @@ onMounted(() => {
     log.info("visibilitychange, hidden = " + document.hidden);
     if (document.hidden) wv.pause(); 
     else wv.resume();
+    lastSn = -1;
   });
 
   setTimeout(() => {

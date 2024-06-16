@@ -1,13 +1,18 @@
 // ================================================================================================================
 // 采集器解析
 
-import { ByteBuf, binary, utils } from '@benefitjs/core';
+import { ByteBuf, binary, logger, utils } from '@benefitjs/core';
 import { GattUUID, IDevice } from './bluetooth';
 
 /**
  * 采集器
  */
 export namespace collector {
+  /**
+   * 日志打印
+   */
+  export const log = logger.newProxy('collector', logger.Level.warn);
+
   /**
    * UUID
    */
@@ -57,7 +62,7 @@ export namespace collector {
 
     addBuf(value?: number[] | undefined): number[] | undefined {
       // pass...
-      throw new Error('不支持此操作!');
+      throw new Error('不支持此操作, 请使用: resolve(data)');
     }
 
     /**
@@ -83,7 +88,7 @@ export namespace collector {
             // 解析数据
             let segment = buf.read(start, 9, false);
             let len = parser.getLength(segment) + HEAD.length; // 数据的长度
-            let hexDeviceId = parser.getDeviceId(segment);
+            let deviceId = parser.getDeviceId(segment);
             if (buf.size() >= len) {
               // 满足需要读取的长度
               segment = buf.read(start, len, false);
@@ -100,17 +105,16 @@ export namespace collector {
                     let jp = jointer.add(segment);
                     if (jp) {
                       let data = jointer.joint(jp);
-                      let hp = parser.parse(data, hexDeviceId);
+                      let hp = parser.parse(data, deviceId);
                       // 直接转发出去
-                      this.onNotify(hexDeviceId, data, type, hp);
-                    } else {
-                      // 数据超时了
-                      jointer.checkTimeout((jp) => this.onPacketLost(jp));
+                      this.onNotify(deviceId, data, type, hp);
                     }
+                    // 数据超时了
+                    jointer.checkTimeout((jp: JointPacket) => this.onPacketLost(deviceId, jp));
                   } else {
-                    let hp = parser.parse(segment, hexDeviceId);
+                    let hp = parser.parse(segment, deviceId);
                     // 直接转发出去
-                    this.onNotify(hexDeviceId, segment, type, hp);
+                    this.onNotify(deviceId, segment, type, hp);
                   }
                 } else {
                   // 直接转发出去
@@ -123,11 +127,11 @@ export namespace collector {
                         // 10秒内不重复接收数据
                         return;
                       }
-                      packet = parser.parseBp(hexDeviceId, segment);
+                      packet = parser.parseBp(deviceId, segment);
                     }
-                    this.onNotify(hexDeviceId, segment, type, packet);
+                    this.onNotify(deviceId, segment, type, packet);
                   } else {
-                    this.onNotify(hexDeviceId, segment, type, undefined);
+                    this.onNotify(deviceId, segment, type, undefined);
                   }
                 }
               } else {
@@ -145,15 +149,15 @@ export namespace collector {
           }
         }
       } catch (err) {
-        console.error('collector resolve error: ', err);
+        log.error('采集器解析错误', err);
       }
     }
 
-    onNotify(hexDeviceId: string, data: number[] | Uint8Array, type: PacketType, packet?: HardwarePacket | BpPacket | undefined): void {
+    onNotify(deviceId: string, data: number[] | Uint8Array, type: PacketType, packet?: HardwarePacket | BpPacket): void {
       throw new Error('Method not implemented.');
     }
 
-    onPacketLost(lost: JointPacket): void {
+    onPacketLost(deviceId: string, lost: JointPacket): void {
       throw new Error('Method not implemented.');
     }
   }
@@ -162,17 +166,20 @@ export namespace collector {
     /**
      * 接收到数据
      *
-     * @param hexDeviceId 16进制的设备ID
+     * @param deviceId 16进制的设备ID
      * @param data 字节数据
      * @param type 数据类型
      * @param packet 实时或重传的数据包 | 血压数据包
      */
-    onNotify(hexDeviceId: string, data: number[] | Uint8Array, type: PacketType, packet?: HardwarePacket | BpPacket | undefined): void;
+    onNotify(deviceId: string, data: number[] | Uint8Array, type: PacketType, packet?: HardwarePacket | BpPacket): void;
 
     /**
      * 丢弃不完整的拼包
+     * 
+     * @param deviceId 16进制的设备ID
+     * @param lost 丢包
      */
-    onPacketLost(lost: JointPacket): void;
+    onPacketLost(deviceId: string, lost: JointPacket): void;
   }
 
   /**
@@ -254,7 +261,7 @@ export namespace collector {
      * @param {number[]|Array} segment3 小包3
      * @returns
      */
-    joint(segment1: number[] | number[], segment2: number[] | number[], segment3: number[] | number[]) {
+    joint(segment1: number[], segment2: number[], segment3: number[]) {
       // 拼接
       let data = new Array(545);
       // 包头(2) + 长度(2) + 设备ID(4) + 包类型(1) + 包序号(4) ==>: 13
@@ -287,7 +294,7 @@ export namespace collector {
      * @param {number} start 开始的位置
      * @returns
      */
-    isHead(data: number[] | number[], start = 0) {
+    isHead(data: number[], start = 0) {
       return data[start] == 0x55 && data[start + 1] == 0xaa;
     }
 
@@ -298,7 +305,7 @@ export namespace collector {
      * @param {number} start 开始的位置
      * @returns 返回类型
      */
-    getType(data: number[] | number[], start = 8): number {
+    getType(data: number[], start = 8): number {
       return data[start];
     }
 
@@ -309,7 +316,7 @@ export namespace collector {
      * @param {number} start 开始的位置
      * @returns 返回类型
      */
-    getPacketType(data: number[] | number[], start = 8): PacketType {
+    getPacketType(data: number[], start = 8): PacketType {
       return findPacketType(data[start]);
     }
 
@@ -320,7 +327,7 @@ export namespace collector {
      * @param {number} start 开始的位置
      * @returns 返回长度
      */
-    getLength(data: number[] | number[], start = 2) {
+    getLength(data: number[], start = 2) {
       return binary.bytesToNumber([data[start], data[start + 1]]);
     }
 
@@ -331,7 +338,7 @@ export namespace collector {
      * @param {number} start 开始的位置
      * @returns 返回16进制的设备ID
      */
-    public getDeviceId(data: number[] | number[], start = 4) {
+    public getDeviceId(data: number[], start = 4) {
       return binary.bytesToHex([data[start], data[start + 1], data[start + 2], data[start + 3]]).toLocaleLowerCase();
     }
 
@@ -342,7 +349,7 @@ export namespace collector {
      * @param {number} start 开始的位置
      * @returns 返回校验和
      */
-    checkSum(data: number[] | number[], start = 0) {
+    checkSum(data: number[], start = 0) {
       let sum = 0;
       for (let i = start; i < data.length - 1; i++) {
         sum += data[i] & 0xff;
@@ -357,7 +364,7 @@ export namespace collector {
      * @param {number} start 开始的位置
      * @returns 返回验证结果：true/false
      */
-    verify(data: number[] | number[], start = 0) {
+    verify(data: number[], start = 0) {
       if (!this.isHead(data, start)) {
         // 不符合包头
         return false;
@@ -379,7 +386,7 @@ export namespace collector {
      * @param start 开始的位置
      * @returns 返回判断结果
      */
-    isData(data: number[] | number[], start = 0): boolean {
+    isData(data: number[], start = 0): boolean {
       let type = this.getPacketType(data, start);
       return type && (type as any).data;
     }
@@ -391,7 +398,7 @@ export namespace collector {
      * @param start 开始的位置
      * @returns 返回判断结果
      */
-    isRealtimeData(data: number[] | number[], start = 0): boolean {
+    isRealtimeData(data: number[], start = 0): boolean {
       return this.getPacketType(data, start).realtime;
     }
 
@@ -404,7 +411,7 @@ export namespace collector {
      * @param {*} packetSn 包序号
      * @returns 返回转换后的UDP数据
      */
-    convertToUdp(bytes: number[] | number[], deviceId: any, time?: number, packetSn?: number) {
+    convertToUdp(bytes: number[], deviceId: any, time?: number, packetSn?: number) {
       let data = new Array(545);
       // 包头
       data[0] = 0x55;
@@ -453,7 +460,7 @@ export namespace collector {
      * @param {number} start 开始的位置
      * @returns 返回包序号
      */
-    getPacketSn(data: number[] | number[], start = 9) {
+    getPacketSn(data: number[], start = 9) {
       return binary.bytesToNumber([data[start], data[start + 1], data[start + 2], data[start + 3]]);
     }
 
@@ -464,7 +471,7 @@ export namespace collector {
      * @param {number} start 开始的位置
      * @returns 返回时间(秒)
      */
-    getTime(data: number[] | number[], start = 13) {
+    getTime(data: number[], start = 13) {
       return binary.bytesToNumber([data[start], data[start + 1], data[start + 2], data[start + 3]]);
     }
 
@@ -475,7 +482,7 @@ export namespace collector {
      * @param deviceId  设备ID
      * @return 返回解析的采集器数据
      */
-    parse(data: number[] | number[], deviceId: string) {
+    parse(data: number[], deviceId: string) {
       let hp = <HardwarePacket>{};
       // 数据包长度: (2 ~ 3)
       hp.packetLength = this.getLength(data);
@@ -483,7 +490,8 @@ export namespace collector {
       hp.deviceId = !deviceId ? binary.bytesToHex([data[4], data[5], data[6], data[7]]) : deviceId;
       // 数据类型: (8) ...
       hp.type = this.getType(data);
-      hp.realtime = hp.type == 0x03 || hp.type == 0xf3;
+      hp.packetType = findPacketType(hp.type);
+      hp.realtime = hp.packetType.realtime;
 
       // 包序号: (9 ~ 12)
       hp.packetSn = this.getPacketSn(data);
@@ -666,7 +674,7 @@ export namespace collector {
      * @param bitSize 每个数据占几个字节
      * @return 返回计算后的数组
      */
-    parseArray(data: number[] | number[], start: number, end: number, bitSize: number) {
+    parseArray(data: number[], start: number, end: number, bitSize: number) {
       if (bitSize > 0) {
         let array = new Array((end - start) / bitSize);
         let buf = bitSize > 1 ? new Array<number>(bitSize) : null;
@@ -691,7 +699,7 @@ export namespace collector {
      * @param group 组数，如心电为4组
      * @param perGroupSize 每组大小，如心电每组50个值，附：心电有50个低位值
      */
-    parseWave(data: number[] | number[], start: number, group: number, perGroupSize: number) {
+    parseWave(data: number[], start: number, group: number, perGroupSize: number) {
       let highLen = Math.floor(perGroupSize / 4) + (perGroupSize % 4 == 0 ? 0 : 1);
       let high, low;
       let wave = new Array(group * perGroupSize);
@@ -714,7 +722,7 @@ export namespace collector {
      * @param end     结束位置(不包含)
      * @return 返回计算后的数组
      */
-    parseSpo2Array(data: number[] | number[], start: number, end: number) {
+    parseSpo2Array(data: number[], start: number, end: number) {
       let wave = <number[]>[];
       for (let i = start, j = 0; i < end; i++, j++) {
         wave[j] = data[i] & 0b01111111;
@@ -979,7 +987,7 @@ export namespace collector {
      * @param segment 小包
      * @returns 返回拼接后的数据
      */
-    add(segment: number[] | number[]): JointPacket | undefined {
+    add(segment: number[]): JointPacket | undefined {
       let sn = parser.getPacketSn(segment);
       let jp = this.queue.get(sn);
       if (!jp) {
@@ -999,7 +1007,7 @@ export namespace collector {
           jp.pkg3 = segment;
           break;
       }
-      jp.refreshTime = Date.now();
+      jp.activeAt = Date.now();
       if (this.verify(jp)) {
         this.queue.delete(jp.sn);
         return jp;
@@ -1020,16 +1028,16 @@ export namespace collector {
     /**
      * 检查超时
      *
-     * @param callback 回调
+     * @param cb 回调
      * @param timeout 超时时长
      */
-    checkTimeout(callback = (jp: JointPacket): void => {}, timeout = 2000) {
+    checkTimeout(cb: Function, timeout = 1200) {
       this.queue.forEach((jp) => {
         if (this.isTimeout(jp, timeout)) {
           try {
-            callback(jp);
+            cb(jp as any);
           } catch (err) {
-            console.warn('拼接数据包超时数据', jp, err);
+            log.warn('拼接数据包超时数据', jp, err);
           } finally {
             this.queue.delete(jp.sn);
           }
@@ -1044,8 +1052,8 @@ export namespace collector {
      * @param timeout 超时时长
      * @returns 返回是否超时
      */
-    isTimeout(jp: JointPacket, timeout = 2000): boolean {
-      return Date.now() - jp.refreshTime >= timeout; // 超过2两
+    isTimeout(jp: JointPacket, timeout = 1200): boolean {
+      return Date.now() - jp.activeAt >= timeout; // 超过2秒
     }
 
     /**
@@ -1087,7 +1095,7 @@ export namespace collector {
       binary.arraycopy(segment3, 14, packet, 371, 187 - 14); // 371 + 173 = 544
 
       // 拷贝流速仪数据
-      if (type.realtime && segment4 != null) {
+      if (type.realtime && typeof segment4 !== 'undefined') {
         // 数据, segment4(14, 139) segment1.length =>: 140
         binary.arraycopy(segment4, 14, packet, 544, 139 - 14); // 544 + 125 = 669
       }
@@ -1097,13 +1105,34 @@ export namespace collector {
     }
   }
 
+  /**
+   * 可拼接的包
+   */
   export interface JointPacket {
+    /**
+     * 包序号
+     */
     sn: number;
-    pkg0: any;
-    pkg1: any;
-    pkg2: any;
-    pkg3: any;
-    refreshTime: number;
+    /**
+     * 包0
+     */
+    pkg0: number[];
+    /**
+     * 包1
+     */
+    pkg1: number[];
+    /**
+     * 包2
+     */
+    pkg2: number[];
+    /**
+     * 包3 流速仪
+     */
+    pkg3: number[];
+    /**
+     * 最后一个包更新时间
+     */
+    activeAt: number;
   }
 
   /**
@@ -1571,4 +1600,38 @@ export namespace collector {
    * 转成10位
    */
   export const toECG_10bits = (value: number, ad: number) => Math.round(value * 80) / ad + 512;
+
+
+  /**
+   * MQTT代理
+   */
+  export interface MqttProxy {
+
+    /**
+     * 订阅的主题前缀, 如: /iot/collector/subscribe/设备ID
+     */
+    subscribeTopic: string;
+    /**
+     * 发布的主题前缀, 如: /iot/collector/publish/设备ID
+     */
+    publishTopic: string;
+
+    /**
+     * 接收到消息  device <- server  (设备接收服务器的消息)
+     * 
+     * @param topic 主题 
+     * @param payload 消息
+     */
+    onSubscribe(topic: string, payload: number[] | Uint8Array | ArrayBuffer): void;
+
+    /**
+     * 发布消息 device -> server  (设备发送给服务器的消息)
+     * 
+     * @param topic 主题 
+     * @param value 值
+     */
+    onPublish(topic: string, value: number[] | Uint8Array | ArrayBuffer): void;
+
+  }
+
 }

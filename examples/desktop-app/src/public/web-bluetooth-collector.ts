@@ -1,4 +1,4 @@
-import { logger } from "@benefitjs/core";
+import { binary } from "@benefitjs/core";
 import { collector } from "@benefitjs/devices";
 import { WebBluetooth } from "./web-bluetooth";
 
@@ -9,7 +9,7 @@ export namespace WebBluetoothCollector {
   /**
    * 日志打印
    */
-  const log = logger.newProxy("WebBluetoothCollector", logger.Level.debug);
+  export const log = collector.log;
 
   // 扫描条件
   // {
@@ -36,8 +36,16 @@ export namespace WebBluetoothCollector {
      */
     constructor(device: WebBluetooth.BluetoothDevice, listener: DataListener = printListener) {
       super(device, collector.uuid);
-      this.resolver = new collector.Device(listener);
       this.listeners.push(listener);
+      const _self = this;
+      this.resolver = new collector.Device(<DataListener> {
+        onNotify(hexDeviceId, data, type, packet) {
+          _self.listeners.forEach(l => WebBluetooth.apply((l as any).onNotify, hexDeviceId, data, type, packet));
+        },
+        onPacketLost(deviceId, lost) {
+          _self.listeners.forEach(l => WebBluetooth.apply((l as any).onPacketLost, deviceId, lost));
+        },
+      });
     }
 
     protected onCharacteristicChanged(...args: any): void {
@@ -65,12 +73,15 @@ export namespace WebBluetoothCollector {
   /**
    * 打印日志
    */
-  const printListener = <DataListener>{
-    onNotify(hexDeviceId, data, type, packet) {
-      log.log('onNotify', hexDeviceId, type, packet);
+  export const printListener = <DataListener>{
+    onNotify(deviceId, data, type, packet) {
+      log.log('onNotify', deviceId, type, packet);
     },
-    onPacketLost(lost) {
-      log.log('onPacketLost', lost);
+    onPacketLost(deviceId, lost) {
+      log.warn('onPacketLost', deviceId, lost.sn, lost);
+      // 发送重传指令
+      let cmd = collector.retryCmd(binary.hexToBytes(deviceId), lost.sn, 1);
+      log.log('发送重传指令', deviceId, lost.sn, binary.bytesToHex(cmd));
     },
     onConnected(client) {
       log.log('onConnected', client);
