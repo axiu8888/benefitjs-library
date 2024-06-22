@@ -1,11 +1,12 @@
 import { binary } from "@benefitjs/core";
 import { collector } from "@benefitjs/devices";
-import { WebBluetooth } from "./web-bluetooth";
+import { ElectronRender } from './electron-render';
+
 
 /**
  * 采集器
  */
-export namespace WebBluetoothCollector {
+export namespace WebBtCollector {
   /**
    * 日志打印
    */
@@ -21,7 +22,7 @@ export namespace WebBluetoothCollector {
   /**
    * 采集器客户端
    */
-  export class Client extends WebBluetooth.Client<Client> {
+  export class Client extends ElectronRender.bluetooth.Client<Client> {
 
     /**
      * 数据解析
@@ -34,23 +35,22 @@ export namespace WebBluetoothCollector {
      * @param device 扫描到的蓝牙设备
      * @param listener 数据监听
      */
-    constructor(device: WebBluetooth.BluetoothDevice, listener: DataListener = printListener) {
+    constructor(device: ElectronRender.bluetooth.BluetoothDevice, listener: DataListener = printListener) {
       super(device, collector.uuid);
       this.listeners.push(listener);
       const _self = this;
       this.resolver = new collector.Device(<DataListener> {
         onNotify(hexDeviceId, data, type, packet) {
-          _self.listeners.forEach(l => WebBluetooth.apply((l as any).onNotify, hexDeviceId, data, type, packet));
+          _self.listeners.forEach(l => ElectronRender.bluetooth.apply((l as any).onNotify, hexDeviceId, data, type, packet));
         },
         onPacketLost(deviceId, lost) {
-          _self.listeners.forEach(l => WebBluetooth.apply((l as any).onPacketLost, deviceId, lost));
+          _self.listeners.forEach(l => ElectronRender.bluetooth.apply((l as any).onPacketLost, deviceId, lost));
         },
       });
     }
 
     protected onCharacteristicChanged(...args: any): void {
       super.onCharacteristicChanged(...args);
-
       try {
         let event = args[0];
         let value = event.target.value as DataView;
@@ -66,7 +66,7 @@ export namespace WebBluetoothCollector {
   /**
    * 数据监听
    */
-  export interface DataListener extends collector.DataListener, WebBluetooth.IGattListener<Client> {
+  export interface DataListener extends collector.DataListener, ElectronRender.bluetooth.IGattListener<Client> {
     // 监听
   }
 
@@ -81,7 +81,7 @@ export namespace WebBluetoothCollector {
       log.warn('onPacketLost', deviceId, lost.sn, lost);
       // 发送重传指令
       let cmd = collector.retryCmd(binary.hexToBytes(deviceId), lost.sn, 1);
-      log.log('发送重传指令', deviceId, lost.sn, binary.bytesToHex(cmd));
+      log.log('待发送重传指令', deviceId, lost.sn, binary.bytesToHex(cmd));
     },
     onConnected(client) {
       log.log('onConnected', client);

@@ -11,10 +11,9 @@ import { join } from "node:path";
 import { logger, utils } from "@benefitjs/core";
 import { io, serialport, sqlite } from "@benefitjs/node";
 import { log } from "../../src/public/log";
-import { helper } from "../public/helper";
+import { ElectronMain} from "../../lib/electron-main";
 // import "../../src/public/ws-server";
 import axios from 'axios';
-import { bluetooth } from "../public/bluetooth";
 
 
 
@@ -56,8 +55,7 @@ const preload = join(__dirname, "../preload/index.js");
 const url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = join(process.env.DIST, "index.html");
 
-helper.ipcMain = ipcMain;
-log.info("instance.ipcMain", process.pid);
+log.info("process.ipcMain, pid:", process.pid);
 
 async function createWindow() {
   const displays = screen.getAllDisplays();
@@ -91,13 +89,14 @@ async function createWindow() {
       // enableRemoteModule: true,
     },
   });
+  // 初始化
+  ElectronMain.mainWin = win;
 
-  helper.mainWin = win;
   if (process.env.VITE_DEV_SERVER_URL) {
     // electron-vite-vue#298
     win.loadURL(url);
     // Open devTool if the app is not packaged
-    helper.openDevTools({
+    ElectronMain.openDevTools({
       mode: "right",
     });
   } else {
@@ -112,6 +111,18 @@ async function createWindow() {
       "main-process-message",
       JSON.stringify({ id: utils.uuid(), time: utils.dateFmt(Date.now()) })
     );
+
+    setTimeout(() => {
+      ElectronMain.ipc.invoke('api', 'testIpc000', '给渲染进程发消息: ' + utils.dateFmt(Date.now()))
+        .then(res => log.warn('testIpc000', res))
+        .catch(e => log.warn('testIpc000', e));
+
+      win?.webContents.send(
+        "ipc:main->render",
+        JSON.stringify({ id: utils.uuid(), time: utils.dateFmt(Date.now()) })
+      );
+
+    }, 3000);
   });
 
   // Make all links open with the browser, not with the application
@@ -128,7 +139,7 @@ async function createWindow() {
   // mytest.test_serialport();
 
   // 蓝牙
-  bluetooth.init(win);
+  ElectronMain.bluetooth.init(win);
 
 }
 

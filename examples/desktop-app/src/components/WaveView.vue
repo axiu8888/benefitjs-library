@@ -52,14 +52,15 @@ let collectorListener: (evt: any) => void = (evt) => {
   
   // log.info("采集器数据:", sn, packet);
 };
-// mqtt.subscribeCollector("01001148", collectorListener);
-// mqtt.subscribeCollector("01000860", collectorListener);
+mqtt.subscribeCollector("01001148", collectorListener);
+mqtt.subscribeCollector("01000860", collectorListener);
 mqtt.subscribeCollector("11000138", collectorListener);
+mqtt.subscribeCollector("11000093", collectorListener);
 
 onMounted(() => {
   // 监听是否在当前页，并置为已读
   document.addEventListener("visibilitychange", () => {
-    log.info("visibilitychange, hidden = " + document.hidden);
+    // log.info("visibilitychange, hidden = " + document.hidden);
     if (document.hidden) wv.pause(); 
     else wv.resume();
     lastSn = -1;
@@ -90,7 +91,7 @@ onMounted(() => {
       container.clientHeight
     );
     wv = waveview.createEcgRespSpo2(wvCanvas, v => {
-      v.models[1].scaleRatio = 0.20;
+      v.models[1].scaleRatio = 0.40;
     });
     log.info("wv ==>:", wv);
   }, 50);

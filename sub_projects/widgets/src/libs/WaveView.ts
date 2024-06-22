@@ -11,7 +11,7 @@ export namespace waveview {
     (v: View): void;
   }
 
-  const defaultOnInit: ViewInit = (v: View): void => { };
+  const globalInit: ViewInit = (v: View): void => { };
 
   /**
    * 波形图绘制：心电/脉搏波/胸腹呼吸
@@ -54,7 +54,7 @@ export namespace waveview {
      */
     isPause: boolean = false;
 
-    constructor(canvas: HTMLCanvasElement, onInit = defaultOnInit, interval: number = 40) {
+    constructor(canvas: HTMLCanvasElement, onInit = globalInit, interval: number = 40) {
       this.canvas = canvas;
       this.ctx = getContext(canvas);
       this.interval = interval;
@@ -636,7 +636,7 @@ export namespace waveview {
    * 40毫秒执行一次
    * 心电每秒200个值      每次绘制8个值
    */
-  export function createEcg1(canvas: HTMLCanvasElement, onInit = defaultOnInit): View {
+  export function createEcg1(canvas: HTMLCanvasElement, onInit = globalInit): View {
     return new View(canvas, (v: View) => { // 初始化
       let canvas = v.canvas;
       let step = 1.0;
@@ -672,7 +672,7 @@ export namespace waveview {
    * 脉搏波每秒50个值     每次绘制2个值
    * 胸腹呼吸每秒25个值   每次绘制1个值
    */
-  export function createEcgResp2(canvas: HTMLCanvasElement, onInit = defaultOnInit): View {
+  export function createEcgResp2(canvas: HTMLCanvasElement, onInit = globalInit): View {
     return new View(canvas, (v: View) => {// 初始化
       let canvas = v.canvas;
       let width = canvas.width;
@@ -742,12 +742,12 @@ export namespace waveview {
    * 脉搏波每秒50个值     每次绘制2个值
    * 胸腹呼吸每秒25个值   每次绘制1个值
    */
-  export function createEcgRespSpo2(canvas: HTMLCanvasElement, onInit = defaultOnInit): View {
+  export function createEcgRespSpo2(canvas: HTMLCanvasElement, onInit = globalInit): View {
     return new waveview.View(canvas, (v: waveview.View) => {// 初始化
       let canvas = v.canvas;
       let width = canvas.width;
       let height = canvas.height;
-      let step = 1.0;
+      let step = 1.4;
       // 添加ViewModel
       v.models.push(
         // 创建心电
@@ -775,7 +775,7 @@ export namespace waveview {
           step: step * 8, // 步长
           baseLine: height * (1 / 6.0), // 基线
           maxCacheSize: 2, // 缓存数量
-          scaleRatio: 0.2, // 缩放比
+          scaleRatio: 0.4, // 缩放比
           wipeWidth: 16, // 空白填充
           startX: -2,
           startY: height * (2 / 6.0) + 0,
@@ -817,7 +817,7 @@ export namespace waveview {
    * @param opt 参数
    * @returns 返回创建的WaveView
    */
-  export function createWaveView(canvas: HTMLCanvasElement, row: number = 1, column: number = 1, opt: Options = DEFAULT_OPTS, onInit = defaultOnInit): View {
+  export function createWaveView(canvas: HTMLCanvasElement, row: number = 1, column: number = 1, opt: Options = DEFAULT_OPTS, onInit = globalInit): View {
     return new View(canvas, (v: View) => {// 初始化
       let canvas = v.canvas;
       let width = canvas.width / column;
@@ -854,7 +854,7 @@ export namespace waveview {
    * @param opt 可选项参数
    * @returns 返回创建的WaveView
    */
-  export const createCanvasWaveView = (container: HTMLElement, row: number = 1, column: number = 1, opt: Options = DEFAULT_OPTS, onInit = defaultOnInit): View => {
+  export const createCanvasWaveView = (container: HTMLElement, row: number = 1, column: number = 1, opt: Options = DEFAULT_OPTS, onInit = globalInit): View => {
     let canvas = document.createElement('canvas');
     canvas.setAttribute('width', container.clientWidth.toString()); //给canvas设置宽度
     canvas.setAttribute('height', container.clientHeight.toString()); //给canvas设置高度

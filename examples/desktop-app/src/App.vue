@@ -16,8 +16,9 @@ import holter from "./components/holter.vue";
 import qrcode from "./components/qrcode.vue";
 import CollectorView from "./components/CollectorView.vue";
 
-import { ipcMain, ipcRenderer } from "electron";
 import { log } from "./public/log";
+
+log.info('Vue create ...');
 
 export default {
   // `setup` 是一个特殊的钩子，专门用于组合式 API。
