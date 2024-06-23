@@ -12,10 +12,10 @@ export namespace mqtt {
    */
   export const client = new MQTT.Client(<MQTT.Options>{
     // host: "192.168.1.198",
-    // host: "pr.sensecho.com",
-    host: "192.168.124.15",
+    host: "pr.sensecho.com",
+    // host: "192.168.124.15",
     port: 80,
-    path: "/mqtt",
+    path: "/support/mqtt",
     clientId: `mqttjs_${utils.uuid().substring(0, 16)}`,
     timeout: 2, // 连接超时
     autoReconnectInterval: 10, // 自动重连的间隔

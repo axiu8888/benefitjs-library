@@ -21,9 +21,9 @@ import { binary, utils } from "@benefitjs/core";
 import { log } from "../public/log";
 import { collector } from "@benefitjs/devices";
 import { mqtt } from "../public/mqtt";
-// import { ElectronMain } from '../../lib/electron-main';//无法引入主进程函数
-import { ElectronRender } from "../../lib/electron-render";
-import { WebBtCollector } from "../../lib/web-bt-collector";
+// import { ElectronMain } from '../../libs/electron-main';//无法引入主进程函数
+import { ElectronRender } from "../../libs/electron-render";
+import { WebBtCollector } from "../../libs/web-bt-collector";
 
 // 采集器设备
 let client: WebBtCollector.Client;
@@ -74,6 +74,12 @@ const listener = <WebBtCollector.DataListener>{
   },
 };
 
+
+ElectronRender.ipc.emitter.on('bluetooth.stopScan', event => {
+  log.info('===========================>: 取消蓝牙扫描');
+});
+
+
 export default {
   // `setup` 是一个特殊的钩子，专门用于组合式 API。
   components: {
@@ -110,7 +116,12 @@ export default {
               acceptAllDevices: true,
               // filters: [{ namePrefix: 'HSRG' }, { namePrefix: 'Bluetooth BP' }],
             })
-            .then((device) => {
+            .then((devices) => {
+              let device;
+              if(!(devices && devices.length > 0)) {
+                return;
+              }
+              device = devices[0];
               log.warn("扫描到蓝牙设备", device, utils.getProperties(device));
               log.info("device.gatt", device.gatt);
 
@@ -184,8 +195,9 @@ export default {
       }
     },
     sendIpcMain() {
+      // import('../../libs/electron-main')
       ElectronRender.ipc
-        .invoke('api', "testIpc222", "给主进程发消息: " + utils.dateFmt(Date.now()))
+        .invoke('ElectronMain.bluetooth', "stopScan")
         .then((res) => log.info("testIpc222", res))
         .catch((e) => log.error("testIpc222", e));
     },

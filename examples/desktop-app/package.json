@@ -28,6 +28,7 @@
     "type-check": "vue-tsc --noEmit"
   },
   "devDependencies": {
+    "@types/node": "^20.12.12",
     "@vitejs/plugin-vue": "^4.6.2",
     "electron": "^30.0.6",
     "electron-builder": "^24.13.3",

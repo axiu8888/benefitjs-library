@@ -46,6 +46,18 @@ export default {
     log.info("app ==>:", app.style);
   },
 };
+
+
+let worker = new Worker("/worker.js");
+worker.onmessage = function(event) {
+  log.info('onmessage ==>:', event.data);
+}
+worker.onmessageerror = function(event) {
+  log.error('onmessageerror ==>:', event);
+}
+worker.onerror = function(event) {
+  log.error('onerror ==>:', event);
+}
 </script>
 
 <style>

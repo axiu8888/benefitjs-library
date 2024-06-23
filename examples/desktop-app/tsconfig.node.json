@@ -9,6 +9,7 @@
   "include": [
     "vite.config.ts",
     "package.json",
-    "electron"
-, "api/electron-main.ts", "api/electron-render.ts"  ]
+    "electron",
+    "libs",
+  ]
 }

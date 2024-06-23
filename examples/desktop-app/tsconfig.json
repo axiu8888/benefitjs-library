@@ -43,7 +43,8 @@
   },
   "include": [
     "src",
-    "./env.d.ts", "api/electron-main.ts", "api/electron-main.ts", "api/web-bt-collector.ts", "api/web-bt-collector.ts",
+    "libs",
+    "./env.d.ts",
   ],
   "exclude": [
     "example",

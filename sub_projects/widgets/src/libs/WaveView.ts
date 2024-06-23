@@ -747,7 +747,7 @@ export namespace waveview {
       let canvas = v.canvas;
       let width = canvas.width;
       let height = canvas.height;
-      let step = 1.4;
+      let step = 1.2;
       // 添加ViewModel
       v.models.push(
         // 创建心电

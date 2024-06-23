@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { logger, utils } from "@benefitjs/core";
 import { io, serialport, sqlite } from "@benefitjs/node";
 import { log } from "../../src/public/log";
-import { ElectronMain} from "../../lib/electron-main";
+import { ElectronMain} from "../../libs/electron-main";
 // import "../../src/public/ws-server";
 import axios from 'axios';
 
@@ -57,6 +57,11 @@ const indexHtml = join(process.env.DIST, "index.html");
 
 log.info("process.ipcMain, pid:", process.pid);
 
+
+// BrowserWindow.on('did-create-window', e => {
+    
+// });
+
 async function createWindow() {
   const displays = screen.getAllDisplays();
   const primaryDisplay = displays[0];
@@ -86,6 +91,7 @@ async function createWindow() {
       // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
       nodeIntegration: true, // 为了解决require 识别问题
       contextIsolation: false,
+      nodeIntegrationInWorker: true, // 多线程
       // enableRemoteModule: true,
     },
   });
@@ -112,17 +118,9 @@ async function createWindow() {
       JSON.stringify({ id: utils.uuid(), time: utils.dateFmt(Date.now()) })
     );
 
-    setTimeout(() => {
-      ElectronMain.ipc.invoke('api', 'testIpc000', '给渲染进程发消息: ' + utils.dateFmt(Date.now()))
-        .then(res => log.warn('testIpc000', res))
-        .catch(e => log.warn('testIpc000', e));
+    // 导出注册的模块
+    ElectronMain.ipc.exportModules('ElectronMain.bluetooth', ElectronMain.bluetooth);
 
-      win?.webContents.send(
-        "ipc:main->render",
-        JSON.stringify({ id: utils.uuid(), time: utils.dateFmt(Date.now()) })
-      );
-
-    }, 3000);
   });
 
   // Make all links open with the browser, not with the application
@@ -138,8 +136,7 @@ async function createWindow() {
   // mytest.test_sqlite();
   // mytest.test_serialport();
 
-  // 蓝牙
-  ElectronMain.bluetooth.init(win);
+  ElectronMain.bluetooth.initializer();
 
 }
 

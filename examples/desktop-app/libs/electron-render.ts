@@ -1,6 +1,8 @@
 import { binary, logger, processEnv, utils } from "@benefitjs/core";
 import { GattUUID } from "@benefitjs/devices";
-import { ipcRenderer, IpcRendererEvent } from "electron";
+import { ipcRenderer } from "electron";
+import { rpc } from './rpc';
+import EventEmitter from "events";
 
 /**
  * 渲染进程操作
@@ -40,74 +42,44 @@ export namespace ElectronRender {
    */
   export namespace ipc {
     /**
-     * 请求
+     * 事件发布
      */
-    interface IpcRequest {
-      /**
-       * 请求ID
-       */
-      id: string,
-      /**
-       * 超时调度ID
-       */
-      timeoutId: any,
-      /**
-       * 目标对象
-       */
-      target: string,
-      /**
-       * 函数
-       */
-      fn: string,
-      /**
-       * 参数
-       */
-      args: any[],
-
-      resolve: any,
-      reject: any,
-    }
-
-    /**
-     * 响应
-     */
-    interface IpcResponse {
-      /**
-       * 请求ID
-       */
-      id: string,
-      /**
-       * 结果码: 200/400/500
-       */
-      code: number,
-      /**
-       * 错误信息
-       */
-      error: string,
-      /**
-       * 响应结果
-       */
-      data: any
-    }
+    export const emitter = new EventEmitter();
     /**
      * 消息
      */
-    const queue = new Map<string, IpcRequest>();
+    const queue = new Map<string, rpc.Request & rpc.Promise>();
     /**
      * 调用RPC
      */
-    ipcRenderer.on('ipc:request[main->render]', (event, request: IpcRequest) => {
-      log.info('ipc:request[main -> render]', request);
+    ipcRenderer.on('ipc:request[main->render]', (event, request: rpc.Request) => {
+      let targetFn = `${request.target}.${request.fn}()`
+      log.info('ipc:request[main -> render]', targetFn, request);
 
-      let response = <IpcResponse>{ id: request.id, code: 200, data: '渲染进程响应结果' };
-      event.sender.send('ipc:response[render->main]', response);
-      
-      // TODO 2024-06-23 调用接口函数
-      // TODO 2024-06-23 调用接口函数
-      // TODO 2024-06-23 调用接口函数
-
+      let response = <rpc.Response>{ id: request.id, code: 200, data: undefined };
+      new Promise((resolve, reject) => {
+        try {
+          let target = 'window' != request.target ? window[request.target] : window;
+          if (target && target[request.fn]) {
+            let result = target[request.fn](...request.args)
+            if (result instanceof Promise) result.then(resolve).catch(reject);
+            else resolve(result);
+          } else {
+            reject(new Error('无法找到注册的模块或函数: ' + targetFn))
+          }
+        } catch (e) {
+          reject(e)
+        }
+      })
+        .then(res => response.data = res)
+        .catch(e => {
+          response.code = 400;
+          response.error = (e as Error).message;
+          response.data = e;
+        })
+        .finally(() => event.sender.send('ipc:response[render->main]', response));
     });
-    ipcRenderer.on('ipc:response[main->render]', (event, response: IpcResponse) => {
+    ipcRenderer.on('ipc:response[main->render]', (event, response: rpc.Response) => {
       try {
         let request = queue.get(response.id)
         log.info('ipc:response[main -> render]', `response[${response.id}]`, response.data);
@@ -129,7 +101,7 @@ export namespace ElectronRender {
     export function invoke(target: string, fn: string, ...args: any) {
       return new Promise<any>((resolve, reject) => {
         const targetFn = `${target}.${fn}()`;
-        const request = <IpcRequest>{ id: utils.uuid(), target: target, fn: fn, args: [...args], resolve, reject };
+        const request = <rpc.Request & rpc.Promise>{ id: utils.uuid(), target: target, fn: fn, args: [...args], resolve, reject };
         try {
           log.info('ipc:request[render -> main]', `req[${request.id}]`, targetFn, ...args);
           queue.set(request.id, request);
@@ -145,9 +117,25 @@ export namespace ElectronRender {
       });
     }
 
-    export function on(channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) {
+    // 监听主进程消息
+    ipcRenderer.on('ipc:message[main->render]', (event, ...args) => {
+      let msg = args[0] as rpc.Event;
+      log.info('ipc:message[main -> render]', `[${msg.channel}][${msg.id}]`, msg.data);
+      emitter.emit(msg.channel, msg.data);
+    });
 
+    /**
+     * 发送消息
+     * 
+     * @param channel 通道 
+     * @param msg 消息
+     */
+    export function send(channel: string, msg: any) {
+      let event = <rpc.Event>{ id: utils.uuid(), channel: channel, data: msg };
+      log.info('ipc:message[render -> main]', `[${event.channel}][${event.id}]`, event.data);
+      ipcRenderer.send(`ipc:message[render->main]`, event);
     }
+
   }
 
   // bluetooth =================================================================================================================== ↓
@@ -160,6 +148,11 @@ export namespace ElectronRender {
    * Web蓝牙
    */
   export namespace bluetooth {
+
+    /**
+     * 暴漏的事件
+     */
+    export const events = ['bluetooth.startScan', 'bluetooth.stopScan', 'bluetooth.devices'];
 
     // 检查当前进程
     requireProcess();
@@ -206,7 +199,7 @@ export namespace ElectronRender {
      * 
      */
     export function startScan(optional: ScanOptional) {
-      return new Promise<bluetooth.BluetoothDevice>((resolve, reject) => {
+      return new Promise<[bluetooth.BluetoothDevice]>((resolve, reject) => {
         if (support()) {
           return bluetooth()
             .requestDevice(optional)
@@ -223,7 +216,9 @@ export namespace ElectronRender {
      */
     export function stopScan() {
       return new Promise<any>((resolve, reject) => {
-
+        ipc.invoke('ElectronMain.bluetooth', 'stopScan')
+          .then(resolve)
+          .catch(reject);
       });
     }
 
