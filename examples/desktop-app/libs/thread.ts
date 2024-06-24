@@ -2,40 +2,86 @@ import { logger } from "@benefitjs/core";
 
 /**
  * 多线程
+ * 
+ * 需要在 index.html 的<head>标签内添加: worker-src 'self' 'unsafe-inline' * blob:; 
+ * 
+ * <p>
+ * 如: <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; worker-src 'self' 'unsafe-inline' * blob:;" />
+ * </p>
  */
 export namespace thread {
   /**
-   * 日志打印
-   */
-  const log = logger.newProxy('thread', logger.Level.debug);
-
-  /**
    * 创建工作线程
    * 
-   * @param f 函数 func.toString()
+   * @param func 函数 (function(){ 在函数处理业务 }).toString()
    * @returns 返回工作线程
    */
-  export function createWorker(f: string) {
-    let blob = new Blob(['(' + f.toString() + ')()'], { type: 'application/javascript' });
+  export function create(func: Function | string, tag = 'worker.js', level = logger.Level.debug) {
+    let blob = new Blob([`
+    (function(){
+      try {
+        const logger = require('@benefitjs/core')['logger'];
+        // self.logger = logger;
+        logger.global.level = ${level};
+        self.log = logger.newProxy('${tag}', ${level});
+        (${func.toString()})();
+      } catch(e) {
+        console.error(e);
+      }
+    })()
+    `], { type: 'application/javascript' });
     let url = window.URL.createObjectURL(blob);
     let worker = new Worker(url, { type: 'module' });
     return worker;
   }
 
   /**
-   * 创建 Worker
+   * 创建日志打印
+   * 
+   * @param tag 标签
+   * @param level 日志等级
+   * @returns 返回日志打印对象
    */
-  export function create() {
-    let script = _SCRIPT;//'console.log("hello world!");';
-    let workerBlob = new Blob([script], { type: 'application/javascript' });
-    let url = URL.createObjectURL(workerBlob);
-    return new Worker(url, { type: 'module' });
+  export function newLogger(tag: string, level: logger.Level) {
+    const logger = require('@benefitjs/core')['logger'];
+    logger.global.level = level;
+    return logger.newProxy(tag, level);
   }
 
-  const _SCRIPT = `
-addEventListener('message', (event) => { console.log('[worker] message =>:', event); });
-addEventListener('error', (event) => { console.log('[worker] error =>:', event); });
-addEventListener('abort', (event) => { console.log('[worker] abort =>:', event); });
-  `
-
 }
+
+// 代码 demo =============================================================================
+`
+let worker = thread.create(function(){
+  const core = require('@benefitjs/core');
+  // 日志模块
+  const logger = core['logger']
+  const utils = core['utils']
+  /**
+   * 日志打印
+   */
+  const log = logger.newProxy('worker', logger.Level.debug);
+  logger.global.level = logger.Level.debug;
+
+  addEventListener('message', (event) => { 
+    log.info('[worker] message =>:', event);
+    setTimeout(() => self.postMessage('worker send ==>: ' + utils.dateFmt(Date.now())), 1000);
+  });
+  addEventListener('error', (event) => { log.info('[worker] error =>:', event); });
+  addEventListener('abort', (event) => { log.info('[worker] abort =>:', event); });
+
+}.toString());
+worker.onmessage = function(event) {
+  log.info('onmessage ==>:', event.data);
+}
+worker.onmessageerror = function(event) {
+  log.error('onmessageerror ==>:', event);
+}
+worker.onerror = function(event) {
+  log.error('onerror ==>:', event);
+}
+
+setInterval(() => {
+  worker.postMessage('render thread =>: 哈哈哈...');
+}, 5000);
+`

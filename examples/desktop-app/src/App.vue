@@ -18,6 +18,7 @@ import CollectorView from "./components/CollectorView.vue";
 
 import { log } from "./public/log";
 import { thread } from "../libs/thread";
+import { logger, utils } from '@benefitjs/core';
 
 log.info('Vue create ...');
 
@@ -49,33 +50,22 @@ export default {
 };
 
 // let worker = new Worker("/worker.js");
-// let worker = thread.create();
-let worker = thread.createWorker(function(){
-  // 日志模块
-  const logger = require('@benefitjs/core')['logger']
-  /**
-   * 日志打印
-   */
-  const log = logger.newProxy('worker', logger.Level.debug);
+let worker = thread.create(function(){
+  // console.log(self);
+  // log create()中注入的对象
   logger.global.level = logger.Level.debug;
+  self.onmessage = (event) => { log.info('onmessage: ', event); }
+  self.onerror = (event) => { log.info('onerror: ', event); }
+  self.onabort = (event) => { log.info('onabort: ', event); }
 
-  addEventListener('message', (event) => { log.info('[worker] message =>:', event); });
-  addEventListener('error', (event) => { log.info('[worker] error =>:', event); });
-  addEventListener('abort', (event) => { log.info('[worker] abort =>:', event); });
-}.toString());
-worker.onmessage = function(event) {
-  log.info('onmessage ==>:', event.data);
-}
-worker.onmessageerror = function(event) {
-  log.error('onmessageerror ==>:', event);
-}
-worker.onerror = function(event) {
-  log.error('onerror ==>:', event);
-}
+});
 
-setInterval(() => {
-  worker.postMessage('render thread =>: 哈哈哈...');
+setInterval(() => { 
+  let date = utils.dateFmt(Date.now());
+  log.info('setInterval ==>: ' + date);
+  worker.postMessage('render ==>: ' + date);
 }, 5000);
+
 
 </script>
 
