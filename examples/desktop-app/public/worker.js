@@ -5,9 +5,12 @@
 // selectively enable features needed in the rendering
 // process.
 
-
 // 定时获取WiFi信息
-setInterval(() => wifiInfo(), 5000);
+// setInterval(() => wifiInfo(), 5000);
+
+addEventListener('message', (event) => { console.log('[worker] message =>:', event); });
+addEventListener('error', (event) => { console.log('[worker] error =>:', event); });
+addEventListener('abort', (event) => { console.log('[worker] abort =>:', event); });
 
 
 function wifiInfo() {

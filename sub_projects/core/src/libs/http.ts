@@ -72,8 +72,8 @@ export namespace http {
   /**
    * 创建工作线程
    * 
-   * @param f 
-   * @returns 
+   * @param f 函数 func.toString()
+   * @returns 返回工作线程
    */
   export function createWorker(f: string) {
     let blob = new Blob(['(' + f.toString() + ')()']);

@@ -245,10 +245,11 @@ export namespace ElectronMain {
     let bluetoothPinCallback; // 蓝牙配对回调
     let selectBluetoothCallback; //蓝牙扫描结果响应
 
-    export function initializer() {
+    export function setup() {
       // 注册监听
       listWindows().forEach(win => {
-        win.webContents.on("select-bluetooth-device", (event, deviceList, callback) => {
+        let webContents = win.webContents;
+        webContents.on("select-bluetooth-device", (event, deviceList, callback) => {
           log.debug('select-bluetooth-device ==>', deviceList.map(d => <any>{ name: d.deviceName, id: d.deviceId }));
           event.preventDefault();
           selectBluetoothCallback = callback;
@@ -262,11 +263,12 @@ export namespace ElectronMain {
           }
         });
         
-        win.webContents.session.setBluetoothPairingHandler((details, callback) => {
+        webContents.session.setBluetoothPairingHandler((details, callback) => {
           log.debug('bluetooth-pairing-request ==>', details);
           bluetoothPinCallback = callback;
           // Send a message to the renderer to prompt the user to confirm the pairing.
-          ipc.send("bluetooth-pairing-request", details);
+          // ipc.send("bluetooth-pairing-request", details);
+          webContents.send("bluetooth-pairing-request", details);
         });
       });
     }
@@ -285,6 +287,7 @@ export namespace ElectronMain {
         log.debug('cancel-bluetooth-request');
         selectBluetoothCallback(""); // 停止扫描
         ipc.send('bluetooth.stopScan', '取消蓝牙扫描');
+        selectBluetoothCallback = undefined;
       }
     }
   }

@@ -17,6 +17,7 @@ import qrcode from "./components/qrcode.vue";
 import CollectorView from "./components/CollectorView.vue";
 
 import { log } from "./public/log";
+import { thread } from "../libs/thread";
 
 log.info('Vue create ...');
 
@@ -47,8 +48,21 @@ export default {
   },
 };
 
+// let worker = new Worker("/worker.js");
+// let worker = thread.create();
+let worker = thread.createWorker(function(){
+  // 日志模块
+  const logger = require('@benefitjs/core')['logger']
+  /**
+   * 日志打印
+   */
+  const log = logger.newProxy('worker', logger.Level.debug);
+  logger.global.level = logger.Level.debug;
 
-let worker = new Worker("/worker.js");
+  addEventListener('message', (event) => { log.info('[worker] message =>:', event); });
+  addEventListener('error', (event) => { log.info('[worker] error =>:', event); });
+  addEventListener('abort', (event) => { log.info('[worker] abort =>:', event); });
+}.toString());
 worker.onmessage = function(event) {
   log.info('onmessage ==>:', event.data);
 }
@@ -58,6 +72,11 @@ worker.onmessageerror = function(event) {
 worker.onerror = function(event) {
   log.error('onerror ==>:', event);
 }
+
+setInterval(() => {
+  worker.postMessage('render thread =>: 哈哈哈...');
+}, 5000);
+
 </script>
 
 <style>

@@ -101,10 +101,6 @@ async function createWindow() {
   if (process.env.VITE_DEV_SERVER_URL) {
     // electron-vite-vue#298
     win.loadURL(url);
-    // Open devTool if the app is not packaged
-    ElectronMain.openDevTools({
-      mode: "right",
-    });
   } else {
     win.loadFile(indexHtml);
   }
@@ -118,8 +114,13 @@ async function createWindow() {
       JSON.stringify({ id: utils.uuid(), time: utils.dateFmt(Date.now()) })
     );
 
+    // Open devTool if the app is not packaged
+    ElectronMain.openDevTools({
+      mode: 'bottom',
+    });
+
     // 导出注册的模块
-    ElectronMain.ipc.exportModules('ElectronMain.bluetooth', ElectronMain.bluetooth);
+    ElectronMain.ipc.exportModules('ElectronMain.bluetooth', ElectronMain.bluetooth, true);
 
   });
 
@@ -136,7 +137,7 @@ async function createWindow() {
   // mytest.test_sqlite();
   // mytest.test_serialport();
 
-  ElectronMain.bluetooth.initializer();
+  ElectronMain.bluetooth.setup();
 
 }
 
