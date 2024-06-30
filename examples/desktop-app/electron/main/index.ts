@@ -10,11 +10,12 @@ import { release } from "node:os";
 import { join } from "node:path";
 
 import { logger, utils } from "@benefitjs/core";
-import { io, serialport/* , sqlite */ } from "@benefitjs/node";
+import { io } from "@benefitjs/node";
+// import { serialport, sqlite } from "@benefitjs/node-library";
 import { log } from "../../src/public/log";
 import { ElectronMain} from "../../libs/electron-main";
 // import "../../src/public/ws-server";
-import axios from 'axios';
+// import axios from 'axios';
 
 
 
@@ -243,42 +244,42 @@ export namespace mytest {
   //   });
   // }
 
-  export function test_serialport() {
-    setTimeout(() => {
-      log.info("获取串口 ...");
+  // export function test_serialport() {
+  //   setTimeout(() => {
+  //     log.info("获取串口 ...");
 
-      serialport
-        .list()
-        .then((ports) => log.info("串口:", ports))
-        .catch((err) => log.error('串口错误', err));
-      // // // 开始探测
-      // serialport.detector.start(true);
-    }, 2000);
-  }
+  //     serialport
+  //       .list()
+  //       .then((ports) => log.info("串口:", ports))
+  //       .catch((err) => log.error('串口错误', err));
+  //     // // // 开始探测
+  //     // serialport.detector.start(true);
+  //   }, 2000);
+  // }
 
 
-  export function test_axios() {
-    try {
+  // export function test_axios() {
+  //   try {
 
-      axios
-        .get('http://pr.sensecho.com/support/api/system/time')
-        .then(resp => {
-          log.info(resp.status, resp.data, resp.headers);
-          log.info('\n当前时间: ' + utils.dateFmtS(resp.data['result']));
-        })
-        .catch(err => log.error(err))
+  //     axios
+  //       .get('http://pr.sensecho.com/support/api/system/time')
+  //       .then(resp => {
+  //         log.info(resp.status, resp.data, resp.headers);
+  //         log.info('\n当前时间: ' + utils.dateFmtS(resp.data['result']));
+  //       })
+  //       .catch(err => log.error(err))
 
-      // let file = 'D:/Jicco_2.3.8.apk'
-      // let url = 'http://192.168.142.1:80/api/simple/uploadStream?filename=Jicco_2.3.8.apk';
-      // axios
-      //   .post(url, { file: fs.createReadStream(file) }, { headers: { "Content-Type": "multipart/form-data" }})
-      //   .then(resp => log.info(resp))
-      //   .catch(err => log.error(err))
-    } catch (err) {
-      log.error(err);
-    }
+  //     // let file = 'D:/Jicco_2.3.8.apk'
+  //     // let url = 'http://192.168.142.1:80/api/simple/uploadStream?filename=Jicco_2.3.8.apk';
+  //     // axios
+  //     //   .post(url, { file: fs.createReadStream(file) }, { headers: { "Content-Type": "multipart/form-data" }})
+  //     //   .then(resp => log.info(resp))
+  //     //   .catch(err => log.error(err))
+  //   } catch (err) {
+  //     log.error(err);
+  //   }
 
-  }
+  // }
 
 
 }

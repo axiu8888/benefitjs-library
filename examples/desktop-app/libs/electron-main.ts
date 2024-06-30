@@ -1,9 +1,9 @@
+import fs from 'node:fs';
+import EventEmitter from "events";
 import { BrowserWindow, ipcMain, PrintToPDFOptions, screen, shell } from "electron";
 import { logger, utils } from "@benefitjs/core";
-import { rpc } from './rpc';
-import EventEmitter from "events";
-import fs from 'node:fs';
 import { io } from "@benefitjs/node";
+import { rpc } from './rpc';
 
 /**
  * 主进程操作
@@ -12,7 +12,7 @@ export namespace ElectronMain {
   /**
    * 日志打印
    */
-  export const log = logger.newProxy("electron-main", logger.Level.info);
+  export const log = logger.newProxy("electron-main", logger.Level.warn);
 
   /**
    * 判断当前进程是否为主进程
@@ -29,7 +29,7 @@ export namespace ElectronMain {
   }
 
   // 打印进程
-  log.info(`当前进程 [${process.type}, ${process.pid}]`);
+  log.log(`当前进程 [${process.type}, ${process.pid}]`);
 
 
   // checkProcess(); // 检查当前环境
@@ -127,9 +127,9 @@ export namespace ElectronMain {
         },
       });
       win.webContents.once("did-finish-load", function (evt) {
-        log.info("加载完成", evt);
+        log.debug("加载完成", evt);
         setTimeout(() => {
-          log.info("printToPDF..................");
+          log.debug("printToPDF..................");
           win.webContents
             .printToPDF(<PrintToPDFOptions>{
               displayHeaderFooter: false,
@@ -145,7 +145,7 @@ export namespace ElectronMain {
                   reject(err);
                 }
                 // file written successfully
-                log.info("结束 ==>: ", pdfPath);
+                log.debug("结束 ==>: ", pdfPath);
                 setTimeout(() => {
                   try {
                     win.destroy();
@@ -204,63 +204,24 @@ export namespace ElectronMain {
      */
     export const emitter = new EventEmitter();
     /**
-     * 消息
+     * RPC
      */
-    const queue = new Map<string, rpc.Request & rpc.Promise>();
+    const manager = new rpc.Manager((req) => {
+      let target = _modules[req.target];
+      log.debug(`${req.target}.${req.fn}()`);
+      return target ? target[req.fn] : undefined; // TODO
+    });
 
     // 主进程 RPC
     ipcMain.on('ipc:request[render->main]', (event, request: rpc.Request) => { // 监听发送给主进程的消息
       let targetFn = `${request.target}.${request.fn}()`;
-      log.info('ipc:request[render -> main]', `request[${request.id}]`, targetFn, ...request.args);
-      // event.returnValue = '调用结果'
-      // event.reply('ipc:response[main->render]', '来自主进程响应: ' + utils.dateFmt(Date.now()))
-      const response = <rpc.Response>{ id: request.id, code: 200, data: undefined };
-      // import(request.target)
-      //   .then(res => {
-      //     log.info(targetFn, 'res ==>:', res);
-      //     // event.sender.send('ipc:response[main->render]', response);
-      //   })
-      //   .catch(err => {
-      //     log.error(targetFn, err);
-      //   })
-      new Promise((resolve, reject) => {
-        try {
-          let target = _modules[request.target];
-          if (target && target[request.fn]) {
-            let result = target[request.fn](...request.args)
-            if (result instanceof Promise) result.then(resolve).catch(reject);
-            else resolve(result);
-          } else {
-            reject(new Error('无法找到注册的模块或函数: ' + targetFn))
-          }
-        } catch (e) {
-          reject(e)
-        }
-      })
-        .then(res => response.data = res)
-        .catch(e => {
-          response.code = 400;
-          response.error = (e as Error).message;
-          response.data = e;
-        })
-        .finally(() => event.sender.send('ipc:response[main->render]', response));
-
-      // TODO 2024-06-23 调用接口函数
-      // TODO 2024-06-23 调用接口函数
-      // TODO 2024-06-23 调用接口函数
-
+      log.debug('ipc:request[render -> main]', `request[${request.id}]`, targetFn, ...request.args);
+      manager.handleRequest(request)
+        .then(response => { event.sender.send('ipc:response[main->render]', response); });
     });
     ipcMain.on('ipc:response[render->main]', (event, response: rpc.Response) => {
-      try {
-        let request = queue.get(response.id)
-        log.info('ipc:response[main -> render]', `response[${response.id}]`, response.data);
-        if (!request) return;
-        clearTimeout(request.timeoutId);
-        if (Math.round(response.code / 200) == 1) request.resolve(response.data);
-        else request.reject(new Error(response.error))
-      } finally {
-        queue.delete(response.id);
-      }
+      log.debug('ipc:response[main -> render]', `response[${response.id}]`, response.data);
+      manager.handleResponse(response);
     });
 
     /**
@@ -270,22 +231,15 @@ export namespace ElectronMain {
      * @param args 参数
      */
     export function invoke(target: string, fn: string, ...args: any) {
+      log.debug('ipc:request[main -> render]', `${target}.${fn}()`, ...args)
       return new Promise<any>((resolve, reject) => {
         listWindows().forEach((win) => {
-          const targetFn = `${target}.${fn}()`;
-          const request = <rpc.Request & rpc.Promise>{ id: utils.uuid(), target: target, fn: fn, args: [...args], resolve, reject };
-          try {
-            log.info('ipc:request[main -> render]', `${targetFn}`, ...args)
-            queue.set(request.id, request);
-            win.webContents.send('ipc:request[main->render]', { ...request, timeoutId: undefined, resolve: undefined, reject: undefined });
-            request.timeoutId = setTimeout(() => {
-              queue.delete(request.id);
-              request.reject(new Error(`${targetFn} 请求超时`));
-            }, 120_000);
-          } catch (e) {
-            queue.delete(request.id);
-            reject(e);
-          }
+          // 发送请求
+          manager.invoke(target, fn, args, 30_000, req => {
+            win.webContents.send('ipc:request[main->render]', { ...req, timeoutId: undefined, resolve: undefined, reject: undefined });
+          })
+            .catch(resolve)
+            .catch(reject);
         });
       });
     }
@@ -293,7 +247,7 @@ export namespace ElectronMain {
     // 监听主进程消息
     ipcMain.on('ipc:message[render->main]', (event, ...args) => {
       let msg = args[0] as rpc.Event;
-      log.info('ipc:message[main -> render]', `[${msg.channel}][${msg.id}]`, msg.data);
+      log.debug('ipc:message[main -> render]', `[${msg.channel}][${msg.id}]`, msg.data);
       emitter.emit(msg.channel, msg.data);
     });
     /**
@@ -304,7 +258,7 @@ export namespace ElectronMain {
      */
     export function send(channel: string, msg: any) {
       let event = <rpc.Event>{ id: utils.uuid(), channel: channel, data: msg };
-      log.info('ipc:message[main -> render]', `[${event.channel}][${event.id}]`, event.data);
+      log.debug('ipc:message[main -> render]', `[${event.channel}][${event.id}]`, event.data);
       BrowserWindow.getAllWindows().forEach((win) => win.webContents.send(`ipc:message[main->render]`, event));
     }
 
@@ -341,7 +295,7 @@ export namespace ElectronMain {
             // device is turned on) or until the user cancels the request
           }
         });
-        
+
         webContents.session.setBluetoothPairingHandler((details, callback) => {
           log.debug('bluetooth-pairing-request ==>', details);
           bluetoothPinCallback = callback;

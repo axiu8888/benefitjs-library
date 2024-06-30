@@ -1,8 +1,8 @@
 import { binary, logger, processEnv, utils } from "@benefitjs/core";
 import { GattUUID } from "@benefitjs/devices";
 import { ipcRenderer } from "electron";
-import { rpc } from './rpc';
 import EventEmitter from "events";
+import { rpc } from './rpc';
 
 /**
  * 渲染进程操作
@@ -11,7 +11,7 @@ export namespace ElectronRender {
   /**
    * 日志打印
    */
-  export const log = logger.newProxy("electron-render", logger.Level.info);
+  export const log = logger.newProxy("electron-render", logger.Level.warn);
 
   /**
    * 判断当前进程是否为渲染进程(浏览器进程)
@@ -29,7 +29,7 @@ export namespace ElectronRender {
 
 
   // 打印进程
-  log.info(`当前进程 [${process.type}, ${process.pid}]`);
+  log.log(`当前进程 [${process.type}, ${process.pid}]`);
 
   // ipc =================================================================================================================== ↓
   // ipc =================================================================================================================== ↓
@@ -45,51 +45,30 @@ export namespace ElectronRender {
      * 事件发布
      */
     export const emitter = new EventEmitter();
+
+    /**
+     * 导出的模块
+     */
+    const modules = {};
+
     /**
      * 消息
      */
-    const queue = new Map<string, rpc.Request & rpc.Promise>();
+    const manager = new rpc.Manager((req) => {
+      // 返回模块对象
+      return req.target != 'window' ? modules[req.target][req.fn] : window[req.fn];
+    });
     /**
      * 调用RPC
      */
     ipcRenderer.on('ipc:request[main->render]', (event, request: rpc.Request) => {
-      let targetFn = `${request.target}.${request.fn}()`
-      log.info('ipc:request[main -> render]', targetFn, request);
-
-      let response = <rpc.Response>{ id: request.id, code: 200, data: undefined };
-      new Promise((resolve, reject) => {
-        try {
-          let target = 'window' != request.target ? window[request.target] : window;
-          if (target && target[request.fn]) {
-            let result = target[request.fn](...request.args)
-            if (result instanceof Promise) result.then(resolve).catch(reject);
-            else resolve(result);
-          } else {
-            reject(new Error('无法找到注册的模块或函数: ' + targetFn))
-          }
-        } catch (e) {
-          reject(e)
-        }
-      })
-        .then(res => response.data = res)
-        .catch(e => {
-          response.code = 400;
-          response.error = (e as Error).message;
-          response.data = e;
-        })
-        .finally(() => event.sender.send('ipc:response[render->main]', response));
+      log.debug('ipc:request[main -> render]', `${request.target}.${request.fn}()`, request);
+      manager.handleRequest(request)
+        .then(response => { event.sender.send('ipc:response[render->main]', response); });
     });
     ipcRenderer.on('ipc:response[main->render]', (event, response: rpc.Response) => {
-      try {
-        let request = queue.get(response.id)
-        log.info('ipc:response[main -> render]', `response[${response.id}]`, response.data);
-        if(!request) return;
-        clearTimeout(request.timeoutId);
-        if(Math.round(response.code / 200) == 1) request.resolve(response.data);
-        else request.reject(new Error(response.error))
-      } finally {
-        queue.delete(response.id);
-      }
+      log.debug('ipc:response[main -> render]', `response[${response.id}]`, response.data);
+      manager.handleResponse(response);
     });
 
     /**
@@ -99,28 +78,16 @@ export namespace ElectronRender {
      * @param args 参数
      */
     export function invoke(target: string, fn: string, ...args: any) {
-      return new Promise<any>((resolve, reject) => {
-        const targetFn = `${target}.${fn}()`;
-        const request = <rpc.Request & rpc.Promise>{ id: utils.uuid(), target: target, fn: fn, args: [...args], resolve, reject };
-        try {
-          log.info('ipc:request[render -> main]', `req[${request.id}]`, targetFn, ...args);
-          queue.set(request.id, request);
-          ipcRenderer.send('ipc:request[render->main]', { ...request, timeoutId: undefined, resolve: undefined, reject: undefined });
-          request.timeoutId = setTimeout(() => {
-            queue.delete(request.id);
-            reject(new Error(`${targetFn} 请求超时`));
-          }, 120_000);
-        } catch (e) {
-          queue.delete(request.id);
-          reject(e);
-        }
+      return manager.invoke(target, fn, args, 30_000, (req) => {
+        log.debug('ipc:request[render -> main]', `req[${req.id}]`, `${target}.${fn}()`, ...args);
+        ipcRenderer.send('ipc:request[render->main]', { ...req, timeoutId: undefined, resolve: undefined, reject: undefined });
       });
     }
 
     // 监听主进程消息
     ipcRenderer.on('ipc:message[main->render]', (event, ...args) => {
       let msg = args[0] as rpc.Event;
-      log.info('ipc:message[main -> render]', `[${msg.channel}][${msg.id}]`, msg.data);
+      log.debug('ipc:message[main -> render]', `[${msg.channel}][${msg.id}]`, msg.data);
       emitter.emit(msg.channel, msg.data);
     });
 
@@ -132,7 +99,7 @@ export namespace ElectronRender {
      */
     export function send(channel: string, msg: any) {
       let event = <rpc.Event>{ id: utils.uuid(), channel: channel, data: msg };
-      log.info('ipc:message[render -> main]', `[${event.channel}][${event.id}]`, event.data);
+      log.debug('ipc:message[render -> main]', `[${event.channel}][${event.id}]`, event.data);
       ipcRenderer.send(`ipc:message[render->main]`, event);
     }
 

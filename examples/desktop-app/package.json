@@ -19,6 +19,49 @@
     }
   },
   "homepage": "",
+  "scripts": {
+    "postinstall": "electron-builder install-app-deps",
+    "dev-win": "chcp 65001 && vite",
+    "dev-mac": "vite",
+    "dev-linux": "vite",
+    "rebuild": "chcp 65001 && electron-rebuild -f -w sqlite3",
+    "build-vue": "vue-tsc --noEmit && vite build",
+    "build": "npm run build-vue && vite build && electron-builder",
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@vitejs/plugin-vue": "^4.6.2",
+    "electron": "^30.0.6",
+    "electron-builder": "^24.13.3",
+    "electron-rebuild": "^3.2.9",
+    "typescript": "^5.4.3",
+    "vite": "^4.5.3",
+    "vite-plugin-electron": "^0.28.4",
+    "vite-plugin-electron-renderer": "^0.14.5",
+    "vue": "^3.4.31",
+    "vue-tsc": "^2.0.22"
+  },
+  "dependencies": {
+    "@ant-design/icons-vue": "^7.0.1",
+    "@benefitjs/core": "workspace:^",
+    "@benefitjs/devices": "workspace:^",
+    "@benefitjs/node": "workspace:^",
+    "@benefitjs/node-library": "workspace:^",
+    "@benefitjs/widgets": "workspace:^",
+    "ant-design-vue": "^4.1.2",
+    "bootstrap-icons": "^1.11.3",
+    "circular-json": "^0.5.9",
+    "echarts": "^5.5.0",
+    "eventemitter3": "^5.0.1",
+    "html5-qrcode": "^2.3.8",
+    "pinia": "^2.1.7",
+    "sass": "^1.74.1",
+    "scss": "^0.2.4",
+    "vuex": "^4.1.0",
+    "ws": "^8.17.0"
+  },
   "build": {
     "productName": "desktop-app",
     "appId": "desktop_app",
@@ -78,52 +121,5 @@
         "deb"
       ]
     }
-  },
-  "scripts": {
-    "postinstall": "install-app-deps",
-    "install": "prebuild-install -r napi || node-gyp rebuild",
-    "dev-win": "chcp 65001 && vite",
-    "dev-mac": "vite",
-    "dev-linux": "vite",
-    "rebuild": "chcp 65001 && electron-rebuild -f -w sqlite3",
-    "build-vue": "vue-tsc --noEmit && vite build",
-    "build": "npm run build-vue && vite build && electron-builder",
-    "preview": "vite preview",
-    "type-check": "vue-tsc --noEmit"
-  },
-  "devDependencies": {
-    "@types/node": "^20.12.12",
-    "@vitejs/plugin-vue": "^4.6.2",
-    "electron": "^30.0.6",
-    "electron-builder": "^24.13.3",
-    "electron-rebuild": "^3.2.9",
-    "typescript": "^5.4.3",
-    "vite": "^4.5.3",
-    "vite-plugin-electron": "^0.28.4",
-    "vite-plugin-electron-renderer": "^0.14.5",
-    "vue": "^3.4.31",
-    "vue-tsc": "^2.0.22"
-  },
-  "dependencies": {
-    "@ant-design/icons-vue": "^7.0.1",
-    "@benefitjs/core": "workspace:^",
-    "@benefitjs/devices": "workspace:^",
-    "@benefitjs/node": "workspace:^",
-    "@benefitjs/widgets": "workspace:^",
-    "@serialport/bindings-interface": "^1.2.2",
-    "@serialport/stream": "^12.0.0",
-    "ant-design-vue": "^4.1.2",
-    "axios": "^1.6.8",
-    "bootstrap-icons": "^1.11.3",
-    "circular-json": "^0.5.9",
-    "echarts": "^5.5.0",
-    "eventemitter3": "^5.0.1",
-    "html5-qrcode": "^2.3.8",
-    "pinia": "^2.1.7",
-    "sass": "^1.74.1",
-    "scss": "^0.2.4",
-    "serialport": "^12.0.0",
-    "vuex": "^4.1.0",
-    "ws": "^8.17.0"
   }
 }
