@@ -1,35 +1,41 @@
 <template>
   <div id="app">
     <h3>{{ title }}</h3>
-    <CollectorView></CollectorView>
-
+    <!-- <CollectorView></CollectorView> -->
     <!-- <qrcode></qrcode> -->
-    <WaveView></WaveView>
+    <!-- <WaveView></WaveView> -->
     <!-- <holter></holter> -->
+    <!-- <Worker></Worker> -->
+    <!-- <xiaofei></xiaofei> -->
+    <ipc></ipc>
   </div>
 </template>
 
 <script lang="ts">
 import { Button } from "ant-design-vue";
-import WaveView from "./components/WaveView.vue";
+import Worker from "./components/Worker.vue"
 import holter from "./components/holter.vue";
 import qrcode from "./components/qrcode.vue";
 import CollectorView from "./components/CollectorView.vue";
+import WaveView from "./components/WaveView.vue";
+import xiaofei from "./components/xiaofei.vue";
+import ipc from "./components/ipc.vue";
 
 import { log } from "./public/log";
-import { thread } from "../libs/thread";
-import { logger, utils } from '@benefitjs/core';
 
 log.info('Vue create ...');
 
 export default {
   // `setup` 是一个特殊的钩子，专门用于组合式 API。
   components: {
+    Button,
     WaveView,
     holter,
     qrcode,
     CollectorView,
-    Button,
+    Worker,
+    xiaofei,
+    ipc,
   },
   setup() {
     // 将 ref 暴露给模板
@@ -48,24 +54,6 @@ export default {
     log.info("app ==>:", app.style);
   },
 };
-
-// let worker = new Worker("/worker.js");
-let worker = thread.create(function(){
-  // console.log(self);
-  // log create()中注入的对象
-  logger.global.level = logger.Level.debug;
-  self.onmessage = (event) => { log.info('onmessage: ', event); }
-  self.onerror = (event) => { log.info('onerror: ', event); }
-  self.onabort = (event) => { log.info('onabort: ', event); }
-
-});
-
-setInterval(() => { 
-  let date = utils.dateFmt(Date.now());
-  log.info('setInterval ==>: ' + date);
-  worker.postMessage('render ==>: ' + date);
-}, 5000);
-
 
 </script>
 

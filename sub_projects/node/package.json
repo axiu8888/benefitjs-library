@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "vite --host",
     "tsc": "tsc",
+    "rebuild": "electron-rebuild -f -w sqlite3",
     "build": "npm run tsc && vite build",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json"

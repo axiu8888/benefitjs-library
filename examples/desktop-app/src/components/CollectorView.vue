@@ -5,12 +5,6 @@
       <Button hover-class="button-hover" @click="cancelScan"> 取消扫描</Button>
       <Button hover-class="button-hover" @click="disconnect">断开连接</Button>
       <Button hover-class="button-hover" @click="reconnect">重新连接</Button>
-      <Button hover-class="button-hover" @click="checkPermission"
-        >检查权限</Button
-      >
-      <Button hover-class="button-hover" @click="sendIpcMain"
-        >发送到主进程</Button
-      >
     </div>
   </div>
 </template>
@@ -177,29 +171,6 @@ export default {
       } else {
         log.warn("设备未连接...");
       }
-    },
-    checkPermission() {
-      // navigator.permissions.query(<PermissionDescriptor> { name: 'bluetooth' }) // screen-wake-lock
-      //   .then(res => {
-      //     log.info('navigator.permissions', res);
-      //     if (res.state !== "denied") {
-      //       // 执行操作
-      //     }
-      //   })
-      //   .catch(err => log.warn('navigator.permissions', err))
-
-      try {
-        log.log("是否为渲染进程: ", ElectronRender.isProcess());
-      } catch (err) {
-        log.error(err);
-      }
-    },
-    sendIpcMain() {
-      // import('../../libs/electron-main')
-      ElectronRender.ipc
-        .invoke('ElectronMain.bluetooth', "stopScan")
-        .then((res) => log.info("testIpc222", res))
-        .catch((e) => log.error("testIpc222", e));
     },
   },
   onMounted() {},

@@ -76,8 +76,8 @@ async function createWindow() {
     icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
     width: Math.max(width * 0.6, 960),
     height: Math.max(height * 0.8, 780),
-    // kiosk: false, // 启用无厘头模式
-    // show: false, // 不显示窗口
+    kiosk: false, // 启用无厘头模式
+    show: false, // 不显示窗口
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -129,7 +129,9 @@ async function createWindow() {
     return;
   }
 
-  const destPdf = `D:/tmp/cache/${reportType}__${reportId}.pdf`;
+  const destPdf = (`${process.cwd()}/dist/pdf/${reportType}__${reportId}.pdf`)
+    .replace(/\\/g, '/')
+    .replace(/\/\//g, '/')
 
   // const confPath = 'D:/tmp/cache/conf.json';
   // if (fs.existsSync(confPath)) {

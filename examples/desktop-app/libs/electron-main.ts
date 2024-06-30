@@ -1,7 +1,9 @@
-import { BrowserWindow, ipcMain } from "electron";
+import { BrowserWindow, ipcMain, PrintToPDFOptions, screen, shell } from "electron";
 import { logger, utils } from "@benefitjs/core";
-import { rpc, Event } from './rpc';
+import { rpc } from './rpc';
 import EventEmitter from "events";
+import fs from 'node:fs';
+import { io } from "@benefitjs/node";
 
 /**
  * 主进程操作
@@ -87,7 +89,84 @@ export namespace ElectronMain {
     * 关闭开发者工具
     */
   export const closeDevTools = () => invokeMain(mainWin?.webContents, 'mainWin', 'closeDevTools');
+  /**
+   * 获取全部的显示
+   */
+  export const getAllDisplays = () => screen.getAllDisplays();
+  /**
+   * 获取主要的显示参数
+   */
+  export const getPrimaryDisplay = () => getAllDisplays()[0];
 
+  /**
+   * 导出PDF文件
+   * 
+   * @param options 配置
+   */
+  export function htmlToPdf(options: any) {
+    return new Promise<any>((resolve, reject) => {
+      let url = options?.url;
+      let pdfPath = options?.pdfPath;
+      const primaryDisplay = getPrimaryDisplay();
+
+      let win = new BrowserWindow({
+        title: "PDF生成",
+        // icon: join(process.env.VITE_PUBLIC, "favicon.ico"),
+        width: primaryDisplay.size.width,
+        height: primaryDisplay.size.height,
+        kiosk: false, // 启用无厘头模式
+        show: false, // 不显示窗口
+        webPreferences: {
+          // preload,
+          // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
+          // Consider using contextBridge.exposeInMainWorld
+          // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
+          nodeIntegration: true, // 为了解决require 识别问题
+          contextIsolation: true,
+          // enableRemoteModule: true,
+        },
+      });
+      win.webContents.once("did-finish-load", function (evt) {
+        log.info("加载完成", evt);
+        setTimeout(() => {
+          log.info("printToPDF..................");
+          win.webContents
+            .printToPDF(<PrintToPDFOptions>{
+              displayHeaderFooter: false,
+              preferCSSPageSize: true,
+              pageSize: "A4",
+              printBackground: true,
+            })
+            .then((buffer) => {
+              io.mkdir(io.getParent(pdfPath)); // 创建目录
+              fs.writeFile(pdfPath, buffer, (err) => {
+                if (err) {
+                  log.error(err);
+                  reject(err);
+                }
+                // file written successfully
+                log.info("结束 ==>: ", pdfPath);
+                setTimeout(() => {
+                  try {
+                    win.destroy();
+                  } finally {
+                    resolve(true);
+                  }
+                }, 1000);//销毁
+              });
+            })
+            .catch(reject);
+        }, 5000);
+      });
+      // Make all links open with the browser, not with the application
+      win.webContents.setWindowOpenHandler(({ url }) => {
+        if (url.startsWith("https:")) shell.openExternal(url);
+        return { action: "deny" };
+      });
+      // win.webContents.on('will-navigate', (event, url) => { }) #344
+      win.loadURL(url);
+    });
+  }
 
 
   // ipc =================================================================================================================== ↓
@@ -202,7 +281,7 @@ export namespace ElectronMain {
             request.timeoutId = setTimeout(() => {
               queue.delete(request.id);
               request.reject(new Error(`${targetFn} 请求超时`));
-            }, 5000);
+            }, 120_000);
           } catch (e) {
             queue.delete(request.id);
             reject(e);

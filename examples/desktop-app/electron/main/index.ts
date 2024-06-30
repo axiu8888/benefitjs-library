@@ -5,11 +5,12 @@ import {
   screen,
   shell
 } from "electron";
+import fs from 'node:fs';
 import { release } from "node:os";
 import { join } from "node:path";
 
 import { logger, utils } from "@benefitjs/core";
-import { io, serialport, sqlite } from "@benefitjs/node";
+import { io, serialport/* , sqlite */ } from "@benefitjs/node";
 import { log } from "../../src/public/log";
 import { ElectronMain} from "../../libs/electron-main";
 // import "../../src/public/ws-server";
@@ -120,7 +121,10 @@ async function createWindow() {
     });
 
     // 导出注册的模块
-    ElectronMain.ipc.exportModules('ElectronMain.bluetooth', ElectronMain.bluetooth, true);
+    ElectronMain.ipc.exportModules('fs', fs, true);
+    ElectronMain.ipc.exportModules('process', process, true);
+    ElectronMain.ipc.exportModules('shell', shell, true);
+    ElectronMain.ipc.exportModules('ElectronMain', ElectronMain, true);
 
   });
 
@@ -188,56 +192,56 @@ ipcMain.handle("open-win", (_, arg) => {
 
 export namespace mytest {
 
-  // 测试sqlite
-  export function test_sqlite() {
-    sqlite.log.level = logger.global.level; // 打印日志
-    sqlite.log.global().level = sqlite.log.level;
-    console.log('global ==>: ' + (logger.global == sqlite.log.global()));
-    const dbName = io.createFile('./sqlite.db');
-    log.info('dbName ==>:', dbName)
-    const db = new sqlite.Database(dbName);
-    db.serialize(() => {
-      // 检查表是否存在
-      db.createTableIfNotExits('sys_user', `
-      CREATE TABLE sys_user (
-          id VARCHAR(32) PRIMARY KEY NOT NULL,
-          username VARCHAR(100),
-          password VARCHAR(100),
-          create_time NUMERIC
-      )`)
-        .then(res => {
-          let record = { id: utils.uuid(), username: 'admin', password: '123456', create_time: new Date() };
-          log.info('types ==>:', sqlite.findTypes(record))
-          // 插入数据
-          // db.insert('sys_user', [record])
-        })
-        .catch(err => log.error(err));
+  // // 测试sqlite
+  // export function test_sqlite() {
+  //   sqlite.log.level = logger.global.level; // 打印日志
+  //   sqlite.log.global().level = sqlite.log.level;
+  //   console.log('global ==>: ' + (logger.global == sqlite.log.global()));
+  //   const dbName = io.createFile('./sqlite.db');
+  //   log.info('dbName ==>:', dbName)
+  //   const db = new sqlite.Database(dbName);
+  //   db.serialize(() => {
+  //     // 检查表是否存在
+  //     db.createTableIfNotExits('sys_user', `
+  //     CREATE TABLE sys_user (
+  //         id VARCHAR(32) PRIMARY KEY NOT NULL,
+  //         username VARCHAR(100),
+  //         password VARCHAR(100),
+  //         create_time NUMERIC
+  //     )`)
+  //       .then(res => {
+  //         let record = { id: utils.uuid(), username: 'admin', password: '123456', create_time: new Date() };
+  //         log.info('types ==>:', sqlite.findTypes(record))
+  //         // 插入数据
+  //         // db.insert('sys_user', [record])
+  //       })
+  //       .catch(err => log.error(err));
   
-      setTimeout(() => {
-        // 查询数据
-        // db.raw.each("SELECT * FROM sys_user", (err, row) => {
-        //   log.info('查询的数据 ==>:', row);
-        // });
-        db.each((err, row) => {
-          if (err) {
-            log.error(err);
-          } else {
-            log.info('查询的数据 ==>:', row);
-          }
-        }, "SELECT * FROM sys_user");
+  //     setTimeout(() => {
+  //       // 查询数据
+  //       // db.raw.each("SELECT * FROM sys_user", (err, row) => {
+  //       //   log.info('查询的数据 ==>:', row);
+  //       // });
+  //       db.each((err, row) => {
+  //         if (err) {
+  //           log.error(err);
+  //         } else {
+  //           log.info('查询的数据 ==>:', row);
+  //         }
+  //       }, "SELECT * FROM sys_user");
   
   
-        // setTimeout(() => {
-        //   // 删除表
-        //   db.dropTable('sys_user')
-        //     .then(res => log.info('删除表:', res))
-        //     .catch(err => log.error(err));
-        // }, 1000);
+  //       // setTimeout(() => {
+  //       //   // 删除表
+  //       //   db.dropTable('sys_user')
+  //       //     .then(res => log.info('删除表:', res))
+  //       //     .catch(err => log.error(err));
+  //       // }, 1000);
   
-      }, 1000);
+  //     }, 1000);
 
-    });
-  }
+  //   });
+  // }
 
   export function test_serialport() {
     setTimeout(() => {

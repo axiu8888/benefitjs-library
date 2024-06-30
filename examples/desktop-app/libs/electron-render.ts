@@ -109,7 +109,7 @@ export namespace ElectronRender {
           request.timeoutId = setTimeout(() => {
             queue.delete(request.id);
             reject(new Error(`${targetFn} 请求超时`));
-          }, 5000);
+          }, 120_000);
         } catch (e) {
           queue.delete(request.id);
           reject(e);
