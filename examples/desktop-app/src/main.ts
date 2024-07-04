@@ -6,8 +6,12 @@ import { log } from "./public/log";
 
 // 初始化IPC
 import { ElectronRender } from "../libs/electron-render";
+import { logger } from "@benefitjs/core";
 
 log.info('create vue app ...')
+
+// 日志
+ElectronRender.log.level = logger.Level.debug;
 
 // ElectronRender.ipc.invoke('api', 'ping', { msg: 'Hello World!'})
 //   .then(res => log.info(res))

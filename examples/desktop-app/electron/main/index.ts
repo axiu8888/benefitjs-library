@@ -60,6 +60,8 @@ const indexHtml = join(process.env.DIST, "index.html");
 log.info("process.ipcMain, pid:", process.pid);
 
 
+ElectronMain.log.level = logger.Level.debug;
+
 // BrowserWindow.on('did-create-window', e => {
     
 // });
