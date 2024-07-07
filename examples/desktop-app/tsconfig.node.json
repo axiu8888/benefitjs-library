@@ -9,6 +9,7 @@
   "include": [
     "vite.config.ts",
     "package.json",
+    "node",
     "electron",
     "libs",
   ]

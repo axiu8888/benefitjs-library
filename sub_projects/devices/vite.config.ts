@@ -10,6 +10,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: "./src/index.ts",
+      formats: ['cjs', 'es'], // 输出格式 CommonJS 和 ES Module
       name: "devices", //导出的类名称
       fileName: "devices",
     },

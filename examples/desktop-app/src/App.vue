@@ -5,9 +5,9 @@
     <!-- <qrcode></qrcode> -->
     <!-- <WaveView></WaveView> -->
     <!-- <holter></holter> -->
-    <!-- <Worker></Worker> -->
+    <Worker></Worker>
     <!-- <xiaofei></xiaofei> -->
-    <ipc></ipc>
+    <!-- <ipc></ipc> -->
   </div>
 </template>
 

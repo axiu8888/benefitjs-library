@@ -1,8 +1,8 @@
 {
   "name": "@benefitjs/devices",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "设备",
-  "main": "dist/devices.umd.js",
+  "main": "dist/devices.js",
   "module": "dist/devices.mjs",
   "types": "types/index.d.ts",
   "files": [
@@ -19,12 +19,10 @@
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@benefitjs/core": "workspace:^",
-    "terser": "^5.31.1"
-  },
   "devDependencies": {
+    "@benefitjs/core": "workspace:^",
     "prettier": "^2.8.8",
+    "terser": "^5.31.1",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^5.2.2",

@@ -1,8 +1,8 @@
 {
   "name": "@benefitjs/node",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Node环境的封装库",
-  "main": "dist/node.umd.js",
+  "main": "dist/node.js",
   "module": "dist/node.mjs",
   "types": "types/index.d.ts",
   "files": [
@@ -19,14 +19,12 @@
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@benefitjs/core": "workspace:^",
-    "terser": "^5.31.1"
-  },
   "devDependencies": {
+    "@benefitjs/core": "workspace:^",
     "@types/node": "^20.12.12",
     "prettier": "^2.8.8",
     "rollup-plugin-polyfill-node": "^0.13.0",
+    "terser": "^5.31.1",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^5.4.3",

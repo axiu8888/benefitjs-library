@@ -9,11 +9,12 @@ import fs from 'node:fs';
 import { release } from "node:os";
 import { join } from "node:path";
 
-import { logger, utils } from "@benefitjs/core";
-import { io } from "@benefitjs/node";
+import { binary, logger, utils } from "@benefitjs/core";
+import { io, udp } from "@benefitjs/node";
 // import { serialport, sqlite } from "@benefitjs/node-library";
+import { collector } from "@benefitjs/devices";
+import { ElectronMain } from "../../libs/electron-main";
 import { log } from "../../src/public/log";
-import { ElectronMain} from "../../libs/electron-main";
 // import "../../src/public/ws-server";
 // import axios from 'axios';
 
@@ -63,7 +64,6 @@ log.info("process.ipcMain, pid:", process.pid);
 ElectronMain.log.level = logger.Level.debug;
 
 // BrowserWindow.on('did-create-window', e => {
-    
 // });
 
 async function createWindow() {
@@ -146,6 +146,8 @@ async function createWindow() {
 
   ElectronMain.bluetooth.setup();
 
+  mytest.test_collector();
+
 }
 
 app.whenReady().then(createWindow);
@@ -195,6 +197,24 @@ ipcMain.handle("open-win", (_, arg) => {
 
 export namespace mytest {
 
+  export function test_collector() {
+    // 监听采集器消息
+    const collectorSocket = udp.bind({ port: 7014, address: '127.0.0.1' } as any, <udp.ServerListener>{
+      onListening(server) {
+        // 监听成功
+        log.info('监听UDP:', server.address());
+      },
+      onMessage(server, message, remote) {
+        const data = binary.asNumberArray(message);
+        const deviceId = collector.parser.getDeviceId(data)
+        const hp = collector.parser.parse(data, deviceId)
+        // 接收到消息
+        // log.info(server.address().port + ', 接收到消息:', remote.address + ":" + remote.port, ', data:', binary.ab2hex(message));
+        log.info(server.address().port + ', 接收到消息:', remote.address + ":" + remote.port, ', data:', JSON.stringify(hp));
+      },
+    });
+  }
+
   // // 测试sqlite
   // export function test_sqlite() {
   //   sqlite.log.level = logger.global.level; // 打印日志
@@ -219,7 +239,7 @@ export namespace mytest {
   //         // db.insert('sys_user', [record])
   //       })
   //       .catch(err => log.error(err));
-  
+
   //     setTimeout(() => {
   //       // 查询数据
   //       // db.raw.each("SELECT * FROM sys_user", (err, row) => {
@@ -232,15 +252,15 @@ export namespace mytest {
   //           log.info('查询的数据 ==>:', row);
   //         }
   //       }, "SELECT * FROM sys_user");
-  
-  
+
+
   //       // setTimeout(() => {
   //       //   // 删除表
   //       //   db.dropTable('sys_user')
   //       //     .then(res => log.info('删除表:', res))
   //       //     .catch(err => log.error(err));
   //       // }, 1000);
-  
+
   //     }, 1000);
 
   //   });

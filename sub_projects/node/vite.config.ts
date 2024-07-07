@@ -10,6 +10,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: "./src/index.ts",
+      formats: ['cjs', 'es'], // 输出格式 CommonJS 和 ES Module
       name: "node", //导出的类名称
       fileName: "node",
     },
@@ -22,12 +23,12 @@ export default defineConfig({
       }
     },
     rollupOptions: {
-      external: ['fs', 'sqlite3', 'serialport'],
+      external: ['fs', 'dgram', 'net'],
       output: {
         globals: {
           fs: 'fs',
-          sqlite3: 'sqlite3',
-          serialport: 'serialport',
+          dgram: 'dgram',
+          net: 'net',
         }
       }
     },

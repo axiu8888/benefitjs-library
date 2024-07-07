@@ -10,8 +10,9 @@ export default defineConfig({
   build: {
     lib: {
       entry: "./src/index.ts",
-      name: "node", //导出的类名称
-      fileName: "node",
+      formats: ['cjs', 'es'], // 输出格式 CommonJS 和 ES Module
+      name: "node-library", //导出的类名称
+      fileName: "node-library",
     },
     minify: 'terser', // 禁用压缩
     terserOptions: {

@@ -1,8 +1,8 @@
 {
   "name": "@benefitjs/uni-plugins",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "UNI插件",
-  "main": "dist/uni-plugins.umd.js",
+  "main": "dist/uni-plugins.js",
   "module": "dist/uni-plugins.mjs",
   "types": "types/index.d.ts",
   "files": [
@@ -19,17 +19,15 @@
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
+  "devDependencies": {
     "@benefitjs/core": "workspace:^",
     "@types/uuid": "~9.0.7",
-    "terser": "^5.31.1",
-    "uuid": "^8.3.2"
-  },
-  "devDependencies": {
     "prettier": "^2.8.8",
+    "terser": "^5.31.1",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.9.5",
+    "uuid": "^8.3.2",
     "vite": "~4.3.9"
   }
 }

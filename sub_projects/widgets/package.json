@@ -1,8 +1,8 @@
 {
   "name": "@benefitjs/widgets",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "核心组件",
-  "main": "dist/widgets.umd.js",
+  "main": "dist/widgets.js",
   "module": "dist/widgets.mjs",
   "types": "types/index.d.ts",
   "files": [
@@ -19,17 +19,15 @@
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
+  "devDependencies": {
     "@benefitjs/core": "workspace:^",
     "@types/uuid": "~9.0.1",
-    "terser": "^5.31.1",
-    "uuid": "^8.3.2"
-  },
-  "devDependencies": {
     "prettier": "^2.8.8",
+    "terser": "^5.31.1",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^5.2.2",
+    "uuid": "^8.3.2",
     "vite": "~4.3.9"
   }
 }

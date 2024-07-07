@@ -2,6 +2,7 @@
  * 导出的接口
  */
 export * from './libs/io'; // IO
+export * from './libs/udp'; // UDP
 
 
 // try {
