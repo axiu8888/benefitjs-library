@@ -9,6 +9,7 @@ export * from './libs/process-env'; // 运行环境(NodeJS、Electron、Browser)
 export * from './libs/proxy'; // 动态代理
 export * from './libs/http'; // HTTP 工具
 export * from './libs/class'; // 类型
+export * from './libs/thread'; // 线程
 
 // MQTT
 export * from './libs/mqtt/paho-mqtt';

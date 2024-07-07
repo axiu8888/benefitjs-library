@@ -1,4 +1,4 @@
-import { logger } from "@benefitjs/core";
+import { logger } from "./logger";
 
 /**
  * 多线程
@@ -33,19 +33,6 @@ export namespace thread {
     let url = window.URL.createObjectURL(blob);
     let worker = new Worker(url, { type: 'module' });
     return worker;
-  }
-
-  /**
-   * 创建日志打印
-   * 
-   * @param tag 标签
-   * @param level 日志等级
-   * @returns 返回日志打印对象
-   */
-  export function newLogger(tag: string, level: logger.Level) {
-    const logger = require('@benefitjs/core')['logger'];
-    logger.global.level = level;
-    return logger.newProxy(tag, level);
   }
 
 }
