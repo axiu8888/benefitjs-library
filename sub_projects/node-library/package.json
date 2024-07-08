@@ -11,7 +11,7 @@
     "types"
   ],
   "scripts": {
-    "postinstall": "install-app-deps",
+    "postinstall222": "install-app-deps",
     "install22": "prebuild-install -r napi || node-gyp rebuild",
     "dev": "vite --host",
     "tsc": "tsc",
@@ -19,7 +19,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json"
   },
-  "author": "",
+  "author": "dxa",
   "license": "ISC",
   "devDependencies": {
     "@benefitjs/core": "workspace:^",

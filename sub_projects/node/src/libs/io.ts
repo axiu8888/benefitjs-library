@@ -100,4 +100,56 @@ export namespace io {
       else return path;
     }
   }
+
+  /**
+   * 写入文件
+   * 
+   * @param file 文件
+   * @param data 数据
+   * @param append 是否追加
+   */
+  export function write(file: string, data: string | Buffer, append: boolean = false, mode: string = 'utf8') {
+    return new Promise<boolean>((resolve, reject) => {
+      fs.writeFile(file, data, { flag: append ? 'a+' : 'rw+', mode: data instanceof String ? mode : undefined  }, (err) => {
+        if (err) reject(err);
+        else resolve(true);
+      });
+    });
+  }
+
+  /**
+   * 写入二进制数据
+   * 
+   * @param file 文件
+   * @param callback 回调
+   */
+  export function writeStream(file: string, buf: any, callback: Function) {
+    let wstream = fs.createWriteStream(file);
+    wstream.write(buf);
+    wstream.end();
+    wstream.on('finish', () => callback());
+    wstream.on('error', (err) => callback(err));
+  }
+
+  /**
+   * 读取二进制数据
+   * 
+   * @param file 文件
+   * @param callback 回调
+   */
+  export function readStream(file: string, callback: Function) {
+    const rstream = fs.createReadStream(file);
+    let chunks: any[] = [];
+    let size = 0;
+    rstream.on('readable', function () {
+      let chunk = rstream.read();
+      if (chunk != null) {
+        chunks.push(chunk);
+        size += chunk.length;
+      }
+    });
+    rstream.on('end', () => callback(null, Buffer.concat(chunks, size)));
+    rstream.on('error', (err) => callback(err, null));
+  }
+
 }

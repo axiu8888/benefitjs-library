@@ -17,7 +17,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json"
   },
-  "author": "",
+  "author": "dxa",
   "license": "ISC",
   "dependencies": {
     "@types/uuid": "~9.0.1",

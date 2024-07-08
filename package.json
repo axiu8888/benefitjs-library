@@ -14,7 +14,7 @@
     "build": "pnpm run build:core && npm run build:node && pnpm run build:devices && pnpm run build:widgets && pnpm run build:uni-plugins"
   },
   "keywords": [],
-  "author": "",
+  "author": "dxa",
   "license": "ISC",
   "devDependencies": {
   }
