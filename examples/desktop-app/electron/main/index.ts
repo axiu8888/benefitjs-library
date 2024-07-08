@@ -15,6 +15,7 @@ import { io, udp } from "@benefitjs/node";
 import { collector } from "@benefitjs/devices";
 import { ElectronMain } from "../../libs/electron-main";
 import { log } from "../../src/public/log";
+import { connect/* mqtt */ } from "mqtt";
 // import "../../src/public/ws-server";
 // import axios from 'axios';
 
@@ -198,6 +199,26 @@ ipcMain.handle("open-win", (_, arg) => {
 export namespace mytest {
 
   export function test_collector() {
+
+    // const mqtt = require("mqtt");
+    const client = connect("mqtt://127.0.0.1:1883");
+
+    client.on("connect", () => {
+      log.info('MQTT客户端已连接...', client);
+      client.subscribe("/device/collector/+", (err) => {
+        if (!err) {
+          // client.publish("", "Hello mqtt");
+          log.warn('subscribe', err);
+        }
+      });
+    });
+
+    client.on("message", (topic, message) => {
+      // message is Buffer
+      log.info('topic:', topic, ', msg:', message.toString());
+      // client.end();
+    });
+
     // 监听采集器消息
     const collectorSocket = udp.bind({ port: 7014, address: '127.0.0.1' } as any, <udp.ServerListener>{
       onListening(server) {
@@ -210,9 +231,17 @@ export namespace mytest {
         const hp = collector.parser.parse(data, deviceId)
         // 接收到消息
         // log.info(server.address().port + ', 接收到消息:', remote.address + ":" + remote.port, ', data:', binary.ab2hex(message));
-        log.info(server.address().port + ', 接收到消息:', remote.address + ":" + remote.port, ', data:', JSON.stringify(hp));
+        log.info(server.address().port + ', 接收到消息:', remote.address + ":" + remote.port, ', deviceId: ' + deviceId, ', data:', JSON.stringify(hp));
+
+        // 发布消息
+        client.publish(`/device/collector/${deviceId}`, hp);
+
       },
     });
+
+    // 发布消息
+    // collectorSocket.send()
+
   }
 
   // // 测试sqlite

@@ -3,7 +3,7 @@
     <h3>{{ title }}</h3>
     <!-- <CollectorView></CollectorView> -->
     <!-- <qrcode></qrcode> -->
-    <!-- <WaveView></WaveView> -->
+    <WaveView></WaveView>
     <!-- <holter></holter> -->
     <Worker></Worker>
     <!-- <xiaofei></xiaofei> -->
@@ -49,7 +49,7 @@ export default {
       //setTimeout(() => ipcRenderer.send("htmlToPdf", this.url), 5000);
     },
   },
-  onMounted() {
+  mounted() {
     const app = document.getElementById("app")!!;
     log.info("app ==>:", app.style);
   },

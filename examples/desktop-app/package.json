@@ -56,6 +56,7 @@
     "echarts": "^5.5.0",
     "eventemitter3": "^5.0.1",
     "html5-qrcode": "^2.3.8",
+    "mqtt": "^5.8.0",
     "pinia": "^2.1.7",
     "sass": "^1.74.1",
     "scss": "^0.2.4",
