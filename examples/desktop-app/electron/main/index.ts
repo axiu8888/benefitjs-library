@@ -233,8 +233,10 @@ export namespace mytest {
         // log.info(server.address().port + ', 接收到消息:', remote.address + ":" + remote.port, ', data:', binary.ab2hex(message));
         log.info(server.address().port + ', 接收到消息:', remote.address + ":" + remote.port, ', deviceId: ' + deviceId, ', data:', JSON.stringify(hp));
 
+        // 调用算法
+
         // 发布消息
-        client.publish(`/device/collector/${deviceId}`, hp);
+        client.publish(`/device/collector/${deviceId}`, JSON.stringify(hp));
 
       },
     });

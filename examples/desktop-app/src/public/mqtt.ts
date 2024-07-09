@@ -13,7 +13,8 @@ export namespace mqtt {
   export const client = new MQTT.Client(<MQTT.Options>{
     // host: "192.168.1.198",
     // host: "pr.sensecho.com",
-    host: "172.22.128.1",
+    // host: "172.22.128.1",
+    host: "127.0.0.1",
     port: 80,
     // path: "/support/mqtt",
     path: "/mqtt",

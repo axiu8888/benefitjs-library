@@ -42,7 +42,8 @@ export default {
       }
     },
     htmlToPdf() {
-      let url = "https://pr.sensecho.com/supportReport/sportRecory?version=null&reportId=d104d411ac1242a385aa9d2f2ab2918f&extend=null";
+      // let url = "https://pr.sensecho.com/supportReport/sportRecory?version=null&reportId=d104d411ac1242a385aa9d2f2ab2918f&extend=null";
+      let url = "https://pr.sensecho.com/supportReport/omsst?version=null&reportId=a29721deef244d74a9249d993fab9feb&extend=pfTest,hrv";
       const searchParams = new URLSearchParams(url.substring(url.indexOf("?")));
       let reportType = "";
       let reportId = "test";
