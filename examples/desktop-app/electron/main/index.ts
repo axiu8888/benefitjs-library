@@ -15,7 +15,7 @@ import { io, udp } from "@benefitjs/node";
 import { collector } from "@benefitjs/devices";
 import { ElectronMain } from "../../libs/electron-main";
 import { log } from "../../src/public/log";
-import { connect/* mqtt */ } from "mqtt";
+import { connect, IClientOptions } from "mqtt";
 // import "../../src/public/ws-server";
 // import axios from 'axios';
 
@@ -201,22 +201,34 @@ export namespace mytest {
   export function test_collector() {
 
     // const mqtt = require("mqtt");
-    const client = connect("mqtt://127.0.0.1:1883");
-
-    client.on("connect", () => {
-      log.info('MQTT客户端已连接...', client);
-      client.subscribe("/device/collector/+", (err) => {
+    // const mqtt = connect("mqtt://127.0.0.1:1883");
+    const mqtt = connect(<IClientOptions>{
+      clientId: 'mqtt_nodejs_' + utils.uuid(),
+      host: '172.28.83.171',
+      // host: '127.0.0.1',
+      // host: 'research.sensecho.com',
+      port: 1883,
+      manualConnect: false,
+      connectTimeout: 2000,
+      keepalive: 30,
+      protocolId: 'MQTT',
+      protocolVersion: 4,
+      clean: true,
+      reconnectPeriod: 5000,
+      // servers: ["tcp://172.27.80.1:1883"],
+    });
+    mqtt.on("connect", () => {
+      log.info('MQTT客户端已连接...', mqtt);
+      mqtt.subscribe("/device/collector/+", (err) => {
         if (!err) {
           // client.publish("", "Hello mqtt");
           log.warn('subscribe', err);
         }
       });
     });
-
-    client.on("message", (topic, message) => {
-      // message is Buffer
+    mqtt.on('error', err => log.error(err));
+    mqtt.on("message", (topic, message) => {
       log.info('topic:', topic, ', msg:', message.toString());
-      // client.end();
     });
 
     // 监听采集器消息
@@ -230,13 +242,12 @@ export namespace mytest {
         const deviceId = collector.parser.getDeviceId(data)
         const hp = collector.parser.parse(data, deviceId)
         // 接收到消息
-        // log.info(server.address().port + ', 接收到消息:', remote.address + ":" + remote.port, ', data:', binary.ab2hex(message));
-        log.info(server.address().port + ', 接收到消息:', remote.address + ":" + remote.port, ', deviceId: ' + deviceId, ', data:', JSON.stringify(hp));
+        // log.info(server.address().port + ', 接收到消息:', remote.address + ":" + remote.port, ', deviceId: ' + deviceId, ', data:', JSON.stringify(hp));
 
         // 调用算法
 
         // 发布消息
-        client.publish(`/device/collector/${deviceId}`, JSON.stringify(hp));
+        mqtt.publish(`/device/collector/${deviceId}`, JSON.stringify(hp));
 
       },
     });

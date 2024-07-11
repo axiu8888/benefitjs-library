@@ -8,7 +8,7 @@ export namespace mqtt {
   /**
    * 日志打印
    */
-  export const log = logger.newProxy('MQTT', logger.Level.debug);
+  export const log = logger.newProxy('MQTT', logger.Level.warn);
 
   /**
    * 分发消息
