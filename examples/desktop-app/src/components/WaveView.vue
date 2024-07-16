@@ -125,6 +125,7 @@ export default {
   },
   unmounted() {
     mqtt.unsubscribeCollector(this.deviceId, this.collectorListener);
+    document.removeEventListener('visibilitychange', this.onVisible);
   },
 };
 </script>
