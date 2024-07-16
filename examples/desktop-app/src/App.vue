@@ -2,7 +2,8 @@
   <div id="app">
     <h3>{{ title }}</h3>
     <!-- <qrcode></qrcode> -->
-    <WaveView></WaveView>
+    <div class="wv"><WaveView :deviceId="'01001148'"></WaveView></div>
+    <div class="wv"><WaveView :deviceId="'01001149'"></WaveView></div>
     <!-- <holter></holter> -->
     <!-- <CollectorView></CollectorView> -->
     <!-- <Worker></Worker> -->
@@ -13,7 +14,7 @@
 
 <script lang="ts">
 import { Button } from "ant-design-vue";
-import Worker from "./components/Worker.vue"
+import Worker from "./components/Worker.vue";
 import holter from "./components/holter.vue";
 import qrcode from "./components/qrcode.vue";
 import CollectorView from "./components/CollectorView.vue";
@@ -23,7 +24,7 @@ import ipc from "./components/ipc.vue";
 
 import { log } from "./public/log";
 
-log.info('Vue create ...');
+log.info("Vue create ...");
 
 export default {
   // `setup` 是一个特殊的钩子，专门用于组合式 API。
@@ -43,18 +44,16 @@ export default {
       title: "波形绘制",
     };
   },
-  methods: {
-    onLoad() {
-      log.info("arguments ==>: ", arguments);
-      //setTimeout(() => ipcRenderer.send("htmlToPdf", this.url), 5000);
-    },
+  methods: {},
+  load() {
+    log.info("arguments ==>: ", arguments);
+    //setTimeout(() => ipcRenderer.send("htmlToPdf", this.url), 5000);
   },
   mounted() {
     const app = document.getElementById("app")!!;
     log.info("app ==>:", app.style);
   },
 };
-
 </script>
 
 <style>
@@ -75,4 +74,9 @@ html {
   color: #969696;
   /* background-color: #EBEEF3 */
 }
+.wv {
+  display: inline-block;
+  width: 100%;
+  height: 400px;
+} 
 </style>

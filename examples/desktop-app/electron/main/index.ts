@@ -211,7 +211,6 @@ export namespace mytest {
       manualConnect: false,
       connectTimeout: 2000,
       keepalive: 30,
-      protocolId: 'MQTT',
       protocolVersion: 4,
       clean: true,
       reconnectPeriod: 5000,
@@ -231,26 +230,26 @@ export namespace mytest {
       log.info('topic:', topic, ', msg:', message.toString());
     });
 
-    // 监听采集器消息
-    const collectorSocket = udp.bind({ port: 7014, address: '127.0.0.1' } as any, <udp.ServerListener>{
-      onListening(server) {
-        // 监听成功
-        log.info('监听UDP:', server.address());
-      },
-      onMessage(server, message, remote) {
-        const data = binary.asNumberArray(message);
-        const deviceId = collector.parser.getDeviceId(data)
-        const hp = collector.parser.parse(data, deviceId)
-        // 接收到消息
-        // log.info(server.address().port + ', 接收到消息:', remote.address + ":" + remote.port, ', deviceId: ' + deviceId, ', data:', JSON.stringify(hp));
+    // // 监听采集器消息
+    // const collectorSocket = udp.bind({ port: 7014, address: '127.0.0.1' } as any, <udp.ServerListener>{
+    //   onListening(server) {
+    //     // 监听成功
+    //     log.info('监听UDP:', server.address());
+    //   },
+    //   onMessage(server, message, remote) {
+    //     const data = binary.asNumberArray(message);
+    //     const deviceId = collector.parser.getDeviceId(data)
+    //     const hp = collector.parser.parse(data, deviceId)
+    //     // 接收到消息
+    //     // log.info(server.address().port + ', 接收到消息:', remote.address + ":" + remote.port, ', deviceId: ' + deviceId, ', data:', JSON.stringify(hp));
 
-        // 调用算法
+    //     // 调用算法
 
-        // 发布消息
-        mqtt.publish(`/device/collector/${deviceId}`, JSON.stringify(hp));
+    //     // 发布消息
+    //     // mqtt.publish(`/device/collector/${deviceId}`, JSON.stringify(hp));
 
-      },
-    });
+    //   },
+    // });
 
     // 发布消息
     // collectorSocket.send()

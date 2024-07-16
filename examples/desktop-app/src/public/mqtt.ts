@@ -99,9 +99,10 @@ export namespace mqtt {
    *
    * @param deviceId 采集器ID, 如 01001234、11001234
    */
-  export const unsubscribeCollector = (deviceId: string) => {
+  export const unsubscribeCollector = (deviceId: string, cb?: (evt: any) => void) => {
     client.unsubscribe(collector_subscriber, `hardware/${deviceId}`);
     client.unsubscribe(collector_subscriber2, `/device/collector/${deviceId}`);
+    if (cb) emitter.removeListener(`collector/${deviceId}`, cb);
   };
 
   /**
