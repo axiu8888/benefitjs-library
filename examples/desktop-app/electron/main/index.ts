@@ -218,12 +218,12 @@ export namespace mytest {
     });
     mqtt.on("connect", () => {
       log.info('MQTT客户端已连接...', mqtt);
-      mqtt.subscribe("/device/collector/+", (err) => {
-        if (!err) {
-          // client.publish("", "Hello mqtt");
-          log.warn('subscribe', err);
-        }
-      });
+      // mqtt.subscribe("/device/collector/+", (err) => {
+      //   if (!err) {
+      //     // client.publish("", "Hello mqtt");
+      //     log.warn('subscribe', err);
+      //   }
+      // });
     });
     mqtt.on('error', err => log.error(err));
     mqtt.on("message", (topic, message) => {

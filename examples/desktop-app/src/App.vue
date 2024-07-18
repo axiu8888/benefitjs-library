@@ -4,6 +4,11 @@
     <!-- <qrcode></qrcode> -->
     <div class="wv"><WaveView :deviceId="'01001148'"></WaveView></div>
     <div class="wv"><WaveView :deviceId="'01001149'"></WaveView></div>
+    <div class="wv"><WaveView :deviceId="'0100114a'"></WaveView></div>
+    <div class="wv"><WaveView :deviceId="'0100114b'"></WaveView></div>
+    <div class="wv"><WaveView :deviceId="'0100114c'"></WaveView></div>
+    <div class="wv"><WaveView :deviceId="'0100114d'"></WaveView></div>
+    <div class="wv"><WaveView :deviceId="'0100114e'"></WaveView></div>
     <!-- <holter></holter> -->
     <!-- <CollectorView></CollectorView> -->
     <!-- <Worker></Worker> -->
@@ -77,6 +82,6 @@ html {
 .wv {
   display: inline-block;
   width: 100%;
-  height: 400px;
+  height: 300px;
 } 
 </style>

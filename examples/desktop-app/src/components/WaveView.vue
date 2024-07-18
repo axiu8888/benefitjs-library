@@ -2,6 +2,7 @@
   <div :id="wvContainerId" class="match_parent wvParent">
     <canvas :id="wvBgCanvasId" class="match_parent wvBg"></canvas>
     <canvas :id="wvCanvasId" class="match_parent wv"></canvas>
+    <span class="deviceId">{{ deviceId }}</span>
   </div>
 </template>
 
@@ -118,7 +119,9 @@ export default {
         container.clientHeight
       );
       this.wv = waveview.createEcgRespSpo2(wvCanvas, (v) => {
-        v.models[1].scaleRatio = 0.20;
+        v.models[0].scaleRatio = 0.6;
+        v.models[1].scaleRatio = 0.15;
+        v.models[2].scaleRatio = 0.9;
       });
       log.info("wv ==>:", this.wv);
     }, 50);
@@ -144,5 +147,9 @@ export default {
 }
 .wv {
   margin-top: -100%;
+}
+.deviceId {
+  margin-top: -100%;
+  display: inline-block;
 }
 </style>
