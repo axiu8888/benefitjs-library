@@ -2,7 +2,6 @@
   <div :id="wvContainerId" class="match_parent wvParent">
     <canvas :id="wvBgCanvasId" class="match_parent wvBg"></canvas>
     <canvas :id="wvCanvasId" class="match_parent wv"></canvas>
-    <span class="deviceId">{{ deviceId }}</span>
   </div>
 </template>
 
@@ -43,15 +42,41 @@ export default {
     };
   },
   methods: {},
-  onCreate() {
-    log.warn("create...");
-  },
-  load() {
-    log.info("arguments ==>: ", arguments);
-    //setTimeout(() => ipcRenderer.send("htmlToPdf", this.url), 5000);
-  },
   mounted() {
     log.info("onMounted, ", this.deviceId);
+    log.info("wvBgCanvasId:", this.wvBgCanvasId, "wvCanvasId:", this.wvCanvasId);
+    let container = document.getElementById(this.wvContainerId)!!;
+    let cs = container.style;
+    log.info(`style.width: ${cs.width}, style.height: ${cs.height}`);
+    log.info(
+      `clientWidth: ${container.clientWidth}, clientHeight: ${container.clientHeight}`
+    );
+    // 创建画布
+    let wvBgCanvas = document.getElementById(this.wvBgCanvasId) as any;
+    waveview.setCanvasPixelRatio(
+      wvBgCanvas,
+      2.0,// window.devicePixelRatio,
+      container.clientWidth,
+      container.clientHeight
+    );
+    waveview.createCanvasGridBG(wvBgCanvas);
+    log.info(
+      `clientWidth: ${wvBgCanvas.clientWidth}, clientHeight: ${wvBgCanvas.clientHeight}, window.devicePixelRatio: ${window.devicePixelRatio}`
+    );
+    // 波形图
+    let wvCanvas = document.getElementById(this.wvCanvasId) as any;
+    waveview.setCanvasPixelRatio(
+      wvCanvas,
+      2.0,//window.devicePixelRatio,
+      container.clientWidth,
+      container.clientHeight
+    );
+    this.wv = waveview.createEcgRespSpo2(wvCanvas, (v) => {
+      v.models[0].scaleRatio = 0.8;
+      v.models[1].scaleRatio = 0.25;
+      v.models[2].scaleRatio = 1.0;
+    });
+    log.info("wv ==>:", this.wv);
 
     if (!this.collectorListener) {
       // 订阅采集器数据
@@ -93,42 +118,10 @@ export default {
     }
     // 监听是否在当前页，并置为已读
     document.addEventListener("visibilitychange", this.onVisible);
-
-    setTimeout(() => {
-      log.info("wvBgCanvasId:", this.wvBgCanvasId, "wvCanvasId:", this.wvCanvasId);
-      let container = document.getElementById(this.wvContainerId)!!;
-      let cs = container.style;
-      log.info(`style.width: ${cs.width}, , style.height: ${cs.height}`);
-      log.info(`clientWidth: ${container.clientWidth}, , clientHeight: ${container.clientHeight}`);
-      // 创建画布
-      let wvBgCanvas = document.getElementById(this.wvBgCanvasId) as any;
-      waveview.setCanvasPixelRatio(
-        wvBgCanvas,
-        window.devicePixelRatio,
-        container.clientWidth,
-        container.clientHeight
-      );
-      waveview.createCanvasGridBG(wvBgCanvas);
-      log.info(`clientWidth: ${wvBgCanvas.clientWidth}, , clientHeight: ${wvBgCanvas.clientHeight}`);
-      // 波形图
-      let wvCanvas = document.getElementById(this.wvCanvasId) as any;
-      waveview.setCanvasPixelRatio(
-        wvCanvas,
-        window.devicePixelRatio,
-        container.clientWidth,
-        container.clientHeight
-      );
-      this.wv = waveview.createEcgRespSpo2(wvCanvas, (v) => {
-        v.models[0].scaleRatio = 0.6;
-        v.models[1].scaleRatio = 0.15;
-        v.models[2].scaleRatio = 0.9;
-      });
-      log.info("wv ==>:", this.wv);
-    }, 50);
   },
   unmounted() {
     mqtt.unsubscribeCollector(this.deviceId, this.collectorListener);
-    document.removeEventListener('visibilitychange', this.onVisible);
+    document.removeEventListener("visibilitychange", this.onVisible);
   },
 };
 </script>
@@ -147,9 +140,5 @@ export default {
 }
 .wv {
   margin-top: -100%;
-}
-.deviceId {
-  margin-top: -100%;
-  display: inline-block;
 }
 </style>

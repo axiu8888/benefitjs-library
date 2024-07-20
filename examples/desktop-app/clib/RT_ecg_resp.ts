@@ -1,6 +1,10 @@
 import { os } from "node:os";
 import { logger } from "@benefitjs/core";
 
+// pnpm i ffi-napi
+// pnpm i ref-array-napi
+// pnpm i ref-napi
+
 /**
  * 实时算法调用
  */

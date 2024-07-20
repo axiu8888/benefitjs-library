@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- {{  }} -->
   </div>
 </template>
 
@@ -17,14 +16,9 @@ export default {
   setup() {
     // 将 ref 暴露给模板
     return {
-      title: "",
     };
   },
   methods: {
-  },
-  onLoad() {
-    log.info("arguments ==>: ", arguments);
-    //setTimeout(() => ipcRenderer.send("htmlToPdf", this.url), 5000);
   },
   mounted() {
     log.info('onMounted ...');
@@ -56,12 +50,14 @@ export default {
 
     });
 
-    setInterval(() => { 
+    this.timerId = setInterval(() => { 
       let date = utils.dateFmt(Date.now());
       log.info('setInterval ==>: ' + date);
       worker.postMessage('render ==>: ' + date);
     }, 5000);
-
+  },
+  unmounted() {
+    clearInterval(this.timerId)
   },
 };
 

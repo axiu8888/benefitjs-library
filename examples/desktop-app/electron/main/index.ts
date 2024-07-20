@@ -217,7 +217,7 @@ export namespace mytest {
       // servers: ["tcp://172.27.80.1:1883"],
     });
     mqtt.on("connect", () => {
-      log.info('MQTT客户端已连接...', mqtt);
+      log.info('MQTT客户端已连接...', mqtt.options);
       // mqtt.subscribe("/device/collector/+", (err) => {
       //   if (!err) {
       //     // client.publish("", "Hello mqtt");

@@ -2,18 +2,13 @@
   <div id="app">
     <h3>{{ title }}</h3>
     <!-- <qrcode></qrcode> -->
-    <div class="wv"><WaveView :deviceId="'01001148'"></WaveView></div>
-    <div class="wv"><WaveView :deviceId="'01001149'"></WaveView></div>
-    <div class="wv"><WaveView :deviceId="'0100114a'"></WaveView></div>
-    <div class="wv"><WaveView :deviceId="'0100114b'"></WaveView></div>
-    <div class="wv"><WaveView :deviceId="'0100114c'"></WaveView></div>
-    <div class="wv"><WaveView :deviceId="'0100114d'"></WaveView></div>
-    <div class="wv"><WaveView :deviceId="'0100114e'"></WaveView></div>
     <!-- <holter></holter> -->
     <!-- <CollectorView></CollectorView> -->
     <!-- <Worker></Worker> -->
     <!-- <xiaofei></xiaofei> -->
     <!-- <ipc></ipc> -->
+    <multi-wave-view></multi-wave-view>
+    <!-- <wave-view :deviceId="'01001148'"></wave-view> -->
   </div>
 </template>
 
@@ -28,6 +23,7 @@ import xiaofei from "./components/xiaofei.vue";
 import ipc from "./components/ipc.vue";
 
 import { log } from "./public/log";
+import MultiWaveView from './components/MultiWaveView.vue';
 
 log.info("Vue create ...");
 
@@ -42,6 +38,7 @@ export default {
     Worker,
     xiaofei,
     ipc,
+    MultiWaveView,
   },
   setup() {
     // 将 ref 暴露给模板
@@ -50,10 +47,6 @@ export default {
     };
   },
   methods: {},
-  load() {
-    log.info("arguments ==>: ", arguments);
-    //setTimeout(() => ipcRenderer.send("htmlToPdf", this.url), 5000);
-  },
   mounted() {
     const app = document.getElementById("app")!!;
     log.info("app ==>:", app.style);
@@ -79,9 +72,4 @@ html {
   color: #969696;
   /* background-color: #EBEEF3 */
 }
-.wv {
-  display: inline-block;
-  width: 100%;
-  height: 300px;
-} 
 </style>
