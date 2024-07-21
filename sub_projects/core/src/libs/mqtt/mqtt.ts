@@ -1,5 +1,4 @@
 import { utils } from '../core';
-import { logger } from '../logger';
 import { mqtt } from '../mqtt';
 import { Paho } from './paho-mqtt';
 
@@ -293,7 +292,7 @@ export namespace MQTT {
           }
           try {
             this.connect();
-          } catch (err) {}
+          } catch (err) { }
         }, this.opts.autoReconnectInterval);
       }
     }
@@ -313,11 +312,11 @@ export namespace MQTT {
   /**
    * 订阅
    */
-  export interface Subscription extends mqtt.Subscription<Subscriber> {}
+  export interface Subscription extends mqtt.Subscription<Subscriber> { }
   /**
    * 订阅主题
    */
-  export interface SubscriptionTopic extends mqtt.SubscriptionTopic {}
+  export interface SubscriptionTopic extends mqtt.SubscriptionTopic { }
 
   /**
    * MQTT消息分发器
@@ -335,7 +334,7 @@ export namespace MQTT {
 
   }
 
-  
+
   /**
    * MQTT消息订阅
    */

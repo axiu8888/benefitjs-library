@@ -64,8 +64,8 @@ export namespace mqtt {
      * @param subscriber 订阅者
      * @returns 返回订阅者
      */
-    getSubscription(subscriber: T): Subscription<T> | undefined {
-      return this.subscriptions.get(subscriber);
+    getSubscription(subscriber: T): Subscription<T> {
+      return this.subscriptions.get(subscriber) as any;
     }
 
     /**
