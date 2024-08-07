@@ -41,6 +41,9 @@ export namespace RT_ecg_resp {
     abDatafilter: ref.array(ref.types.int, 25),
     rr: ref.types.int,
     SignalQualityflag: ref.types.int,
+    xyzOutList: ref.array(ref.types.int, 25),
+    gesture: ref.types.int,
+    ecgsignalQualityflag: ref.types.int,
   });
 
   // 加载 DLL 并定义 processSignal 函数
@@ -65,6 +68,9 @@ export namespace RT_ecg_resp {
     paramsIn.chData.forEach((v, i) => (_in.chData[i] = v)); // 填充 chData 数组
     paramsIn.abData.forEach((v, i) => (_in.abData[i] = v)); // 填充 abData 数组
     _in.rspFlag = paramsIn.rspFlag;
+    _in.xList = paramsIn.xList;
+    _in.yList = paramsIn.yList;
+    _in.zList = paramsIn.zList;
     // 创建 ParamsOut 实例
     const _out = new CParamsOut();
     // 调用 DLL 函数
@@ -76,7 +82,10 @@ export namespace RT_ecg_resp {
       chDatafilter: _out.chDatafilter,
       abDatafilter: _out.abDatafilter,
       rr: _out.rr,
-      SignalQualityflag: _out.SignalQualityflag,
+      signalQualityFlag: _out.SignalQualityflag,
+      xyzOutList: _out.xyzOutList,
+      gesture: _out.gesture,
+      ecgSignalQualityFlag: _out.ecgsignalQualityflag,
     };
   }
 
@@ -116,6 +125,18 @@ export namespace RT_ecg_resp {
      * 胸呼吸的导联脱落状态, 1是否为脱落
      */
     rspFlag: number;
+    /**
+     * x轴
+     */
+    xList: number[];
+    /**
+     * y轴
+     */
+    yList: number[];
+    /**
+     * z轴
+     */
+    zList: number[];
   }
 
   /**
@@ -149,6 +170,10 @@ export namespace RT_ecg_resp {
     /**
      * 信号质量标志
      */
-    SignalQualityflag: number;
+    signalQualityFlag: number;
+    /**
+     * 心电信号质量
+     */
+    ecgSignalQualityFlag: number;
   }
 }
