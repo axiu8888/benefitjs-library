@@ -1062,46 +1062,43 @@ export namespace collector {
      * @param jp 拼包
      */
     joint(jp: JointPacket) {
-      let segment1 = jp.pkg0;
-      let segment2 = jp.pkg1;
-      let segment3 = jp.pkg2;
-      let segment4 = jp.pkg3;
+      let pkg0 = jp.pkg0;
+      let pkg1 = jp.pkg1;
+      let pkg2 = jp.pkg2;
+      let pkg3 = jp.pkg3;
 
-      let type = parser.getPacketType(segment1);
-
-      let packet = new Array<number>(segment4 ? 670 : 545);
+      let type = parser.getPacketType(pkg0);
+      let data = new Array<number>(pkg3 ? 670 : 545);
       // 包头(2) + 长度(2) + 设备ID(4) + 包类型(1) + 包序号(4) ==>: 13
-      binary.arraycopy(segment1, 0, packet, 0, 13); // total(0, 13]
+      binary.arraycopy(pkg0, 0, data, 0, 13); // total(0, 13]
       // 长度
-      let length = binary.numberToBytes(packet.length - 2, 16);
-      binary.arraycopy(length, 0, packet, 2, length.length);
+      let length = binary.numberToBytes(data.length - 2, 16);
+      binary.arraycopy(length, 0, data, 2, length.length);
       // 设置类型
-      if (type.realtime) {
-        packet[8] = segment4 != null ? 0xf3 : 0x03;
-      }
+      if (type.realtime) data[8] = pkg3 != null ? 0xf3 : 0x03;
       // 时间(4), (14, 19)    p(13, 18) segment1.length =>: 197
-      binary.arraycopy(segment1, 14, packet, 13, 6); // 14 + 6 = 20
+      binary.arraycopy(pkg0, 14, data, 13, 6); // 14 + 6 = 20
       // 数据, segment1(19, 69)(呼吸波型)   p(19, 118) segment1.length =>: 197
-      binary.arraycopy(segment1, 20, packet, 19, 50); // 20 + 50 = 70
+      binary.arraycopy(pkg0, 20, data, 19, 50); // 20 + 50 = 70
       // 数据, segment1(70, 195)    p(119, 245) segment1.length =>: 197
-      binary.arraycopy(segment1, 70, packet, 119, 126); // 119 + 126 = 245
+      binary.arraycopy(pkg0, 70, data, 119, 126); // 119 + 126 = 245
       // 数据, segment2(14, 189) segment2.length =>: 191
-      binary.arraycopy(segment2, 14, packet, 245, 190 - 14); // 245 + 125 = 370
+      binary.arraycopy(pkg1, 14, data, 245, 190 - 14); // 245 + 125 = 370
       // 数据, segment1(140, 189)(腹呼吸波型)   p(69, 118) segment1.length =>: 197
-      binary.arraycopy(segment2, 140, packet, 69, 50); // 140 + 50 = 190
+      binary.arraycopy(pkg1, 140, data, 69, 50); // 140 + 50 = 190
       // 空出一个字节
       // 370
       // 数据, segment3(14, 187) segment1.length =>: 188
-      binary.arraycopy(segment3, 14, packet, 371, 187 - 14); // 371 + 173 = 544
+      binary.arraycopy(pkg2, 14, data, 371, 187 - 14); // 371 + 173 = 544
 
       // 拷贝流速仪数据
-      if (type.realtime && typeof segment4 !== 'undefined') {
+      if (type.realtime && typeof pkg3 !== 'undefined') {
         // 数据, segment4(14, 139) segment1.length =>: 140
-        binary.arraycopy(segment4, 14, packet, 544, 139 - 14); // 544 + 125 = 669
+        binary.arraycopy(pkg3, 14, data, 544, 139 - 14); // 544 + 125 = 669
       }
       // 设置校验和(545/670)
-      packet[packet.length - 1] = parser.checkSum(packet);
-      return packet;
+      data[data.length - 1] = parser.checkSum(data);
+      return data;
     }
   }
 
