@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flexbox Example</title>
+    <!-- <link rel="stylesheet" href="styles.css"> -->
+    <style>
+      body,
+      html {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        display: flex;
+        width: 100%; /* Adjust the width of the container as needed */
+        height: 100%; /* Adjust the height of the container as needed */
+        border: 1px solid black; /* Optional, for visualization */
+      }
+
+      .child {
+        flex: 1; /* Each child will take up an equal amount of space */
+        border: 1px solid red; /* Optional, for visualization */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: lightblue; 
+      }
+
+      .fixed-width {
+        flex: none; /* This child will not grow */
+        width: 200px; /* Fixed width */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="child">Child 1</div>
+      <div class="child">Child 2</div>
+      <div class="child fixed-width">Fixed Width</div>
+      <div class="child">Child 3</div>
+    </div>
+  </body>
+</html>

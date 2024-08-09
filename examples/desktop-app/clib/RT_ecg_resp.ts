@@ -30,6 +30,9 @@ export namespace RT_ecg_resp {
     chData: ref.array(ref.types.int, 25),
     abData: ref.array(ref.types.int, 25),
     rspFlag: ref.types.int,
+    xList: ref.array(ref.types.int, 25),
+    yList: ref.array(ref.types.int, 25),
+    zList: ref.array(ref.types.int, 25),
   });
 
   // 定义 ParamsOut 结构体
@@ -82,10 +85,10 @@ export namespace RT_ecg_resp {
       chDatafilter: _out.chDatafilter,
       abDatafilter: _out.abDatafilter,
       rr: _out.rr,
-      signalQualityFlag: _out.SignalQualityflag,
+      SignalQualityflag: _out.SignalQualityflag,
       xyzOutList: _out.xyzOutList,
       gesture: _out.gesture,
-      ecgSignalQualityFlag: _out.ecgsignalQualityflag,
+      ecgsignalQualityflag: _out.ecgsignalQualityflag,
     };
   }
 
@@ -170,10 +173,18 @@ export namespace RT_ecg_resp {
     /**
      * 信号质量标志
      */
-    signalQualityFlag: number;
+    SignalQualityflag: number;
+    /**
+     * 三轴拟合值
+     */
+    xyzOutList: number[];
+    /**
+     * 体位体动
+     */
+    gesture: number;
     /**
      * 心电信号质量
      */
-    ecgSignalQualityFlag: number;
+    ecgsignalQualityflag: number;
   }
 }
