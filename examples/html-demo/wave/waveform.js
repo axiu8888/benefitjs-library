@@ -94,7 +94,7 @@ drawZoomedWaveform();
 
 function generateWaveformData() {
   const array = [];
-  for (let i = 0; i < 50000000; i++) {
+  for (let i = 0; i < 50_000_000; i++) {
     array.push(Math.sin(i / 100) * 0.5 + 0.5); // 简单的正弦波数据
   }
   return array;
