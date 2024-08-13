@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Waveform Viewer</title>
+    <style>
+      #waveform-container {
+        position: relative;
+        width: 100%;
+        height: 300px;
+      }
+
+      #waveform {
+        width: 100%;
+        height: 100%;
+        background-color: #f3f3f3;
+      }
+
+      #thumbnail-container {
+        position: relative;
+        width: 100%;
+        height: 100px;
+        background-color: #e3e3e3;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+
+      #thumbnail {
+        width: 100%;
+        height: 100%;
+      }
+
+      #viewfinder {
+        position: absolute;
+        height: 100%;
+        background-color: rgba(223, 60, 32, 0.2);
+        border: 1px solid #0000ff;
+        cursor: pointer;
+        top: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="waveform-container">
+      <canvas id="waveform"></canvas>
+    </div>
+    <div id="thumbnail-container">
+      <canvas id="thumbnail"></canvas>
+      <div id="viewfinder"></div>
+    </div>
+
+    <script src="waveform.js"></script>
+  </body>
+</html>
