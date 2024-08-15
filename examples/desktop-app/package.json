@@ -51,6 +51,7 @@
     "@benefitjs/node-library": "workspace:^",
     "@benefitjs/widgets": "workspace:^",
     "ant-design-vue": "^4.1.2",
+    "axios": "^1.7.4",
     "bootstrap-icons": "^1.11.3",
     "echarts": "^5.5.0",
     "eventemitter3": "^5.0.1",

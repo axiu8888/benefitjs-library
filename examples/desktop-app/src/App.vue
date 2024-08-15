@@ -7,8 +7,9 @@
     <!-- <Worker></Worker> -->
     <!-- <xiaofei></xiaofei> -->
     <!-- <ipc></ipc> -->
-    <multi-wave-view></multi-wave-view>
+    <!-- <multi-wave-view></multi-wave-view> -->
     <!-- <wave-view :deviceId="'01001148'"></wave-view> -->
+    <draggable-waveform style="width: 100%; height: 400px;">拖拽的波形图</draggable-waveform>
   </div>
 </template>
 
@@ -24,6 +25,7 @@ import ipc from "./components/ipc.vue";
 
 import { log } from "./public/log";
 import MultiWaveView from './components/MultiWaveView.vue';
+import DraggableWaveform from './components/DraggableWaveform.vue';
 
 log.info("Vue create ...");
 
@@ -39,6 +41,7 @@ export default {
     xiaofei,
     ipc,
     MultiWaveView,
+    DraggableWaveform,
   },
   setup() {
     // 将 ref 暴露给模板
@@ -48,8 +51,8 @@ export default {
   },
   methods: {},
   mounted() {
-    const app = document.getElementById("app")!!;
-    log.info("app ==>:", app.style);
+    // const app = document.getElementById("app")!!;
+    // log.info("app ==>:", app.style);
   },
 };
 </script>

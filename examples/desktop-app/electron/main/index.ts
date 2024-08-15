@@ -147,7 +147,7 @@ async function createWindow() {
 
   ElectronMain.bluetooth.setup();
 
-  mytest.test_collector();
+  // mytest.test_collector();
 
 }
 

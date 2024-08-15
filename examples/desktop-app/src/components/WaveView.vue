@@ -48,9 +48,7 @@ export default {
     let container = document.getElementById(this.wvContainerId)!!;
     let cs = container.style;
     log.info(`style.width: ${cs.width}, style.height: ${cs.height}`);
-    log.info(
-      `clientWidth: ${container.clientWidth}, clientHeight: ${container.clientHeight}`
-    );
+    log.info(`clientWidth: ${container.clientWidth}, clientHeight: ${container.clientHeight}`);
     // 创建画布
     let wvBgCanvas = document.getElementById(this.wvBgCanvasId) as any;
     waveview.setCanvasPixelRatio(
