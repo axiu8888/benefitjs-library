@@ -53,8 +53,8 @@
       const waveformCanvas = document.getElementById('waveform')
       const thumbnailCanvas = document.getElementById('thumbnail')
       const viewfinder = document.getElementById('viewfinder')
-      const waveformCtx = waveformCanvas.getContext('2d', { alpha: true })
-      const thumbnailCtx = thumbnailCanvas.getContext('2d', { alpha: true })
+      const waveformCtx = waveformCanvas.getContext('2d')
+      const thumbnailCtx = thumbnailCanvas.getContext('2d')
 
       // 设置 canvas 尺寸
       waveformCanvas.width = waveformCanvas.clientWidth
@@ -77,8 +77,10 @@
         ctx.strokeStyle = '#00DD00'
 
         let baseLine = height / 2
+        // console.log('baseLine: ' + baseLine + ', width: ' + width +", height: " + height +", data[0]: " + data[0]);
+        //console.log('baseLine: ' + baseLine + ', width: ' + width +", height: " + height + ", scaleX: " + scaleX + ", scaleY: " + scaleY);
         for (let i = 0; i < data.length; i++) {
-          let y = (70 - data[i]) * scaleY + baseLine
+          let y = (60 - data[i]) * scaleY + baseLine
           ctx.lineTo(i * scaleX, y)
         }
         ctx.stroke()
@@ -90,65 +92,37 @@
         viewfinder.style.left = viewfinderX + 'px'
       }
 
-      function update() {
-        const rect = thumbnailCanvas.getBoundingClientRect();
-        if (viewfinderX < 0) viewfinderX = 0
-        if (viewfinderX + viewfinderWidth > thumbnailCanvas.width)
-          viewfinderX = thumbnailCanvas.width - viewfinderWidth
-        drawViewfinder()
-        drawZoomedWaveform()
-      }
-
       // 事件处理: 拖动 viewfinder
-      let viewfinderDragging = false;//滑块
-      let thumbnailCanvasDragging = false;//缩略图
-      let waveformCanvasDragging = false;//裁剪的波形图
-      let drawTimerId = [];
+      let dragging = false
 
-      viewfinder.addEventListener('mousedown', e => { viewfinderDragging = true; })//滑块被拖动
-      thumbnailCanvas.addEventListener('mousedown', e => {
-        console.log('thumbnailCanvas, mousedown, (' + (e.clientX + ', ' + e.clientY) + ')');
-        thumbnailCanvasDragging = true;
-        if (!drawTimerId[0]) {
-          drawTimerId[0] = setInterval(() => {
-            viewfinderX += e.clientX > viewfinderX ? 1 : -1;
-            update();
-          }, 50);
-        }
-      })//缩略图被拖动
-      waveformCanvas.addEventListener('mousedown', e => { 
-        waveformCanvasDragging = true;
-        waveformCanvasMoveX = e.clientX;
-      })//裁剪的波形图被拖动
-
-      let waveformCanvasMoveX = 0;
+      viewfinder.addEventListener('mousedown', e => {
+        dragging = true
+      })
 
       document.addEventListener('mousemove', e => {
-        if (viewfinderDragging) {
-          const rect = thumbnailCanvas.getBoundingClientRect();
+        if (dragging) {
+          const rect = thumbnailCanvas.getBoundingClientRect()
           viewfinderX = e.clientX - rect.left - viewfinderWidth / 2
-          update();
-        } else if (waveformCanvasDragging) {
-          console.log('waveformCanvas, mousedown, (' + (e.clientX + ', ' + e.clientY) + ')');
-          viewfinderX += e.clientX - waveformCanvasMoveX;
-          update();
-          waveformCanvasMoveX = e.clientX;
+          if (viewfinderX < 0) viewfinderX = 0
+          if (viewfinderX + viewfinderWidth > thumbnailCanvas.width)
+            viewfinderX = thumbnailCanvas.width - viewfinderWidth
+          drawViewfinder()
+          drawZoomedWaveform()
         }
       })
 
-      document.addEventListener('mouseup', () => {//鼠标抬起
-        viewfinderDragging = false
-        thumbnailCanvasDragging = false
-        waveformCanvasDragging = false
-        clearInterval(drawTimerId[0]);
-        drawTimerId[0] = undefined;
+      document.addEventListener('mouseup', () => {
+        dragging = false
       })
 
       // 根据 viewfinder 绘制缩放后的波形图
       function drawZoomedWaveform() {
         const zoomedData = data.slice(
           Math.floor((viewfinderX / thumbnailCanvas.width) * data.length),
-          Math.floor(((viewfinderX + viewfinderWidth) / thumbnailCanvas.width) * data.length)
+          Math.floor(
+            ((viewfinderX + viewfinderWidth) / thumbnailCanvas.width) *
+              data.length
+          )
         )
         drawWaveform(zoomedData, waveformCtx, 0.25, 1) //绘制缩略图
       }
@@ -163,7 +137,7 @@
 
       function generateWaveformData() {
         const array = []
-        for (let i = 0; i < 18_00_000; i++) {
+        for (let i = 0; i < 5_00_000; i++) {
           array.push((Math.sin(i / 100) * 0.5 + 0.5) * 140) // 简单的正弦波数据
         }
         return array

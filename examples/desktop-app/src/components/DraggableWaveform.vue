@@ -1,5 +1,5 @@
 <template>
-  <div class="match-parent">
+  <div id="draggableWaveformContainerId" class="match-parent">
     <div id="wv-container" class="match-parent wv-parent">
       <canvas id="wvBgCanvasId" class="match-parent wv-bg"></canvas>
       <canvas id="wvCanvasId" class="match-parent wv"></canvas>
@@ -102,6 +102,8 @@ export default {
 
     const self = this;
 
+    const draggableWaveformContainer = document.getElementById('draggableWaveformContainerId')!!;
+
     const wvContainer = document.getElementById("wv-container") as HTMLElement;
 
     // 绘制背景
@@ -126,12 +128,22 @@ export default {
       ctx.strokeStyle = "#00DD00";
 
       let baseLine = height / 2;
-      log.info('baseLine:', baseLine, ', width:', width, ', height:', height);
+      // log.info('baseLine:', baseLine, ', width:', width, ', height:', height);
       for (let i = 0; i < data.length; i++) {
         let y = (512 - data[i]) * scaleY + baseLine;
         ctx.lineTo(i * scaleX, y);
       }
       ctx.stroke();
+    }
+
+
+    function update() {
+      const rect = thumbnailCanvas.getBoundingClientRect();
+      if (viewfinderX < 0) viewfinderX = 0
+      if (viewfinderX + viewfinderWidth > thumbnailCanvas.width)
+        viewfinderX = thumbnailCanvas.width - viewfinderWidth
+      drawViewfinder()
+      drawZoomedWaveform(self.data)
     }
 
     // 绘制 viewfinder
@@ -141,27 +153,49 @@ export default {
     }
 
     // 事件处理: 拖动 viewfinder
-    let dragging = false;
+    let viewfinderDragging = false;
+    let thumbnailCanvasDragging = false;
+    let waveformCanvasDragging = false;
+    let waveformCanvasMoveX = 0;
+    let drawTimerId: any[] = [];
 
-    viewfinder.addEventListener("mousedown", (e) => {
-      dragging = true;
-    });
-
-    document.addEventListener("mousemove", (e) => {
-      if (dragging) {
-        const rect = thumbnailCanvas.getBoundingClientRect();
-        viewfinderX = e.clientX - rect.left - viewfinderWidth / 2;
-        if (viewfinderX < 0) viewfinderX = 0;
-        if (viewfinderX + viewfinderWidth > thumbnailCanvas.width)
-          viewfinderX = thumbnailCanvas.width - viewfinderWidth;
-        drawViewfinder();
-        drawZoomedWaveform(self.data);
+    viewfinder.addEventListener('mousedown', e => { viewfinderDragging = true; })//滑块被拖动
+    thumbnailCanvas.addEventListener('mousedown', e => {
+      // log.info('thumbnailCanvas, mousedown, (' + (e.clientX + ', ' + e.clientY) + ')');
+      thumbnailCanvasDragging = true;
+      if(!drawTimerId[0]) {
+        drawTimerId[0] = setInterval(() => {
+          viewfinderX += e.clientX > viewfinderX ? 1 : -1;
+          update();
+        }, 100);
       }
-    });
+    })//缩略图被拖动
+    waveformCanvas.addEventListener('mousedown', e => {
+      waveformCanvasDragging = true;
+      waveformCanvasMoveX = e.clientX;
+    })//波形图被拖动
 
-    document.addEventListener("mouseup", () => {
-      dragging = false;
-    });
+    draggableWaveformContainer.addEventListener('mousemove', e => {
+      if (viewfinderDragging) {
+        const rect = thumbnailCanvas.getBoundingClientRect();
+        viewfinderX = e.clientX - rect.left - viewfinderWidth / 2
+        update();
+      } else if (waveformCanvasDragging) {
+          log.info('waveformCanvas, mousedown, (' + (e.clientX + ', ' + e.clientY) + ')');
+          viewfinderX += e.clientX - waveformCanvasMoveX;
+          update();
+          waveformCanvasMoveX = e.clientX;
+      }
+    })
+
+    draggableWaveformContainer.addEventListener('mouseup', () => {//鼠标抬起
+      viewfinderDragging = false;
+      thumbnailCanvasDragging = false;
+      waveformCanvasDragging = false
+      clearInterval(drawTimerId[0]);
+      drawTimerId[0] = undefined;
+    })
+
 
     // 根据 viewfinder 绘制缩放后的波形图
     function drawZoomedWaveform(data: number[]) {
