@@ -30,9 +30,10 @@ export default {
   methods: {},
   mounted() {
     log.info("onMounted ...");
-    const getCanvasEL = (id) => document.getElementById(id) as HTMLCanvasElement;
+    const getCanvasEL = (id: string) => document.getElementById(id) as HTMLCanvasElement;
     const getCanvasCtx = (target: string | HTMLCanvasElement) => {
-      return (target instanceof HTMLCanvasElement ? target : getCanvasEL(target)).getContext("2d") as CanvasRenderingContext2D;
+      let canvas = (target instanceof HTMLCanvasElement ? target : getCanvasEL(target));
+      return canvas.getContext("2d", { alpha: true}) as CanvasRenderingContext2D;
     };
     const setupGetCanvas = (target: string | HTMLCanvasElement) => {
       let el = target instanceof HTMLCanvasElement
@@ -44,7 +45,59 @@ export default {
     };
     const setupGetCanvasCtx = (id: string | HTMLCanvasElement) => {
       let el = setupGetCanvas(id);
-      return el.getContext("2d") as CanvasRenderingContext2D;
+      return el.getContext("2d", { alpha: true}) as CanvasRenderingContext2D;
+    };
+
+    /**
+     * 设置画布的缩放比(为了高显示性)
+     */
+    const setCanvasScale = function(canvas: string | HTMLCanvasElement, scale: number = 1.0) {
+      let cs = canvas instanceof HTMLCanvasElement ? canvas : getCanvasEL(canvas);
+      let ctx = getCanvasCtx(canvas);
+      ctx.scale(2.0, 2.0);
+      cs.style.width = cs.clientWidth + 'px';
+      cs.style.height = cs.clientHeight + 'px';
+      cs.width = cs.clientWidth * scale;
+      cs.height = cs.clientHeight * scale;
+    }
+    
+    /**
+     * 绘制背景网格
+     *
+     * @param canvas 画布
+     * @param gridSize 网格大小
+     */
+     const drawGrid = function (canvas: HTMLCanvasElement, gridSize: number, clearRect: boolean = true) {
+      let ctx = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D;
+      if (clearRect) {
+        // 清理
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // 垂直方向数量
+      let verticalCount = Math.floor(canvas.width / gridSize);
+      let verticalPadding = (canvas.width - Math.floor(verticalCount * gridSize)) / 2;
+      // 水平方向数量
+      let horizontalCount = Math.floor(canvas.height / gridSize);
+      let horizontalPadding = (canvas.height - Math.floor(horizontalCount * gridSize)) / 2;
+
+      // 垂直线
+      for (let i = 0; i <= verticalCount; i++) {
+        waveview.setPaint(ctx, i);
+        ctx.beginPath();
+        ctx.moveTo(verticalPadding + i * gridSize, horizontalPadding);
+        ctx.lineTo(verticalPadding + i * gridSize, canvas.height - horizontalPadding);
+        ctx.stroke();
+      }
+
+      // 水平线
+      for (let i = 0; i <= horizontalCount; i++) {
+        waveview.setPaint(ctx, i);
+        ctx.beginPath();
+        ctx.moveTo(verticalPadding, horizontalPadding + i * gridSize);
+        ctx.lineTo(canvas.width - verticalPadding, horizontalPadding + i * gridSize);
+        ctx.stroke();
+      }
     };
 
     const self = this;
@@ -53,14 +106,9 @@ export default {
 
     // 绘制背景
     let wvBgCanvas = getCanvasEL("wvBgCanvasId");
-    waveview.setCanvasPixelRatio(
-      wvBgCanvas,
-      2.0,
-      wvContainer.clientWidth,
-      wvContainer.clientHeight
-    );
-    waveview.createCanvasGridBG(wvBgCanvas);
-
+    setCanvasScale(wvBgCanvas, 2.0);
+    drawGrid(wvBgCanvas, 15, true);
+    
     const waveformCanvas = setupGetCanvas("wvCanvasId");
     const thumbnailCanvas = setupGetCanvas("thumbnailId");
     const viewfinder = document.getElementById("viewfinderId") as HTMLElement;
@@ -69,12 +117,7 @@ export default {
     let viewfinderX = 0;
 
     // 绘制波形图
-    function drawWaveform(
-      data: number[],
-      ctx: CanvasRenderingContext2D,
-      scaleX: number,
-      scaleY: number
-    ) {
+    function drawWaveform(data: number[], ctx: CanvasRenderingContext2D, scaleX: number, scaleY: number) {
       const width = ctx.canvas.width;
       const height = ctx.canvas.height;
       ctx.clearRect(0, 0, width, height);
@@ -139,6 +182,8 @@ export default {
       drawViewfinder();
       drawZoomedWaveform(data);
     }
+ 
+
 
 
     let patientId = "547bd48e6a514c579b288537e8122972";
