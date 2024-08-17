@@ -5,7 +5,7 @@
       <canvas id="wvCanvasId" class="match-parent wv"></canvas>
     </div>
     <div class="thumbnail-container">
-      <canvas id="thumbnailId" class="thumbnail"></canvas>
+      <canvas id="thumbnailId" class="match-parent"></canvas>
       <div id="viewfinderId" class="viewfinder"></div>
     </div>
   </div>
@@ -32,13 +32,10 @@ export default {
     log.info("onMounted ...");
     const getCanvasEL = (id) => document.getElementById(id) as HTMLCanvasElement;
     const getCanvasCtx = (target: string | HTMLCanvasElement) => {
-      if (target instanceof HTMLCanvasElement) {
-        return target.getContext("2d") as CanvasRenderingContext2D;
-      }
-      return getCanvasEL(target).getContext("2d") as CanvasRenderingContext2D;
+      return (target instanceof HTMLCanvasElement ? target : getCanvasEL(target)).getContext("2d") as CanvasRenderingContext2D;
     };
     const setupGetCanvas = (target: string | HTMLCanvasElement) => {
-      let el = target instanceof HTMLCanvasElement 
+      let el = target instanceof HTMLCanvasElement
         ? target
         : document.getElementById(target)!! as HTMLCanvasElement;
       el.width = el.clientWidth;
@@ -75,20 +72,21 @@ export default {
     function drawWaveform(
       data: number[],
       ctx: CanvasRenderingContext2D,
-      width: number,
-      height: number,
-      scale: number
+      scaleX: number,
+      scaleY: number
     ) {
+      const width = ctx.canvas.width;
+      const height = ctx.canvas.height;
       ctx.clearRect(0, 0, width, height);
       ctx.beginPath();
       ctx.moveTo(0, height / 2);
-      ctx.strokeStyle = "#00FF00";
+      ctx.strokeStyle = "#00DD00";
 
       let baseLine = height / 2;
-      for (let i = 0; i < width; i++) {
-        const value = data[i];
-        const y = (512 - value) * 0.5 + baseLine;
-        ctx.lineTo(i * scale, y);
+      log.info('baseLine:', baseLine, ', width:', width, ', height:', height);
+      for (let i = 0; i < data.length; i++) {
+        let y = (512 - data[i]) * scaleY + baseLine;
+        ctx.lineTo(i * scaleX, y);
       }
       ctx.stroke();
     }
@@ -126,19 +124,9 @@ export default {
     function drawZoomedWaveform(data: number[]) {
       const zoomedData = data.slice(
         Math.floor((viewfinderX / thumbnailCanvas.width) * data.length),
-        Math.floor(
-          ((viewfinderX + viewfinderWidth) / thumbnailCanvas.width) *
-            data.length
-        )
+        Math.floor(((viewfinderX + viewfinderWidth) / thumbnailCanvas.width) * data.length)
       );
-
-      drawWaveform(
-        zoomedData,
-        getCanvasCtx(waveformCanvas),
-        waveformCanvas.width,
-        waveformCanvas.height,
-        1
-      );
+      drawWaveform(zoomedData, getCanvasCtx(waveformCanvas), 1, 1); //绘制裁剪的波形
     }
 
     function setup(data: number[]) {
@@ -146,29 +134,23 @@ export default {
       // 初始化绘制
       const scale = thumbnailCanvas.width / data.length;
       log.log("scale: ", scale, self.data);
-      drawWaveform(
-        data,
-        getCanvasCtx(thumbnailCanvas),
-        thumbnailCanvas.width,
-        thumbnailCanvas.height,
-        // scale
-        1
-      );
+      log.log("width:", thumbnailCanvas.width, 'height:', thumbnailCanvas.height, ', data.length:', data.length);
+      drawWaveform(data, getCanvasCtx(thumbnailCanvas), scale, 0.3); //绘制缩略图
       drawViewfinder();
       drawZoomedWaveform(data);
     }
 
 
-    let patientId = "630b3db047cc41f9a71d0e255b8576ba";
-    let startTime = utils.dateParse("2024-07-31 14:31:08").getTime();
-    let endTIme = utils.dateParse("2024-07-31 14:38:59").getTime();
-    let url = `http://192.168.1.198/support/api/dataReview/ecg?patientId=${patientId}&startTime=${startTime}&endTime=${endTIme}`;
+    let patientId = "547bd48e6a514c579b288537e8122972";
+    let startTime = utils.dateParse("2024-06-13 09:43:35").getTime();
+    let endTIme = utils.dateParse("2024-06-13 09:58:10").getTime();
+    let url = `https://pr.sensecho.com/support/api/dataReview/ecg?patientId=${patientId}&startTime=${startTime}&endTime=${endTIme}`;
     log.info("url:", url);
     axios
       .get(url, {
         headers: {
-          "x-access-token":
-            "eyJhbGciOiJIUzUxMiJ9.eyJvcmdJZCI6ImY2MjJjZTdjN2FhMDRmNjI5NjllYWVkOTE1YjBkZDBjIiwicm9vdE9yZ0lkIjoiZjYyMmNlN2M3YWEwNGY2Mjk2OWVhZWQ5MTViMGRkMGMiLCJqdGkiOiIzYTMyODE0MDVlZWY0NThiYWZlZjc0YTU1MzhhNDFiMSIsInN1YiI6IjcwMjRhZWNkMGI0NzZhNGIwNjY3ZDhjN2M4MzEyNzY0IiwiaXNzIjoiaHNyZyIsImlhdCI6MTcyMzcwMjYzOSwiZXhwIjoxNzI0MzA3NDM5fQ.22Vn4k2gkV3P9zFzBD5kfL1WbhiQ9T4UZG2sN35wL2rtXmY3g-_NH0ymMZ5fhLbYdFap1lC1HxYOvJKoYVC0kA",
+          "zCenter":"true",
+          "x-access-token": "eyJhbGciOiJIUzUxMiJ9.eyJvcmdJZCI6Ijc4YzI0OGVlZWY2ODQyMjk5NjM2MTVhMmUyOGVjOWJlIiwicm9vdE9yZ0lkIjoiNzhjMjQ4ZWVlZjY4NDIyOTk2MzYxNWEyZTI4ZWM5YmUiLCJqdGkiOiJjOTY2ZGM0NzMzMTY0NTI0YWY0MGMzNGYyZDg5OThjYiIsInN1YiI6ImQwMjU5NTMxMmM4ZDhmYmVlOWVhM2ZkYTE4ODcwYTdmIiwiaXNzIjoiaHNyZyIsImlhdCI6MTcyMzgyMjkyNiwiZXhwIjoxNzI0NDI3NzI2fQ.2_AVUScWuH8zj4r4qF0fYJTiXrrorFHDzcFFcJlLN63PemxnNeVqmSCIk_jtIzLymXyRqp0WrFbb4lX1UgxrKA",
         },
       })
       .then((resp) => {
@@ -205,31 +187,18 @@ export default {
   margin-top: -100%;
 }
 
-/* .waveform {
-  width: 100%;
-  height: 100%;
-  background-color: #333333;
-} */
-
 .thumbnail-container {
   position: relative;
   width: 100%;
-  height: 100px;
+  height: 60px;
   background-color: #333333;
-  margin-top: 10px;
   overflow: hidden;
-}
-
-.thumbnail {
-  width: 100%;
-  height: 100%;
 }
 
 .viewfinder {
   position: absolute;
   height: 100%;
-  background-color: rgba(223, 60, 32, 0.2);
-  border: 1px solid #0000ff;
+  background-color: rgba(223, 60, 32, 0.4);
   cursor: pointer;
   top: 0;
 }
