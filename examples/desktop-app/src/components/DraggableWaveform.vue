@@ -159,15 +159,19 @@ export default {
     let waveformCanvasMoveX = 0;
     let drawTimerId: any[] = [];
 
+
+    const thumbnailCanvasMoveStep = 1;//缩略图的步长
+    const waveformCanvasMoveStep = 0.04;//波形拖拽的步长
+
     viewfinder.addEventListener('mousedown', e => { viewfinderDragging = true; })//滑块被拖动
     thumbnailCanvas.addEventListener('mousedown', e => {
       // log.info('thumbnailCanvas, mousedown, (' + (e.clientX + ', ' + e.clientY) + ')');
       thumbnailCanvasDragging = true;
       if(!drawTimerId[0]) {
         drawTimerId[0] = setInterval(() => {
-          viewfinderX += e.clientX > viewfinderX ? 1 : -1;
+          viewfinderX += e.clientX > viewfinderX ? thumbnailCanvasMoveStep : -thumbnailCanvasMoveStep;
           update();
-        }, 100);
+        }, 50);
       }
     })//缩略图被拖动
     waveformCanvas.addEventListener('mousedown', e => {
@@ -182,7 +186,7 @@ export default {
         update();
       } else if (waveformCanvasDragging) {
           log.info('waveformCanvas, mousedown, (' + (e.clientX + ', ' + e.clientY) + ')');
-          viewfinderX += e.clientX - waveformCanvasMoveX;
+          viewfinderX += (e.clientX - waveformCanvasMoveX) > 0 ? -waveformCanvasMoveStep : waveformCanvasMoveStep;
           update();
           waveformCanvasMoveX = e.clientX;
       }
@@ -203,7 +207,7 @@ export default {
         Math.floor((viewfinderX / thumbnailCanvas.width) * data.length),
         Math.floor(((viewfinderX + viewfinderWidth) / thumbnailCanvas.width) * data.length)
       );
-      drawWaveform(zoomedData, getCanvasCtx(waveformCanvas), 1, 1); //绘制裁剪的波形
+      drawWaveform(zoomedData, getCanvasCtx(waveformCanvas), 1, 0.8); //绘制裁剪的波形
     }
 
     function setup(data: number[]) {

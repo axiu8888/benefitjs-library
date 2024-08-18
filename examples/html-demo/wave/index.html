@@ -105,13 +105,16 @@
       let waveformCanvasDragging = false;//裁剪的波形图
       let drawTimerId = [];
 
+      const thumbnailCanvasMoveStep = 1;//缩略图的步长
+      const waveformCanvasMoveStep = 0.04;//波形拖拽的步长
+
       viewfinder.addEventListener('mousedown', e => { viewfinderDragging = true; })//滑块被拖动
       thumbnailCanvas.addEventListener('mousedown', e => {
         console.log('thumbnailCanvas, mousedown, (' + (e.clientX + ', ' + e.clientY) + ')');
         thumbnailCanvasDragging = true;
         if (!drawTimerId[0]) {
           drawTimerId[0] = setInterval(() => {
-            viewfinderX += e.clientX > viewfinderX ? 1 : -1;
+            viewfinderX += e.clientX > viewfinderX ? thumbnailCanvasMoveStep : -thumbnailCanvasMoveStep;
             update();
           }, 50);
         }
@@ -130,7 +133,7 @@
           update();
         } else if (waveformCanvasDragging) {
           console.log('waveformCanvas, mousedown, (' + (e.clientX + ', ' + e.clientY) + ')');
-          viewfinderX += e.clientX - waveformCanvasMoveX;
+          viewfinderX += (e.clientX - waveformCanvasMoveX) > 0 ? -waveformCanvasMoveStep : waveformCanvasMoveStep;
           update();
           waveformCanvasMoveX = e.clientX;
         }
