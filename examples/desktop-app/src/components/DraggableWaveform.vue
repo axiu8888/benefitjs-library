@@ -185,14 +185,14 @@ export default {
         viewfinderX = e.clientX - rect.left - viewfinderWidth / 2
         update();
       } else if (waveformCanvasDragging) {
-          log.info('waveformCanvas, mousedown, (' + (e.clientX + ', ' + e.clientY) + ')');
+          // log.info('waveformCanvas, mousedown, (' + (e.clientX + ', ' + e.clientY) + ')');
           viewfinderX += (e.clientX - waveformCanvasMoveX) > 0 ? -waveformCanvasMoveStep : waveformCanvasMoveStep;
           update();
           waveformCanvasMoveX = e.clientX;
       }
     })
 
-    draggableWaveformContainer.addEventListener('mouseup', () => {//鼠标抬起
+    document.addEventListener('mouseup', () => {//鼠标抬起
       viewfinderDragging = false;
       thumbnailCanvasDragging = false;
       waveformCanvasDragging = false
