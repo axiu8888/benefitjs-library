@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>血氧波形图</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            display: block;
+            width: 100vw;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="oximeterCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('oximeterCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 获取屏幕宽度来设置canvas宽度
+        canvas.width = window.innerWidth;
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const middleY = canvasHeight / 2;
+
+        // 模拟的血氧数据
+        let data = [];
+        const maxDataLength = canvasWidth; // 最大数据长度设置为屏幕宽度
+
+        // 清理画布的前一段，绘制新的波形
+        function drawWaveform() {
+            // 每次绘制前，清理前面部分区域，保持波形流动
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            // 设置波形填充颜色
+            ctx.fillStyle = '#e44b4b';
+            ctx.strokeStyle = '#ee0000'; // 设置边框颜色
+            ctx.lineWidth = 2;
+
+            // 绘制波形线条
+            ctx.beginPath();
+            ctx.moveTo(0, middleY - data[0]);
+
+            for (let i = 1; i < data.length; i++) {
+                const x = i;
+                const y = middleY - data[i];
+                ctx.lineTo(x, y);
+            }
+
+            ctx.stroke();
+
+            // 绘制波形图下方的填充区域
+            ctx.lineTo(canvasWidth, middleY);
+            ctx.lineTo(0, middleY);
+            ctx.fill();
+        }
+
+        // 更新数据
+        function updateData(newValue) {
+            data.push(newValue);
+            if (data.length > maxDataLength) {
+                data.shift(); // 删除最旧的数据以保持数据量在屏幕宽度范围内
+            }
+        }
+
+        // 模拟血氧数据的实时输入
+        function generateOximeterData() {
+            // 模拟波形变化，生成随机数据
+            const randomValue = Math.sin(Date.now() / 100) * 50 + Math.random() * 10;
+            updateData(randomValue);
+
+            drawWaveform();
+        }
+
+        // 每20毫秒更新一次波形
+        setInterval(generateOximeterData, 20);
+    </script>
+</body>
+</html>

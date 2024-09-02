@@ -9,7 +9,8 @@
     <!-- <ipc></ipc> -->
     <!-- <multi-wave-view></multi-wave-view> -->
     <!-- <wave-view :deviceId="'01001148'"></wave-view> -->
-    <draggable-waveform style="width: 100%; height: 400px;">拖拽的波形图</draggable-waveform>
+    <!-- <draggable-waveform style="width: 100%; height: 400px;">拖拽的波形图</draggable-waveform> -->
+    <Waveform2 style="width: 100%; height: 400px;">波形图</Waveform2>
   </div>
 </template>
 
@@ -22,6 +23,7 @@ import CollectorView from "./components/CollectorView.vue";
 import WaveView from "./components/WaveView.vue";
 import xiaofei from "./components/xiaofei.vue";
 import ipc from "./components/ipc.vue";
+import Waveform2 from "./components/Waveform2.vue";
 
 import { log } from "./public/log";
 import MultiWaveView from './components/MultiWaveView.vue';
@@ -42,6 +44,7 @@ export default {
     ipc,
     MultiWaveView,
     DraggableWaveform,
+    Waveform2,
   },
   setup() {
     // 将 ref 暴露给模板

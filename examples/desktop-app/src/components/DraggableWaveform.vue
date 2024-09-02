@@ -54,7 +54,7 @@ export default {
     const setCanvasScale = function(canvas: string | HTMLCanvasElement, scale: number = 1.0) {
       let cs = canvas instanceof HTMLCanvasElement ? canvas : getCanvasEL(canvas);
       let ctx = getCanvasCtx(canvas);
-      ctx.scale(2.0, 2.0);
+      ctx.scale(scale, scale);
       cs.style.width = cs.clientWidth + 'px';
       cs.style.height = cs.clientHeight + 'px';
       cs.width = cs.clientWidth * scale;

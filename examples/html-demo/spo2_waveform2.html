@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>血氧波形图</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            width: 100%;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="oximeterCanvas" width="1000" height="300"></canvas>
+
+    <script>
+        const canvas = document.getElementById('oximeterCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const middleY = canvasHeight / 2;
+
+        // 模拟的血氧数据
+        let data = [];
+        let maxDataLength = 500; // 波形图数据的最大长度
+
+        // 绘制波形函数
+        function drawWaveform() {
+            // 清空画布
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            // 设置波形填充颜色
+            ctx.fillStyle = '#e44b4b';
+            ctx.strokeStyle = '#ee0000'; // 设置边框颜色
+            ctx.lineWidth = 2;
+
+            // 开始绘制波形
+            ctx.beginPath();
+            ctx.moveTo(0, middleY);
+
+            for (let i = 0; i < data.length; i++) {
+                const x = (i / maxDataLength) * canvasWidth;
+                const y = middleY - data[i];
+                ctx.lineTo(x, y);
+            }
+
+            // 填充底部区域
+            ctx.lineTo(canvasWidth, middleY);
+            ctx.lineTo(0, middleY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        // 更新数据
+        function updateData(newValue) {
+            data.push(newValue);
+            if (data.length > maxDataLength) {
+                data.shift(); // 删除最旧的数据
+            }
+        }
+
+        // 模拟血氧数据的实时输入
+        function generateOximeterData() {
+            // 模拟波形变化，生成随机数据
+            const randomValue = Math.sin(Date.now() / 100) * 50 + Math.random() * 10;
+            updateData(randomValue);
+
+            drawWaveform();
+        }
+
+        // 每20毫秒更新一次波形
+        setInterval(generateOximeterData, 20);
+    </script>
+</body>
+</html>
