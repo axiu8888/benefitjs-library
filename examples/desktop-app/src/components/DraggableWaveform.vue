@@ -14,7 +14,7 @@
 <script lang="ts">
 import { Button } from "ant-design-vue";
 import { log } from "../public/log";
-import { utils } from "@benefitjs/core";
+import { logger, utils } from "@benefitjs/core";
 import axios from "axios";
 import { waveview } from "@benefitjs/widgets";
 
@@ -221,27 +221,54 @@ export default {
       drawZoomedWaveform(data);
     }
  
+    // const reportId = '390f02f2afdc4fdbb2bbad06a7ba9899';
+    const reportId = 'de92e74a5f704d1b8ba7743b97b85aee';
+    axios.get(`https://pr.sensecho.com/support/api/report/data?reportType=smwt&reportId=${reportId}&version=v1`)
+      .then(resp => {
+        log.info('data:', resp.data);
 
+        const result = resp.data['result'];
+        let patientId = result['patientId'];
+        let startTime = utils.dateParse(result['start_time']).getTime();
+        let endTIme = utils.dateParse(result['end_time']).getTime();
+        let url = `https://pr.sensecho.com/support/api/dataReview/ecg?patientId=${patientId}&startTime=${startTime}&endTime=${endTIme}`;
+        log.info("url:", url);
+        axios
+          .get(url, {
+            headers: {
+              "zCenter":"true",
+              "x-access-token": "eyJhbGciOiJIUzUxMiJ9.eyJvcmdJZCI6Ijc4YzI0OGVlZWY2ODQyMjk5NjM2MTVhMmUyOGVjOWJlIiwicm9vdE9yZ0lkIjoiNzhjMjQ4ZWVlZjY4NDIyOTk2MzYxNWEyZTI4ZWM5YmUiLCJqdGkiOiJjOTY2ZGM0NzMzMTY0NTI0YWY0MGMzNGYyZDg5OThjYiIsInN1YiI6ImQwMjU5NTMxMmM4ZDhmYmVlOWVhM2ZkYTE4ODcwYTdmIiwiaXNzIjoiaHNyZyIsImlhdCI6MTcyMzgyMjkyNiwiZXhwIjoxNzI0NDI3NzI2fQ.2_AVUScWuH8zj4r4qF0fYJTiXrrorFHDzcFFcJlLN63PemxnNeVqmSCIk_jtIzLymXyRqp0WrFbb4lX1UgxrKA",
+            },
+          })
+          .then((resp) => {
+            // log.info(resp.status, resp.data, resp.headers);
+            log.info("请求结果: ", resp.data);
+            setup(resp.data["result"]["ecg"]); //绘制
+          })
+          .catch((err) => log.error(err));
 
-
-    let patientId = "547bd48e6a514c579b288537e8122972";
-    let startTime = utils.dateParse("2024-06-13 09:43:35").getTime();
-    let endTIme = utils.dateParse("2024-06-13 09:58:10").getTime();
-    let url = `https://pr.sensecho.com/support/api/dataReview/ecg?patientId=${patientId}&startTime=${startTime}&endTime=${endTIme}`;
-    log.info("url:", url);
-    axios
-      .get(url, {
-        headers: {
-          "zCenter":"true",
-          "x-access-token": "eyJhbGciOiJIUzUxMiJ9.eyJvcmdJZCI6Ijc4YzI0OGVlZWY2ODQyMjk5NjM2MTVhMmUyOGVjOWJlIiwicm9vdE9yZ0lkIjoiNzhjMjQ4ZWVlZjY4NDIyOTk2MzYxNWEyZTI4ZWM5YmUiLCJqdGkiOiJjOTY2ZGM0NzMzMTY0NTI0YWY0MGMzNGYyZDg5OThjYiIsInN1YiI6ImQwMjU5NTMxMmM4ZDhmYmVlOWVhM2ZkYTE4ODcwYTdmIiwiaXNzIjoiaHNyZyIsImlhdCI6MTcyMzgyMjkyNiwiZXhwIjoxNzI0NDI3NzI2fQ.2_AVUScWuH8zj4r4qF0fYJTiXrrorFHDzcFFcJlLN63PemxnNeVqmSCIk_jtIzLymXyRqp0WrFbb4lX1UgxrKA",
-        },
       })
-      .then((resp) => {
-        // log.info(resp.status, resp.data, resp.headers);
-        log.info("请求结果: ", resp.data);
-        setup(resp.data["result"]["ecg"]); //绘制
-      })
-      .catch((err) => log.error(err));
+      .catch(err => log.error(err));
+
+
+    // let patientId = "547bd48e6a514c579b288537e8122972";
+    // let startTime = utils.dateParse("2024-06-13 09:43:35").getTime();
+    // let endTIme = utils.dateParse("2024-06-13 09:58:10").getTime();
+    // let url = `https://pr.sensecho.com/support/api/dataReview/ecg?patientId=${patientId}&startTime=${startTime}&endTime=${endTIme}`;
+    // log.info("url:", url);
+    // axios
+    //   .get(url, {
+    //     headers: {
+    //       "zCenter":"true",
+    //       "x-access-token": "eyJhbGciOiJIUzUxMiJ9.eyJvcmdJZCI6Ijc4YzI0OGVlZWY2ODQyMjk5NjM2MTVhMmUyOGVjOWJlIiwicm9vdE9yZ0lkIjoiNzhjMjQ4ZWVlZjY4NDIyOTk2MzYxNWEyZTI4ZWM5YmUiLCJqdGkiOiJjOTY2ZGM0NzMzMTY0NTI0YWY0MGMzNGYyZDg5OThjYiIsInN1YiI6ImQwMjU5NTMxMmM4ZDhmYmVlOWVhM2ZkYTE4ODcwYTdmIiwiaXNzIjoiaHNyZyIsImlhdCI6MTcyMzgyMjkyNiwiZXhwIjoxNzI0NDI3NzI2fQ.2_AVUScWuH8zj4r4qF0fYJTiXrrorFHDzcFFcJlLN63PemxnNeVqmSCIk_jtIzLymXyRqp0WrFbb4lX1UgxrKA",
+    //     },
+    //   })
+    //   .then((resp) => {
+    //     // log.info(resp.status, resp.data, resp.headers);
+    //     log.info("请求结果: ", resp.data);
+    //     setup(resp.data["result"]["ecg"]); //绘制
+    //   })
+    //   .catch((err) => log.error(err));
   },
   unmounted() {
     clearInterval(this.timerId);
