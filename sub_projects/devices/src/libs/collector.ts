@@ -1527,6 +1527,9 @@ export namespace collector {
      * 加圈 0：无   1：有
      */
     circle: number;
+
+    chbr: number[];//滤波后的胸呼吸
+    abbr: number[];//滤波后的腹呼吸
   }
 
   /**

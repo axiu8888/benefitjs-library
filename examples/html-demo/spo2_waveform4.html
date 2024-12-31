@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>血氧波形绘制</title>
+<style>
+  canvas {
+    border: 1px solid #ddd;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="spo2Canvas" width="800" height="200"></canvas>
+
+<script>
+const canvas = document.getElementById('spo2Canvas');
+const ctx = canvas.getContext('2d');
+
+const width = canvas.width;
+const height = canvas.height;
+
+// 波形参数
+let offsetX = 0;
+const amplitude = 30; // 波形的振幅
+const frequency = 0.05; // 波形的频率
+const speed = 2; // 波形的移动速度
+
+function drawWave() {
+  ctx.clearRect(0, 0, width, height); // 清除画布
+  ctx.beginPath();
+  ctx.moveTo(0, height / 2); // 起始点为画布中间
+
+  // 绘制波形曲线
+  for (let x = 0; x < width; x++) {
+    const y = height / 2 + amplitude * Math.sin(frequency * (x + offsetX));
+    ctx.lineTo(x, y);
+  }
+
+  ctx.strokeStyle = 'blue';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 更新偏移量以实现波形移动
+  offsetX += speed;
+  requestAnimationFrame(drawWave); // 循环调用以更新波形
+}
+
+drawWave();
+</script>
+
+</body>
+</html>

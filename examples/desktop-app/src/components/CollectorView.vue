@@ -108,7 +108,7 @@ export default {
             .startScan(<ElectronRender.bluetooth.ScanOptional>{
               optionalServices: [collector.uuid.service],
               acceptAllDevices: true,
-              // filters: [{ namePrefix: 'HSRG' }, { namePrefix: 'Bluetooth BP' }],
+              //filters: [{ namePrefix: 'HSRG_1' }, { namePrefix: 'Bluetooth BP' }],
             })
             .then((devices) => {
               let device;

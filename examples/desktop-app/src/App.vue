@@ -6,10 +6,10 @@
     <!-- <CollectorView></CollectorView> -->
     <!-- <Worker></Worker> -->
     <!-- <xiaofei></xiaofei> -->
-    <!-- <ipc></ipc> -->
+    <ipc></ipc>
     <!-- <multi-wave-view></multi-wave-view> -->
     <!-- <wave-view :deviceId="'01001148'"></wave-view> -->
-    <draggable-waveform style="width: 100%; height: 400px;">拖拽的波形图</draggable-waveform>
+    <!-- <draggable-waveform style="width: 100%; height: 400px;">拖拽的波形图</draggable-waveform> -->
     <!-- <Waveform2 style="width: 100%; height: 400px;">波形图</Waveform2> -->
   </div>
 </template>

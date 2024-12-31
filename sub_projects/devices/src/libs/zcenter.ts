@@ -50,6 +50,18 @@ export namespace zcenter {
     zp.volume = binary.bytesToNumber(data.slice(648, 648 + 2));
     zp.circle = data[650] & 0xff;
     zp.spo2Battery = data[651] & 0xff;
+
+    if (data.length >= 651 + 200) {//解析滤波后的胸腹呼吸
+      zp.chbr = binary.bytesToNumberArray(data.splice(652, 652 + 100), 16);
+      zp.abbr = binary.bytesToNumberArray(data.splice(652 + 100, 652 + 200), 16);
+    }
+
+    if (data.length >= 852 + 150) {//解析三轴数据
+      zp.x = binary.bytesToNumberArray(data.splice(852, 852 + 50), 16);
+      zp.x = binary.bytesToNumberArray(data.splice(852 + 50, 852 + 50), 16);
+      zp.x = binary.bytesToNumberArray(data.splice(852 + 100, 852 + 50), 16);
+    }
+
     return zp;
   }
 
@@ -61,7 +73,7 @@ export namespace zcenter {
    * @returns 返回转换后的中央台数据
    */
   export function convertZCenterBytes(hp: c.HardwarePacket, mmhg?: c.BpPacket) {
-    let pkgSize = 652;
+    let pkgSize = 652 + (25 * 2 * 4) + (25 * 2 * 3);//652 + 两个呼吸波形 + 三轴
     let result = new Array(pkgSize);
     result[0] = 0x12;
     result[1] = 0x26;
@@ -186,6 +198,34 @@ export namespace zcenter {
     result[650] = hp.circle != null ? hp.circle : 0;
     result[651] = hp.spo2ConnState == 0 ? hp.spo2Battery : 0;
 
+    if (hp.chbr && hp.chbr.length > 0) {
+      // 胸呼吸
+      let respStartAt = 652;
+      for (let i = 0; i < hp.chbr.length; i++) {
+        let values = binary.numberToBytes(hp.chbr[i], 32);
+        binary.arraycopy(values, 0, result, respStartAt + i * 4, values.length);
+      }
+      // 腹呼吸
+      for (let i = 0; i < hp.abbr.length; i++) {
+        let values = binary.numberToBytes(hp.abbr[i], 32);
+        binary.arraycopy(values, 0, result, respStartAt + 100 + i * 4, values.length);
+      }
+    }
+
+    // 三轴
+    let xyzStartAt = 652 + 200;
+    for (let i = 0; i < hp.xList.length; i++) {
+      let values = binary.numberToBytes(hp.zList[i], 16);
+      binary.arraycopy(values, 0, result, xyzStartAt + i * 2, values.length);
+    }
+    for (let i = 0; i < hp.yList.length; i++) {
+      let values = binary.numberToBytes(hp.yList[i], 16);
+      binary.arraycopy(values, 0, result, xyzStartAt + 50 + i * 2, values.length);
+    }
+    for (let i = 0; i < hp.zList.length; i++) {
+      let values = binary.numberToBytes(hp.zList[i], 16);
+      binary.arraycopy(values, 0, result, xyzStartAt + 100 + i * 2, values.length);
+    }
     return result;
   }
 
@@ -375,6 +415,32 @@ export namespace zcenter {
      * spo2电池电量, [651]
      */
     spo2Battery: number;
+    
+    /**
+     * 胸呼吸波形
+     * @since 2024-10-22
+     */
+    chbr?: number[];
+    /**
+     * 胸呼吸波形
+     * @since 2024-10-22
+     */
+    abbr?: number[];
+    /**
+     * x波形
+     * @since 2024-10-25
+     */
+    x?: number[];
+    /**
+     * y波形
+     * @since 2024-10-25
+     */
+    y?: number[];
+    /**
+     * z波形
+     * @since 2024-10-25
+     */
+    z?: number[];
   }
 
   /**
