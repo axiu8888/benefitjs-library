@@ -12,6 +12,8 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import { log } from "../../src/public/log";
+import { utils } from "@benefitjs/core";
+import { io } from "@benefitjs/node";
 
 globalThis.__filename = fileURLToPath(import.meta.url);
 globalThis.__dirname = dirname(__filename);
@@ -105,9 +107,11 @@ async function createWindow() {
   // const url = 'https://pr.sensecho.com/monitorReports/physical?reportZid=3111c6935b9f48eab1d39836feb48927&loginName=ywtest&version=undefined&extend=undefined&moduleShow=true'
   // const url = 'https://pr.sensecho.com/supportReport/v1/smwt?version=v1&reportId=599e5b01bf94422696874a1f23276ca1&extend=pfTest'
   // const url = "https://pr.sensecho.com/supportReport/sgrq?version=null&reportId=85d0bf6e8ed74c3d9dfad61036006d9f&extend=null";
-  const url = 'https://pr.sensecho.com/supportReport/sportRecory?version=null&reportId=d104d411ac1242a385aa9d2f2ab2918f&extend=null';
+  // const url = 'https://pr.sensecho.com/supportReport/sportRecory?version=null&reportId=d104d411ac1242a385aa9d2f2ab2918f&extend=null';
   // const url = 'http://192.168.1.198/supportAdmin/question.html#/preview?item=saq&reportId=c2b976f7cd974e45b86ce99b8ac4d243&version=null&extend=null';
   // const url = 'http://192.168.1.198/supportAdmin/question.html#/preview?item=saq&reportId=c2b976f7cd974e45b86ce99b8ac4d243&version=null&extend=null';
+  // const url = 'https://pr.sensecho.com/supportReport/v1/smwt?version=v1&reportId=a019f0b846934f349214dbb43c0cb1ff&extend=pfTest,hrv';
+  const url = 'https://pr.sensecho.com/reportPages/CAT.html?reportZid=9029725&reportType=CAT&orgZid=34&zid=6b2a4570321b4190b259bf5d5d32ef02&taskZid=9029725&login=gdszf_hsrg&reportPath=true&flag=true';
   const searchParams = new URLSearchParams(url.substring(url.indexOf("?")));
   let reportType = "";
   let reportId = "test";
@@ -121,6 +125,7 @@ async function createWindow() {
     }
     reportId = searchParams.get("reportId");
     reportId = reportId ? reportId : searchParams.get("reportZid");
+    reportId = reportId ? reportId : searchParams.get("reportId");
     reportId = reportId ? reportId : searchParams.get("zid");
     reportId = reportId ? reportId : searchParams.get("id");
   } catch (err) {
@@ -158,6 +163,7 @@ async function createWindow() {
           printBackground: true,
         })
         .then((buffer) => {
+          io.createFile(destPdf);
           fs.writeFile(destPdf, buffer, (err) => {
             if (err) {
               console.error(err);
