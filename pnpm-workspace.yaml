@@ -1,10 +1,6 @@
 packages:
-  # 所有在 sub_projects、examples 子目录下的文件
-  - "sub_projects/**"
-  # - "examples/**"
-  - "examples/desktop-app"
-  # - "examples/pdf-creator"
-  # - "examples/my-uniapp"
-
-  # 不包括在 test 文件夹下的 package
-  - "!**/test/**"
+  - sub_projects/**
+  - examples/desktop-app
+  - '!**/test/**'
+onlyBuiltDependencies:
+  - electron
