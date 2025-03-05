@@ -16,8 +16,8 @@ export namespace mqtt {
     // host: "127.0.0.1",
     // host: "172.28.83.171",
     port: 80,
-    // path: "/support/mqtt",
-    path: "/mqtt",
+    path: "/support/mqtt",
+    // path: "/mqtt",
     clientId: `mqttjs_${utils.uuid().substring(0, 16)}`,
     timeout: 2, // 连接超时
     autoReconnectInterval: 10, // 自动重连的间隔

@@ -204,10 +204,8 @@ export namespace mytest {
     // const mqtt = connect("mqtt://127.0.0.1:1883");
     const mqtt = connect(<IClientOptions>{
       clientId: 'mqtt_nodejs_' + utils.uuid(),
-      host: '172.28.83.171',
-      // host: '127.0.0.1',
-      // host: 'research.sensecho.com',
-      port: 1883,
+      host: 'pr.sensecho.com',
+      port: 2883,
       manualConnect: false,
       connectTimeout: 2000,
       keepalive: 30,

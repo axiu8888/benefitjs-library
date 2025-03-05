@@ -6,6 +6,7 @@ import renderer from 'vite-plugin-electron-renderer'
 import pkg from './package.json'
 const path = require("path")
 
+
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
   rmSync('dist-electron', { recursive: true, force: true })

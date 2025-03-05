@@ -44,21 +44,30 @@ export default {
     htmlToPdf() {
       // let url = "https://pr.sensecho.com/supportReport/sportRecory?version=null&reportId=d104d411ac1242a385aa9d2f2ab2918f&extend=null";
       // let url = "https://pr.sensecho.com/supportReport/omsst?version=null&reportId=a29721deef244d74a9249d993fab9feb&extend=pfTest,hrv";
-      let url = "https://pr.sensecho.com/reportPages/CAT.html?reportZid=9029725&reportType=CAT&orgZid=34&zid=6b2a4570321b4190b259bf5d5d32ef02&taskZid=9029725&login=gdszf_hsrg&reportPath=true&flag=true&token=eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiJiN2RiNTFiY2ZkZjg0YjMyYjA3NGM5NGUxOTM0ODNlMiIsInVzZXJaaWQiOiIwZTkzYjI2YTJhZDg0NmMyODIyM2ViNzhhMDEwN2UzYSIsInN1YiI6Imdkc3pmX2hzcmciLCJvcmdaaWQiOiIzNCIsIndhcmRDb2RlIjoiMzQiLCJwbGF0Zm9ybSI6MCwiaXNzIjoiaHNyZyIsImlhdCI6MTczNTY0NjEzMywicmVmcmVzaCI6ZmFsc2UsImV4cCI6MTczODIzODEzM30.GQXca55q2VVFhcmawAGxyoq97kKSAWNby3bMLDS4dh4XxDFn4aAUv3vRa1Z17WVhK3L688bQ3_Sn2e5PYir3oA";
+      let url = "https://pr.sensecho.com/reportPages/CAT.html?reportZid=9029725&reportType=CAT&orgZid=34&zid=6b2a4570321b4190b259bf5d5d32ef02&taskZid=9029725&login=gdszf_hsrg&reportPath=true";
       const searchParams = new URLSearchParams(url.substring(url.indexOf("?")));
       let reportType = "";
       let reportId = "test";
       try {
-        reportType = searchParams.get("item") as any;
+        reportType = find(searchParams, ['item', 'reportType', 'type']);
         if (!reportType) {
           reportType = url.substring(0, url.indexOf("?"));
           reportType = reportType.substring(reportType.lastIndexOf("/"));
           reportType = reportType ? reportType : "";
         }
-        reportId = searchParams.get("reportId") as any;
-        reportId = reportId ? reportId : (searchParams.get("reportZid") as any);
-        reportId = reportId ? reportId : (searchParams.get("zid") as any);
-        reportId = reportId ? reportId : (searchParams.get("id") as any);
+        reportId = find(searchParams, ['reportId', 'id', 'reportZid', 'zid', 'taskId']);
+        
+
+        function find(searchParams: URLSearchParams, keys: string[], filter: Function = (v, k, i) => v != null && v.length > 0): any {
+          for (let i = 0; i < keys.length; i++) {
+            let key = keys[i];
+            let value = searchParams.get(key);
+            if (filter(value, key, i)) {
+              return value;
+            }
+          }
+        }
+
       } catch (err) {
         log.error(err);
         return;

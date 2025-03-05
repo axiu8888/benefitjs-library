@@ -1,5 +1,6 @@
 import { createApp } from "vue";
 import App from "./App.vue";
+import 'ant-design-vue/dist/reset.css';
 import "./style.css";
 import "./public/node-ipc"; // 渲染线程调用
 import { log } from "./public/log";

@@ -1,12 +1,15 @@
 <template>
   <div id="app">
     <h3>{{ title }}</h3>
+    <!-- <DragFileUpload></DragFileUpload> -->
+    <DragFileUpload2></DragFileUpload2>
     <!-- <qrcode></qrcode> -->
     <!-- <holter></holter> -->
     <!-- <CollectorView></CollectorView> -->
     <!-- <Worker></Worker> -->
     <!-- <xiaofei></xiaofei> -->
-    <ipc></ipc>
+    <!-- <ipc></ipc> -->
+    <!-- <EcgDemo></EcgDemo> -->
     <!-- <multi-wave-view></multi-wave-view> -->
     <!-- <wave-view :deviceId="'01001148'"></wave-view> -->
     <!-- <draggable-waveform style="width: 100%; height: 400px;">拖拽的波形图</draggable-waveform> -->
@@ -16,6 +19,7 @@
 
 <script lang="ts">
 import { Button } from "ant-design-vue";
+import EcgDemo from "./components/EcgDemo.vue";
 import Worker from "./components/Worker.vue";
 import holter from "./components/holter.vue";
 import qrcode from "./components/qrcode.vue";
@@ -28,6 +32,9 @@ import Waveform2 from "./components/Waveform2.vue";
 import { log } from "./public/log";
 import MultiWaveView from './components/MultiWaveView.vue';
 import DraggableWaveform from './components/DraggableWaveform.vue';
+import DragFileUpload from "./components/DragFileUpload.vue";
+import DragFileUpload2 from "./components/DragFileUpload2.vue";
+
 
 log.info("Vue create ...");
 
@@ -45,6 +52,9 @@ export default {
     MultiWaveView,
     DraggableWaveform,
     Waveform2,
+    EcgDemo,
+    DragFileUpload,
+    DragFileUpload2,
   },
   setup() {
     // 将 ref 暴露给模板
