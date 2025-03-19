@@ -8,7 +8,7 @@ export namespace io {
   /**
    * 日志打印
    */
-  export const log = logger.newProxy("IO", logger.Level.debug);
+  export const log = logger.newProxy("IO", logger.Level.warn);
 
   /**
    * 替换路径的双斜杠和双反斜杠
@@ -57,10 +57,10 @@ export namespace io {
    * @param throwError 是否抛出异常
    * @returns 返回创建的路径
    */
-  export function mkdir(path: string, throwError: boolean = false): string {
+  export function mkdir(path: string, recursive: boolean = true, throwError: boolean = false): string {
     try {
       path = replaceWithCurDir(path);
-      fs.mkdirSync(path, { recursive: true });
+      fs.mkdirSync(path, { recursive: recursive });
       return path;
     } catch (err) {
       log.warn(`Failed to create directory: ${path}`, err);

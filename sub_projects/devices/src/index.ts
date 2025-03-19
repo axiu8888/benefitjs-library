@@ -1,8 +1,6 @@
 /*
- * @Description:
- * @Date: 2023-11-29
+ * @Author: dingxiuan
  */
-export * from './libs/bluetooth';// 蓝牙定义
 // 各种设备
 export * from './libs/collector'; // 采集器
 // export * from './libs/collector-client'; // 采集器-蓝牙客户端

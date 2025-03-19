@@ -1,4 +1,4 @@
-import { ByteBuf } from '@benefitjs/core';
+import { ByteBuf } from "../binary-helper";
 
 /**
  * 蓝牙设备

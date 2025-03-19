@@ -2,8 +2,7 @@
  * 傅里叶设备：智能电动训练车、上下肢主被动训练车
  */
 
-import { binary, utils, ByteBuf } from '@benefitjs/core';
-import { GattUUID, IDevice } from './bluetooth';
+import { binary, utils, ByteBuf, GattUUID, IDevice } from '@benefitjs/core';
 
 /**
  * H1设备

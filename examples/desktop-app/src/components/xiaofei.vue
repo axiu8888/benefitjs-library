@@ -15,9 +15,8 @@
 
 <script lang="ts">
 import { Button } from "ant-design-vue";
-import { binary, logger, utils } from "@benefitjs/core";
+import { binary, logger, utils, connector } from "@benefitjs/core";
 import { log } from "../public/log";
-import { connector } from '../../libs/auto-connector';
 
 export default {
   // `setup` 是一个特殊的钩子，专门用于组合式 API。

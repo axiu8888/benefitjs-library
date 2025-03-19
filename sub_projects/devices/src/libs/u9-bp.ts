@@ -1,5 +1,4 @@
-import { ByteBuf, binary, utils } from '@benefitjs/core';
-import { GattUUID, IDevice } from './bluetooth';
+import { ByteBuf, binary, utils, GattUUID, IDevice } from '@benefitjs/core';
 
 /**
  * U9 血压设备

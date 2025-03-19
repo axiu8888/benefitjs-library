@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import EventEmitter from "events";
 import { BrowserWindow, ipcMain, PrintToPDFOptions, screen, shell } from "electron";
 import { logger, utils } from "@benefitjs/core";
-import { io } from "@benefitjs/node";
+import { io } from "../io";
 import { rpc } from './rpc';
 
 /**

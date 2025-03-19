@@ -2,6 +2,7 @@ import { binary, logger } from "@benefitjs/core";
 import { collector } from "@benefitjs/devices";
 import { ElectronRender } from './electron-render';
 
+
 /**
  * 蓝牙采集器
  */

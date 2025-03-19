@@ -14,6 +14,7 @@ import { io, udp } from "@benefitjs/node";
 // import { serialport, sqlite } from "@benefitjs/node-library";
 import { collector } from "@benefitjs/devices";
 import { ElectronMain } from "../../libs/electron-main";
+import { ElectronRender } from "../../libs/electron-render";
 import { log } from "../../src/public/log";
 import { connect, IClientOptions } from "mqtt";
 // import "../../src/public/ws-server";

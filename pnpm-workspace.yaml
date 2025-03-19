@@ -1,6 +1,12 @@
 packages:
   - sub_projects/**
+  - '!sub_projects/node-library'
+  # - '!sub_projects/node'
   - examples/desktop-app
   - '!**/test/**'
 onlyBuiltDependencies:
+  - core-js
   - electron
+  - esbuild
+  - lzma-native
+  - vue-demi

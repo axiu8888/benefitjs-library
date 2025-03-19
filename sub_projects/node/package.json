@@ -21,7 +21,10 @@
   "license": "ISC",
   "devDependencies": {
     "@benefitjs/core": "workspace:^",
+    "@benefitjs/devices": "workspace:^",
     "@types/node": "^20.14.9",
+    "electron": "^35.0.0",
+    "eventemitter3": "^5.0.1",
     "prettier": "^2.8.8",
     "rollup-plugin-polyfill-node": "^0.13.0",
     "terser": "^5.31.1",

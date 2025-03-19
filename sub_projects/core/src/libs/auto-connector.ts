@@ -28,7 +28,11 @@ export namespace connector {
       this.interval = interval;
     }
 
-    start() {
+    start(newConnection?: Connection) {
+      if (newConnection) {
+        this.stop();
+        this.connection = newConnection;
+      }
       if (this.timerId) return; // 已开始，不重复调用
       this.timerId = setInterval(() => {
         if (!this.autoConnect) {
@@ -49,6 +53,11 @@ export namespace connector {
     }
 
     stop() {
+      try {
+        this.connection.doClose();
+      } catch (e) {
+        console.error(e);
+      }
       if (this.timerId) {
         clearInterval(this.timerId);
         this.timerId = undefined;
@@ -70,5 +79,10 @@ export namespace connector {
      * 连接
      */
     doConnect(): void;
+
+    /**
+     * 断开或关闭
+     */
+    doClose(): void;
   }
 }

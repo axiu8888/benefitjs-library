@@ -1,8 +1,7 @@
 // ================================================================================================================
 // 采集器解析
 
-import { ByteBuf, binary, logger, utils } from '@benefitjs/core';
-import { GattUUID, IDevice } from './bluetooth';
+import { ByteBuf, binary, logger, utils, GattUUID, IDevice } from '@benefitjs/core';
 
 /**
  * 采集器

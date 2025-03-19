@@ -6,8 +6,8 @@ import "./public/node-ipc"; // 渲染线程调用
 import { log } from "./public/log";
 
 // 初始化IPC
-import { ElectronRender } from "../libs/electron-render";
 import { binary, logger } from "@benefitjs/core";
+import { ElectronRender } from "../libs/electron-render";
 
 // 日志
 ElectronRender.log.level = logger.Level.debug;
