@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心电图模拟</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="ecgCanvas" width="800" height="300"></canvas>
+
+    <script>
+        const canvas = document.getElementById('ecgCanvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        // 心电图数据数组
+        let ecgData = Array(width).fill(0);
+        
+        // 模拟一个心跳周期的ECG波形 (约200个点)
+        function createEcgModel() {
+            const model = Array(200).fill(0);
+            
+            // P波 (心房去极化)
+            for(let i=20; i<40; i++) {
+                model[i] = Math.sin((i-20)*Math.PI/20) * 15;
+            }
+            
+            // QRS复合波 (心室去极化)
+            model[50] = -25; // Q波
+            model[51] = -10;
+            model[52] = 40;  // R波
+            model[53] = 20;
+            model[54] = -15; // S波
+            model[55] = -5;
+            
+            // T波 (心室复极化)
+            for(let i=80; i<120; i++) {
+                model[i] = Math.sin((i-80)*Math.PI/40) * 20;
+            }
+            
+            return model;
+        }
+        
+        const ecgModel = createEcgModel();
+        let modelIndex = 0;
+        
+        // 绘制心电图
+        function drawECG() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // 绘制网格线
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            // 水平网格线
+            for(let y=0; y<height; y+=20) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            // 垂直网格线
+            for(let x=0; x<width; x+=20) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            // 绘制基线
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, height/2);
+            ctx.lineTo(width, height/2);
+            ctx.stroke();
+            
+            // 更新数据 - 每帧添加8个新点
+            for(let i=0; i<8; i++) {
+                ecgData.shift(); // 移除最旧的数据点
+                ecgData.push(ecgModel[modelIndex]); // 添加新点
+                modelIndex = (modelIndex + 1) % ecgModel.length;
+            }
+            
+            // 绘制心电图
+            ctx.strokeStyle = '#00a000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            for(let x=0; x<width; x++) {
+                const y = height/2 - ecgData[x];
+                if(x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+            
+            requestAnimationFrame(drawECG);
+        }
+        
+        // 开始动画
+        drawECG();
+    </script>
+</body>
+</html>

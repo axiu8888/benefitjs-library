@@ -138,9 +138,9 @@ export namespace ElectronMain {
               pageSize: "A4",
               printBackground: true,
             })
-            .then((buffer) => {
+            .then((buf) => {
               io.mkdir(io.getParent(pdfPath)); // 创建目录
-              fs.writeFile(pdfPath, buffer, (err) => {
+              fs.writeFile(pdfPath, buf, (err) => {
                 if (err) {
                   log.error(err);
                   reject(err);
