@@ -294,10 +294,10 @@ export namespace Paho {
 
     constructor(public type?: any, public options?: any) {
       //this.type = type;
-      let _this = this as any;
+      let self = this as any;
       for (let name in options) {
         if (options.hasOwnProperty(name)) {
-          _this[name] = options[name];
+          self[name] = options[name];
         }
       }
     }
@@ -696,11 +696,11 @@ export namespace Paho {
   export const Pinger = function (client: any, keepAliveInterval: any) {
 
     // @ts-ignore
-    let _this = this;
+    let self = this;
 
-    _this._client = client;
-    _this._keepAliveInterval = keepAliveInterval * 1000;
-    _this.isReset = false;
+    self._client = client;
+    self._keepAliveInterval = keepAliveInterval * 1000;
+    self.isReset = false;
 
     let pingReq = new WireMessage(MESSAGE_TYPE.PINGREQ).encode();
 
@@ -712,24 +712,24 @@ export namespace Paho {
 
     /** @ignore */
     let doPing = function () {
-      if (!_this.isReset) {
-        _this._client._trace('Pinger.doPing', 'Timed out');
-        _this._client._disconnected(ERROR.PING_TIMEOUT.code, format(ERROR.PING_TIMEOUT));
+      if (!self.isReset) {
+        self._client._trace('Pinger.doPing', 'Timed out');
+        self._client._disconnected(ERROR.PING_TIMEOUT.code, format(ERROR.PING_TIMEOUT));
       } else {
-        _this.isReset = false;
-        _this._client._trace('Pinger.doPing', 'send PINGREQ');
-        _this._client.socket.send(pingReq);
-        _this.timeout = setTimeout(doTimeout(_this), _this._keepAliveInterval);
+        self.isReset = false;
+        self._client._trace('Pinger.doPing', 'send PINGREQ');
+        self._client.socket.send(pingReq);
+        self.timeout = setTimeout(doTimeout(self), self._keepAliveInterval);
       }
     };
 
-    _this.reset = function () {
+    self.reset = function () {
       this.isReset = true;
       clearTimeout(this.timeout);
       if (this._keepAliveInterval > 0) this.timeout = setTimeout(doTimeout(this), this._keepAliveInterval);
     };
 
-    _this.cancel = function () {
+    self.cancel = function () {
       clearTimeout(this.timeout);
     };
   };
@@ -748,10 +748,10 @@ export namespace Paho {
     };
 
     // @ts-ignore
-    let _this = this as any;
-    _this.timeout = setTimeout(doTimeout(action, client, args), timeoutSeconds * 1000);
+    let self = this as any;
+    self.timeout = setTimeout(doTimeout(action, client, args), timeoutSeconds * 1000);
 
-    _this.cancel = function () {
+    self.cancel = function () {
       clearTimeout(this.timeout);
     };
   };

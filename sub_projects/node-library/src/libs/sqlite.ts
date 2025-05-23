@@ -1,5 +1,6 @@
 import { logger, js_class as jsc } from '@benefitjs/core';
-import { io } from './io';
+import { io } from '@benefitjs/node';
+// import { io } from './io';
 import sqlite3 from 'sqlite3';
 
 /**

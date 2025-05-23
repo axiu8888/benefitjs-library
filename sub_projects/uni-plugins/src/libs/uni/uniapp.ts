@@ -430,11 +430,11 @@ export namespace uniapp {
      */
     setupWS() {
       if (global && !global.WebSocket) {
-        let _this = this;
+        let self = this;
         class UniWebSocketProxy extends UniWebSocketImpl {
           constructor(url: string | URL, protocols?: string | string[]) {
             super(undefined);
-            _this.createWebSocket({ url: url, protocols: protocols }, this);
+            self.createWebSocket({ url: url, protocols: protocols }, this);
           }
         }
         global.WebSocket = UniWebSocketProxy;

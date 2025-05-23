@@ -150,42 +150,42 @@ export namespace bluetooth {
     private _intervalNativeHandler(msg: BlePluginMessage) {
       try {
         log.debug('_intervalNativeHandler ==>: ', msg);
-        let _this = this as any;
+        let self = this as any;
         // onFailure、onBtStateChange、onConnected、onDisconnected、onServicesDiscovered、onCharacteristicRead、onCharacteristicWrite、onCharacteristicChanged、onMtuChanged
         switch (msg.type) {
           case 'onFailure':
-            super.callListenersFn<uniapp.OnBleClientListener<T>>((l) => l.onError(_this, msg.mac, new Error(msg.error)), 'onError');
+            super.callListenersFn<uniapp.OnBleClientListener<T>>((l) => l.onError(self, msg.mac, new Error(msg.error)), 'onError');
             break;
           case 'onBtStateChange':
             let state = (msg as any).state;
             let stateMsg = <{ discovering: boolean; available: boolean }>{ discovering: false, available: state == 'ON' };
-            super.callListenersFn<uniapp.OnBleClientListener<T>>((l) => l.onBtStateChange(_this, stateMsg as any), 'onBtStateChange');
+            super.callListenersFn<uniapp.OnBleClientListener<T>>((l) => l.onBtStateChange(self, stateMsg as any), 'onBtStateChange');
             break;
           case 'onConnected':
             super.isConnected = true;
-            super.callListenersFn<uniapp.OnBleClientListener<T>>((l) => l.onConnected(_this, msg.mac), 'onConnected');
+            super.callListenersFn<uniapp.OnBleClientListener<T>>((l) => l.onConnected(self, msg.mac), 'onConnected');
             break;
           case 'onDisconnected':
             super.isConnected = false;
-            super.callListenersFn<uniapp.OnBleClientListener<T>>((l) => l.onDisconnected(_this, msg.mac, msg.auto), 'onDisconnected');
+            super.callListenersFn<uniapp.OnBleClientListener<T>>((l) => l.onDisconnected(self, msg.mac, msg.auto), 'onDisconnected');
             break;
           case 'onServicesDiscovered':
             super.isConnected = true;
             let services = msg.services.map((s) => <uniapp.BtUuid>{ isPrimary: s.isPrimary, uuid: s.serviceId });
-            _this.rawServices = msg.services;
-            _this.services = services;
-            super.callListenersFn<uniapp.OnBleClientListener<T>>((l) => l.onServiceDiscover(_this, msg.mac, services), 'onServiceDiscover');
+            self.rawServices = msg.services;
+            self.services = services;
+            super.callListenersFn<uniapp.OnBleClientListener<T>>((l) => l.onServiceDiscover(self, msg.mac, services), 'onServiceDiscover');
             break;
           case 'onCharacteristicRead':
             // 暂不支持
             break;
           case 'onCharacteristicWrite':
-            super.callListenersFn<uniapp.OnBleClientListener<T>>((l) => l.onCharacteristicWrite(_this, msg.mac, binary.hexToBytes(msg.value)), 'onCharacteristicWrite');
+            super.callListenersFn<uniapp.OnBleClientListener<T>>((l) => l.onCharacteristicWrite(self, msg.mac, binary.hexToBytes(msg.value)), 'onCharacteristicWrite');
             break;
           case 'onCharacteristicChanged':
             super.isConnected = true;
             super.callListenersFn<uniapp.OnBleClientListener<T>>(
-              (l) => l.onCharacteristicChanged(_this, msg.mac, binary.hexToBytes(msg.value), undefined as any),
+              (l) => l.onCharacteristicChanged(self, msg.mac, binary.hexToBytes(msg.value), undefined as any),
               'onCharacteristicChanged',
             );
             break;

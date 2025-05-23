@@ -149,24 +149,24 @@ export namespace serialport {
     /**
      * 探测
      */
-    private _detecting(_this: any) {
+    private _detecting(self: any) {
       SerialPort.list()
         .then((ports: PortInfo[]) => {
-          _this.forEach((port: PortInfo) => _this.setState(port, 0));
+          self.forEach((port: PortInfo) => self.setState(port, 0));
           ports
-            .filter((p) => _this.filter(p))
+            .filter((p) => self.filter(p))
             .forEach((p) => {
-              let port = _this.get(p);
-              port = _this.setState(port ? port : p, port ? 2 : 1);
-              _this.put(port);
+              let port = self.get(p);
+              port = self.setState(port ? port : p, port ? 2 : 1);
+              self.put(port);
             });
-          _this.forEach((port: PortInfo) => {
-            if (_this.isExist(port)) {
-              _this.setState(port, 2);
-            } else if (_this.isAttach(port)) {
-              _this.attach(port);
+          self.forEach((port: PortInfo) => {
+            if (self.isExist(port)) {
+              self.setState(port, 2);
+            } else if (self.isAttach(port)) {
+              self.attach(port);
             } else {
-              _this.detach(port);
+              self.detach(port);
             }
           });
         })
@@ -207,8 +207,8 @@ export namespace serialport {
      */
     start(clear: boolean = true) {
       if (!this.timerId) {
-        let _this = this;
-        this.timerId = setInterval(() => this._detecting(_this), this.interval);
+        let self = this;
+        this.timerId = setInterval(() => this._detecting(self), this.interval);
         if (clear) {
           this.clear();
         }
