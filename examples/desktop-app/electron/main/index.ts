@@ -21,8 +21,8 @@ import { log } from "../../src/public/log";
 // import axios from 'axios';
 
 
-import { sqlite } from '../../libs/node-lib/sqlite';
-import { serialport } from '../../libs/node-lib/serialport';
+// import { sqlite } from '../../libs/node-lib/sqlite';
+// import { serialport } from '../../libs/node-lib/serialport';
 
 
 
