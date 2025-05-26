@@ -10,8 +10,8 @@
     <!-- <xiaofei></xiaofei> -->
     <!-- <ipc></ipc> -->
     <!-- <EcgDemo></EcgDemo> -->
-    <!-- <EcgDraw></EcgDraw> -->
-    <ECGSimulator></ECGSimulator>
+    <!-- <ECGSimulator></ECGSimulator> -->
+    <ECGSimulator2></ECGSimulator2>
     <!-- <multi-wave-view></multi-wave-view> -->
     <!-- <wave-view :deviceId="'01001148'"></wave-view> -->
     <!-- <draggable-waveform style="width: 100%; height: 400px;">拖拽的波形图</draggable-waveform> -->
@@ -22,8 +22,8 @@
 <script lang="ts">
 import { Button } from "ant-design-vue";
 import EcgDemo from "./components/EcgDemo.vue";
-import EcgDraw from "./components/EcgDraw.vue";
 import ECGSimulator from "./components/ECGSimulator.vue";
+import ECGSimulator2 from "./components/ECGSimulator2.vue";
 import Worker from "./components/Worker.vue";
 import holter from "./components/holter.vue";
 import qrcode from "./components/qrcode.vue";
@@ -57,8 +57,8 @@ export default {
     DraggableWaveform,
     Waveform2,
     EcgDemo,
-    EcgDraw,
     ECGSimulator,
+    ECGSimulator2,
     DragFileUpload,
     DragFileUpload2,
   },
