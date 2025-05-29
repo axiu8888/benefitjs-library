@@ -11,7 +11,9 @@
     <!-- <ipc></ipc> -->
     <!-- <EcgDemo></EcgDemo> -->
     <!-- <ECGSimulator></ECGSimulator> -->
-    <ECGSimulator2></ECGSimulator2>
+    <!-- <ECGSimulator2></ECGSimulator2> -->
+    <!-- <LinearLayoutDemo></LinearLayoutDemo> -->
+    <LinearLayoutDemo2></LinearLayoutDemo2>
     <!-- <multi-wave-view></multi-wave-view> -->
     <!-- <wave-view :deviceId="'01001148'"></wave-view> -->
     <!-- <draggable-waveform style="width: 100%; height: 400px;">拖拽的波形图</draggable-waveform> -->
@@ -32,6 +34,8 @@ import WaveView from "./components/WaveView.vue";
 import xiaofei from "./components/xiaofei.vue";
 import ipc from "./components/ipc.vue";
 import Waveform2 from "./components/Waveform2.vue";
+import LinearLayoutDemo from "./components/LinearLayoutDemo.vue";
+import LinearLayoutDemo2 from "./components/LinearLayoutDemo2.vue";
 
 import { log } from "./public/log";
 import MultiWaveView from './components/MultiWaveView.vue';
@@ -56,6 +60,9 @@ export default {
     MultiWaveView,
     DraggableWaveform,
     Waveform2,
+    LinearLayoutDemo,
+    LinearLayoutDemo2,
+
     EcgDemo,
     ECGSimulator,
     ECGSimulator2,
