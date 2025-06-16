@@ -541,11 +541,11 @@ export namespace collector {
       // 参数高位：(521)
       let paramHigh = data[521];
       // 设备功耗过高标志       (5)
-      hp.deviceOverload = paramHigh & (0b00100000 >> 5);
+      hp.deviceOverload = (paramHigh & 0b00100000) >> 5;
       // 胸呼吸连接标志( 0 连接 (6)
-      hp.respConnState = paramHigh & (0b01000000 >> 6);
+      hp.respConnState = (paramHigh & 0b01000000) >> 6;
       // 腹呼吸连接标志( 0 连接 (7)
-      hp.abdominalConnState = paramHigh & (0b10000000 >> 7);
+      hp.abdominalConnState = (paramHigh & 0b10000000) >> 7;
       // 血氧信号强度(522)
       hp.spo2Signal = data[513];
       // 胸呼吸系数(514)
@@ -553,7 +553,7 @@ export namespace collector {
       // 腹呼吸系数(515)
       hp.abdominalRatio = data[524];
       // 体温(525)
-      hp.temperature = ((paramHigh & (0b00000100 >> 2)) << 8) | data[525];
+      hp.temperature = (((paramHigh & 0b00000100) >> 2) << 8) | data[525];
       // 血氧饱和度(526)
       hp.spo2 = data[526];
 
@@ -566,51 +566,51 @@ export namespace collector {
       // 心电导联脱落状态
       hp.ecgConnState = deviceState & 0b00000001;
       // 血氧探头脱落标志
-      hp.spo2ProbeConnState = deviceState & (0b00000010 >> 1);
+      hp.spo2ProbeConnState = (deviceState & 0b00000010) >> 1;
       // 体温连接断开标志
-      hp.temperatureConnState = deviceState & (0b00000100 >> 2);
+      hp.temperatureConnState = (deviceState & 0b00000100) >> 2;
       // 血氧连接断开标志
-      hp.spo2ConnState = deviceState & (0b00001000 >> 3);
+      hp.spo2ConnState = (deviceState & 0b00001000) >> 3;
       // 血压连接断开标志
-      hp.elecMmhgConnState = deviceState & (0b00010000 >> 4);
+      hp.elecMmhgConnState = (deviceState & 0b00010000) >> 4;
       // 流速仪连接断开标志
-      hp.flowmeterConnState = deviceState & (0b00100000 >> 5);
+      hp.flowmeterConnState = (deviceState & 0b00100000) >> 5;
       // 时间设置标志
-      hp.calibrationTime = deviceState & (0b01000000 >> 6);
+      hp.calibrationTime = (deviceState & 0b01000000) >> 6;
       // 开机标志
-      hp.powerOn = deviceState & (0b10000000 >> 7);
+      hp.powerOn = (deviceState & 0b10000000) >> 7;
 
       // 电量提示：(528)   0 为正常; 1 为告警
       let batteryHint = data[528];
       // 外部电池电量低
       hp.deviceOuterBatteryAlarm = batteryHint & 0b00000001;
       // 蓝牙体温计电量低
-      hp.temperatureBatteryAlarm = batteryHint & (0b00000010 >> 1);
+      hp.temperatureBatteryAlarm = (batteryHint & 0b00000010) >> 1;
       // 蓝牙血氧电量低
-      hp.spo2BatteryAlarm = batteryHint & (0b00000100 >> 2);
+      hp.spo2BatteryAlarm = (batteryHint & 0b00000100) >> 2;
       // 蓝牙血压计电量低
-      hp.elecMmhgBatteryAlarm = batteryHint & (0b00001000 >> 3);
+      hp.elecMmhgBatteryAlarm = (batteryHint & 0b00001000) >> 3;
       // 流速仪电量低
-      hp.flowmeterBatteryAlarm = batteryHint & (0b00010000 >> 4);
+      hp.flowmeterBatteryAlarm = (batteryHint & 0b00010000) >> 4;
 
       // 状态开关: (529)，0为关; 1为开
       let switchState = data[529];
       // 蓝牙连接断开蓝闪
-      hp.bluetoothConnSwitch = switchState & (0b00000001 >> 0);
+      hp.bluetoothConnSwitch = (switchState & 0b00000001) >> 0;
       // 锂电池电量低绿闪
-      hp.batteryLowLightSwitch = switchState & (0b00000010 >> 1);
+      hp.batteryLowLightSwitch = (switchState & 0b00000010) >> 1;
       // 锂电池电量低震动
-      hp.batteryLowShockSwitch = switchState & (0b00000100 >> 2);
+      hp.batteryLowShockSwitch = (switchState & 0b00000100) >> 2;
       // 蓝牙设备电量低绿闪
-      hp.bluetoothLightSwitch = switchState & (0b00001000 >> 3);
+      hp.bluetoothLightSwitch = (switchState & 0b00001000) >> 3;
       // 蓝牙体温计开关位
-      hp.temperatureSwitch = switchState & (0b00010000 >> 4);
+      hp.temperatureSwitch = (switchState & 0b00010000) >> 4;
       // 蓝牙血氧计开关位
-      hp.spo2Switch = switchState & (0b00100000 >> 5);
+      hp.spo2Switch = (switchState & 0b00100000) >> 5;
       // 蓝牙血压计开关位
-      hp.elecMmhgSwitch = switchState & (0b01000000 >> 6);
+      hp.elecMmhgSwitch = (switchState & 0b01000000) >> 6;
       // 蓝牙流速仪开关位
-      hp.flowmeterSwitch = switchState & (0b10000000 >> 7);
+      hp.flowmeterSwitch = (switchState & 0b10000000) >> 7;
 
       // 电量: (531)
       if (hp.realtime) {
