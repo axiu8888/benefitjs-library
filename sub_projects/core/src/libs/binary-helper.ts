@@ -252,6 +252,38 @@ export class BinaryHelper {
   }
 
   /**
+   * 将数字转换为bit数组
+   * 
+   * @param value 数值
+   * @param bits bit 数，默认至少8位
+   * @returns 返回bit数组
+   */
+  numberToBinary(value: number, bits?: number): number[] {
+    let buf: number[] = [];
+    let v = value;
+    let byteCount = (bits || 8) / 8;
+    do {
+      byteCount--;
+      for (let i = 0; i < 8; i++) {
+        buf.push(v & 1 ? 1 : 0);
+        v = v >> 1;
+      }
+    } while (v != 0 && byteCount > 0);
+    return buf;
+  }
+
+  /**
+   * 将数字转换为bit字符串
+   * 
+   * @param value 数值
+   * @param bits bit 数，默认至少8位
+   * @returns 返回bit字符串
+   */
+  numberToBinaryStr(value: number, bits?: number): string {
+    return this.numberToBinary(value, bits).join('');
+  }
+  
+  /**
    * 往数组中push整数数据
    *
    * @param {Array<number>} bytes 原字节数组
