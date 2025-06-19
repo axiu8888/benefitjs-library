@@ -1,7 +1,7 @@
 import { binary, logger } from '@benefitjs/core';
+import { collector } from '@benefitjs/devices';
 import { uniapp } from '../uni/uniapp';
 import { udp } from '../uni/udp';
-import { collector } from './collector';
 import { bluetooth } from '../uni/bluetooth';
 
 /**
@@ -69,23 +69,23 @@ export namespace btcollector {
       this.addListener(this._handler); // 处理数据包
       // 采集器设备
       this.collector = new collector.Device({
-        onNotify: (hexDeviceId, data, type, packet) => this.onNotify(hexDeviceId, data, type, packet),
-        onPacketLost: (lost) => this.onPacketLost(lost),
+        onNotify: (deviceId, data, type, packet) => this.onNotify(deviceId, data, type, packet),
+        onPacketLost: (deviceId, lost) => this.onPacketLost(deviceId, lost),
       });
     }
 
     /**
      * 接收到数据
      *
-     * @param hexDeviceId 16进制的设备ID
+     * @param deviceId 16进制的设备ID
      * @param data 字节数据
      * @param type 数据类型
      * @param packet 实时或重传的数据包 | 血压数据包
      */
-    onNotify(hexDeviceId: string, data: number[] | Uint8Array, type: collector.PacketType, packet?: collector.HardwarePacket | collector.BpPacket | undefined): void {
+    onNotify(deviceId: string, data: number[] | Uint8Array, type: collector.PacketType, packet?: collector.HardwarePacket | collector.BpPacket | undefined): void {
       if (type.data) {
         this.callListeners<Listener>(
-          (l) => l.onData(this, hexDeviceId, data, type, packet as collector.HardwarePacket),
+          (l) => l.onData(this, deviceId, data, type, packet as collector.HardwarePacket),
           (l) => l && (l as any).onData,
         );
       } else {
@@ -93,13 +93,13 @@ export namespace btcollector {
           case collector.packet_blood_pressure_data.type:
           case collector.packet_blood_pressure_measure.type:
             this.callListeners<Listener>(
-              (l) => l.onBpData(this, hexDeviceId, data, type, packet as collector.BpPacket),
+              (l) => l.onBpData(this, deviceId, data, type, packet as collector.BpPacket),
               (l) => l && (l as any).onBpData,
             );
             break;
           default:
             this.callListeners<Listener>(
-              (l) => l.onData(this, hexDeviceId, data, type, packet as any),
+              (l) => l.onData(this, deviceId, data, type, packet as any),
               (l) => l && (l as any).onData,
             );
             break;
@@ -110,7 +110,7 @@ export namespace btcollector {
     /**
      * 丢弃不完整的拼包
      */
-    onPacketLost(lost: collector.JointPacket): void {
+    onPacketLost(deviceId: string, lost: collector.JointPacket): void {
       let pkg = lost.pkg0 ? lost.pkg0 : lost.pkg1 ? lost.pkg1 : lost.pkg2 ? lost.pkg2 : lost.pkg3;
       log.warn(
         `【${parser.getDeviceId(pkg)}】检测到丢包: ${parser.getPacketSn(pkg)}, pk0: ${binary.bytesToHex(lost.pkg0)}, pk1: ${binary.bytesToHex(lost.pkg1)}, pk2: ${binary.bytesToHex(
@@ -118,7 +118,6 @@ export namespace btcollector {
         )}, pk3: ${binary.bytesToHex(lost.pkg3)}`,
       );
       // 发送一次重传操作
-      let deviceId = this.device!!.deviceId;
       this.write(collector.retryCmd(deviceId, lost.sn, 1))
         .then((resp) => log.debug(`[${deviceId}] 发送重传指令: ${lost.sn}`, resp))
         .catch((err) => log.warn('发送重传指令出错', err));

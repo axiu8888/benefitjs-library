@@ -98,6 +98,7 @@ export class BinaryHelper {
       return src;
     }
     if (src instanceof Uint8Array) {
+      //@ts-ignore
       return src.buffer.byteLength != src.length ? src.buffer.slice(0, src.length) : src.buffer;
     }
     if (src instanceof Array) {
